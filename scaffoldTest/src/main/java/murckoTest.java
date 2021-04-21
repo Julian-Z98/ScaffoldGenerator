@@ -1,51 +1,84 @@
-import org.openscience.cdk.Atom;
 import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.depict.DepictionGenerator;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.fragment.MurckoFragmenter;
-import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.cdk.io.MDLV2000Reader;
 import org.openscience.cdk.io.MDLV3000Reader;
-import org.openscience.cdk.renderer.AtomContainerRenderer;
-import org.openscience.cdk.renderer.RendererModel;
-import org.openscience.cdk.renderer.SymbolVisibility;
-import org.openscience.cdk.renderer.color.UniColor;
-import org.openscience.cdk.renderer.elements.IRenderingVisitor;
-import org.openscience.cdk.renderer.font.AWTFontManager;
-import org.openscience.cdk.renderer.generators.BasicSceneGenerator;
-import org.openscience.cdk.renderer.generators.standard.StandardGenerator;
-import org.openscience.cdk.renderer.visitor.IDrawVisitor;
+
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.util.Arrays;
 
 public class murckoTest {
     public static void main(String[] args) throws IOException, CDKException {
         //Load molecule
-        InputStream tmpInputStream = new FileInputStream(
-                new File("D:/Studium/Scaffold/MOL_Files/Test3.mol"));
+        InputStream tmpInputStream = new FileInputStream("D:/Studium/Scaffold/MOL_Files/Test3.mol");
         MDLV3000Reader tmpReader = new MDLV3000Reader(tmpInputStream);
-        IAtomContainer tmpTestMol =(IAtomContainer) tmpReader.read(new AtomContainer());
-        //Generate picture
-        DepictionGenerator dptgen = new DepictionGenerator();
-        //Genereate window
-        dptgen.withSize(300, 350).withMolTitle().withTitleColor(Color.DARK_GRAY);
-        BufferedImage tmpImg = dptgen.depict(tmpTestMol).toImg();
-        ImageIcon tmpIcon=new ImageIcon(tmpImg);
+        IAtomContainer tmpTestMol = tmpReader.read(new AtomContainer());
+        //Generate picture of the original molecule
+        DepictionGenerator tmpGenerator = new DepictionGenerator();
+        tmpGenerator.withSize(300, 350).withMolTitle().withTitleColor(Color.DARK_GRAY);
+        BufferedImage tmpImg = tmpGenerator.depict(tmpTestMol).toImg();
+        ImageIcon tmpIcon = new ImageIcon(tmpImg);
         JFrame frame=new JFrame();
         frame.setLayout(new FlowLayout());
-        frame.setSize(320,370);
-        JLabel lbl=new JLabel();
-        lbl.setIcon(tmpIcon);
-        frame.add(lbl);
-        frame.setTitle("Original");
+        frame.setSize(800,500);
+        JLabel tmpOriLbl = new JLabel();
+        tmpOriLbl.setIcon(tmpIcon);
+        tmpOriLbl.setText("Original");
+        frame.add(tmpOriLbl);
+        //Generate fragments, rings and frameworks
+        MurckoFragmenter tmpMurckoFragmenter = new MurckoFragmenter();
+        tmpMurckoFragmenter.generateFragments(tmpTestMol);
+        IAtomContainer[] tmpFragments = tmpMurckoFragmenter.getFragmentsAsContainers();
+        IAtomContainer[] tmpRings = tmpMurckoFragmenter.getRingSystemsAsContainers();
+        IAtomContainer[] tmpFrameworks = tmpMurckoFragmenter.getFrameworksAsContainers();
+        //Generate pictures of the fragments
+        int tmpCountFra = 0;
+        for(IAtomContainer tmpFragment : tmpFragments) {
+            tmpCountFra++;
+            BufferedImage tmpImgFra = tmpGenerator.depict(tmpFragment).toImg();
+            ImageIcon tmpIconFra = new ImageIcon(tmpImgFra);
+            JFrame frameFra = new JFrame();
+            frameFra.setLayout(new FlowLayout());
+            frameFra.setSize(320,370);
+            JLabel tmpLblFra = new JLabel();
+            tmpLblFra.setIcon(tmpIconFra);
+            tmpLblFra.setText("Fragment "+tmpCountFra);
+            frame.add(tmpLblFra);
+        }
+        //Generate pictures of the rings
+        int tmpCountRgs = 0;
+        for(IAtomContainer tmpRing : tmpRings) {
+            tmpCountRgs++;
+            BufferedImage tmpImgRgs = tmpGenerator.depict(tmpRing).toImg();
+            ImageIcon tmpIconRgs = new ImageIcon(tmpImgRgs);
+            JFrame frameRgs = new JFrame();
+            frameRgs.setLayout(new FlowLayout());
+            frameRgs.setSize(320,370);
+            JLabel tmpLblRgs = new JLabel();
+            tmpLblRgs.setIcon(tmpIconRgs);
+            tmpLblRgs.setText("Ring "+tmpCountRgs);
+            frame.add(tmpLblRgs);
+        }
+        //Generate pictures of the frameworks
+        int tmpCountFrw = 0;
+        for(IAtomContainer tmpFramework : tmpFrameworks) {
+            tmpCountFrw++;
+            BufferedImage tmpImgFrw = tmpGenerator.depict(tmpFramework).toImg();
+            ImageIcon tmpIconFrw = new ImageIcon(tmpImgFrw);
+            JFrame frameFrw = new JFrame();
+            frameFrw.setLayout(new FlowLayout());
+            frameFrw.setSize(320,370);
+            JLabel tmpLblFrw = new JLabel();
+            tmpLblFrw.setIcon(tmpIconFrw);
+            tmpLblFrw.setText("Framework "+tmpCountFrw);
+            frame.add(tmpLblFrw);
+        }
+        //Show window
         frame.setVisible(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        MurckoFragmenter tmpMurckoFragmenter = new MurckoFragmenter();
     }
 }
