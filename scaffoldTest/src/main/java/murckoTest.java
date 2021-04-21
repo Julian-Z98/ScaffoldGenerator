@@ -5,7 +5,6 @@ import org.openscience.cdk.fragment.MurckoFragmenter;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.io.MDLV3000Reader;
 
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -14,15 +13,15 @@ import java.io.*;
 public class murckoTest {
     public static void main(String[] args) throws IOException, CDKException {
         //Load molecule
-        InputStream tmpInputStream = new FileInputStream("D:/Studium/Scaffold/MOL_Files/Test3.mol");
+        InputStream tmpInputStream = new FileInputStream("D:/Studium/Scaffold/MOL_Files/Test2.mol");
         MDLV3000Reader tmpReader = new MDLV3000Reader(tmpInputStream);
         IAtomContainer tmpTestMol = tmpReader.read(new AtomContainer());
         //Generate picture of the original molecule
         DepictionGenerator tmpGenerator = new DepictionGenerator();
-        tmpGenerator.withSize(300, 350).withMolTitle().withTitleColor(Color.DARK_GRAY);
+        tmpGenerator.withSize(300, 350).withMolTitle().withTitleColor(Color.BLACK);
         BufferedImage tmpImg = tmpGenerator.depict(tmpTestMol).toImg();
         ImageIcon tmpIcon = new ImageIcon(tmpImg);
-        JFrame frame=new JFrame();
+        JFrame frame= new JFrame();
         frame.setLayout(new FlowLayout());
         frame.setSize(800,500);
         JLabel tmpOriLbl = new JLabel();
@@ -39,7 +38,7 @@ public class murckoTest {
         int tmpCountFra = 0;
         for(IAtomContainer tmpFragment : tmpFragments) {
             tmpCountFra++;
-            BufferedImage tmpImgFra = tmpGenerator.depict(tmpFragment).toImg();
+            BufferedImage tmpImgFra = tmpGenerator.withBackgroundColor(Color.LIGHT_GRAY).depict(tmpFragment).toImg();
             ImageIcon tmpIconFra = new ImageIcon(tmpImgFra);
             JFrame frameFra = new JFrame();
             frameFra.setLayout(new FlowLayout());
@@ -53,7 +52,7 @@ public class murckoTest {
         int tmpCountRgs = 0;
         for(IAtomContainer tmpRing : tmpRings) {
             tmpCountRgs++;
-            BufferedImage tmpImgRgs = tmpGenerator.depict(tmpRing).toImg();
+            BufferedImage tmpImgRgs = tmpGenerator.withBackgroundColor(Color.GRAY).depict(tmpRing).toImg();
             ImageIcon tmpIconRgs = new ImageIcon(tmpImgRgs);
             JFrame frameRgs = new JFrame();
             frameRgs.setLayout(new FlowLayout());
@@ -67,7 +66,7 @@ public class murckoTest {
         int tmpCountFrw = 0;
         for(IAtomContainer tmpFramework : tmpFrameworks) {
             tmpCountFrw++;
-            BufferedImage tmpImgFrw = tmpGenerator.depict(tmpFramework).toImg();
+            BufferedImage tmpImgFrw = tmpGenerator.withBackgroundColor(Color.PINK).depict(tmpFramework).toImg();
             ImageIcon tmpIconFrw = new ImageIcon(tmpImgFrw);
             JFrame frameFrw = new JFrame();
             frameFrw.setLayout(new FlowLayout());
