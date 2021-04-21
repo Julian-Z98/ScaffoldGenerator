@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Scaffold.iml" filepath="$PROJECT_DIR$/Scaffold.iml" />
+      <module fileurl="file://$PROJECT_DIR$/scaffoldTest.iml" filepath="$PROJECT_DIR$/scaffoldTest.iml" />
     </modules>
   </component>
 </project>
