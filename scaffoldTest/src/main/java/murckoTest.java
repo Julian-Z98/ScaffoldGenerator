@@ -3,6 +3,7 @@ import org.openscience.cdk.depict.DepictionGenerator;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.fragment.MurckoFragmenter;
 import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.io.MDLV2000Reader;
 import org.openscience.cdk.io.MDLV3000Reader;
 
 import javax.swing.*;
@@ -13,8 +14,8 @@ import java.io.*;
 public class murckoTest {
     public static void main(String[] args) throws IOException, CDKException {
         //Load molecule
-        InputStream inputStream = new FileInputStream("MOL_Files/Test3.mol"); // Try Test1-Test7
-        MDLV3000Reader reader = new MDLV3000Reader(inputStream);
+        InputStream inputStream = new FileInputStream("MOL_Files/TestO.mol"); // Try Test1-Test7
+        MDLV2000Reader reader = new MDLV2000Reader(inputStream);
         IAtomContainer testMol = reader.read(new AtomContainer());
         //Generate picture of the original molecule
         DepictionGenerator generator = new DepictionGenerator();
