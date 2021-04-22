@@ -13,37 +13,37 @@ import java.io.*;
 public class murckoTest {
     public static void main(String[] args) throws IOException, CDKException {
         //Load molecule
-        InputStream tmpInputStream = new FileInputStream("MOL_Files/Test6.mol"); // Try Test1-Test7
-        MDLV3000Reader tmpReader = new MDLV3000Reader(tmpInputStream);
-        IAtomContainer tmpTestMol = tmpReader.read(new AtomContainer());
+        InputStream inputStream = new FileInputStream("MOL_Files/Test3.mol"); // Try Test1-Test7
+        MDLV3000Reader reader = new MDLV3000Reader(inputStream);
+        IAtomContainer testMol = reader.read(new AtomContainer());
         //Generate picture of the original molecule
-        DepictionGenerator tmpGenerator = new DepictionGenerator();
-        tmpGenerator.withSize(300, 350).withMolTitle().withTitleColor(Color.BLACK);
-        BufferedImage tmpImg = tmpGenerator.depict(tmpTestMol).toImg();
-        ImageIcon tmpIcon = new ImageIcon(tmpImg);
+        DepictionGenerator generator = new DepictionGenerator();
+        generator.withSize(300, 350).withMolTitle().withTitleColor(Color.BLACK);
+        BufferedImage imgOri = generator.depict(testMol).toImg();
+        ImageIcon iconOri = new ImageIcon(imgOri);
         JFrame frame= new JFrame();
         frame.setLayout(new FlowLayout());
         frame.setSize(1000,800);
-        JLabel tmpOriLbl = new JLabel();
-        tmpOriLbl.setIcon(tmpIcon);
-        tmpOriLbl.setText("Original");
-        frame.add(tmpOriLbl);
+        JLabel lblOri = new JLabel();
+        lblOri.setIcon(iconOri);
+        lblOri.setText("Original");
+        frame.add(lblOri);
         //Generate fragments, rings and frameworks
-        MurckoFragmenter tmpMurckoFragmenter = new MurckoFragmenter(false,1);
-        tmpMurckoFragmenter.setComputeRingFragments(true);
-        tmpMurckoFragmenter.generateFragments(tmpTestMol);
-        IAtomContainer[] tmpFragments = tmpMurckoFragmenter.getFragmentsAsContainers();
-        IAtomContainer[] tmpRings = tmpMurckoFragmenter.getRingSystemsAsContainers();
-        IAtomContainer[] tmpFrameworks = tmpMurckoFragmenter.getFrameworksAsContainers();
+        MurckoFragmenter murckoFragmenter = new MurckoFragmenter(false,1);
+        murckoFragmenter.setComputeRingFragments(true);
+        murckoFragmenter.generateFragments(testMol);
+        IAtomContainer[] fragments = murckoFragmenter.getFragmentsAsContainers();
+        IAtomContainer[] rings = murckoFragmenter.getRingSystemsAsContainers();
+        IAtomContainer[] frameworks = murckoFragmenter.getFrameworksAsContainers();
         //Generate pictures of the fragments
         int tmpCountFra = 0;
-        for(IAtomContainer tmpFragment : tmpFragments) {
+        for(IAtomContainer tmpFragment : fragments) {
             tmpCountFra++;
-            BufferedImage tmpImgFra = tmpGenerator.withBackgroundColor(Color.LIGHT_GRAY).depict(tmpFragment).toImg();
+            BufferedImage tmpImgFra = generator.withBackgroundColor(Color.LIGHT_GRAY).depict(tmpFragment).toImg();
             ImageIcon tmpIconFra = new ImageIcon(tmpImgFra);
-            JFrame frameFra = new JFrame();
-            frameFra.setLayout(new FlowLayout());
-            frameFra.setSize(320,370);
+            JFrame tmpFrameFra = new JFrame();
+            tmpFrameFra.setLayout(new FlowLayout());
+            tmpFrameFra.setSize(320,370);
             JLabel tmpLblFra = new JLabel();
             tmpLblFra.setIcon(tmpIconFra);
             tmpLblFra.setText("Fragment "+tmpCountFra);
@@ -51,13 +51,13 @@ public class murckoTest {
         }
         //Generate pictures of the rings
         int tmpCountRgs = 0;
-        for(IAtomContainer tmpRing : tmpRings) {
+        for(IAtomContainer tmpRing : rings) {
             tmpCountRgs++;
-            BufferedImage tmpImgRgs = tmpGenerator.withBackgroundColor(Color.GRAY).depict(tmpRing).toImg();
+            BufferedImage tmpImgRgs = generator.withBackgroundColor(Color.GRAY).depict(tmpRing).toImg();
             ImageIcon tmpIconRgs = new ImageIcon(tmpImgRgs);
-            JFrame frameRgs = new JFrame();
-            frameRgs.setLayout(new FlowLayout());
-            frameRgs.setSize(320,370);
+            JFrame tmpFrameRgs = new JFrame();
+            tmpFrameRgs.setLayout(new FlowLayout());
+            tmpFrameRgs.setSize(320,370);
             JLabel tmpLblRgs = new JLabel();
             tmpLblRgs.setIcon(tmpIconRgs);
             tmpLblRgs.setText("Ring "+tmpCountRgs);
@@ -65,13 +65,13 @@ public class murckoTest {
         }
         //Generate pictures of the frameworks
         int tmpCountFrw = 0;
-        for(IAtomContainer tmpFramework : tmpFrameworks) {
+        for(IAtomContainer tmpFramework : frameworks) {
             tmpCountFrw++;
-            BufferedImage tmpImgFrw = tmpGenerator.withBackgroundColor(Color.PINK).depict(tmpFramework).toImg();
+            BufferedImage tmpImgFrw = generator.withBackgroundColor(Color.PINK).depict(tmpFramework).toImg();
             ImageIcon tmpIconFrw = new ImageIcon(tmpImgFrw);
-            JFrame frameFrw = new JFrame();
-            frameFrw.setLayout(new FlowLayout());
-            frameFrw.setSize(320,370);
+            JFrame tmpFrameFrw = new JFrame();
+            tmpFrameFrw.setLayout(new FlowLayout());
+            tmpFrameFrw.setSize(320,370);
             JLabel tmpLblFrw = new JLabel();
             tmpLblFrw.setIcon(tmpIconFrw);
             tmpLblFrw.setText("Framework "+tmpCountFrw);
