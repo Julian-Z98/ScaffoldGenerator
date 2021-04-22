@@ -13,7 +13,7 @@ import java.io.*;
 public class murckoTest {
     public static void main(String[] args) throws IOException, CDKException {
         //Load molecule
-        InputStream tmpInputStream = new FileInputStream("MOL_Files/Test3.mol");
+        InputStream tmpInputStream = new FileInputStream("MOL_Files/Test6.mol"); // Try Test1-Test7
         MDLV3000Reader tmpReader = new MDLV3000Reader(tmpInputStream);
         IAtomContainer tmpTestMol = tmpReader.read(new AtomContainer());
         //Generate picture of the original molecule
