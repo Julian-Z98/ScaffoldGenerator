@@ -23,7 +23,7 @@ public class murckoTest {
         ImageIcon tmpIcon = new ImageIcon(tmpImg);
         JFrame frame= new JFrame();
         frame.setLayout(new FlowLayout());
-        frame.setSize(800,500);
+        frame.setSize(1000,800);
         JLabel tmpOriLbl = new JLabel();
         tmpOriLbl.setIcon(tmpIcon);
         tmpOriLbl.setText("Original");
