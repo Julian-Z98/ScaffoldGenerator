@@ -29,7 +29,8 @@ public class murckoTest {
         tmpOriLbl.setText("Original");
         frame.add(tmpOriLbl);
         //Generate fragments, rings and frameworks
-        MurckoFragmenter tmpMurckoFragmenter = new MurckoFragmenter();
+        MurckoFragmenter tmpMurckoFragmenter = new MurckoFragmenter(false,1);
+        tmpMurckoFragmenter.setComputeRingFragments(true);
         tmpMurckoFragmenter.generateFragments(tmpTestMol);
         IAtomContainer[] tmpFragments = tmpMurckoFragmenter.getFragmentsAsContainers();
         IAtomContainer[] tmpRings = tmpMurckoFragmenter.getRingSystemsAsContainers();
