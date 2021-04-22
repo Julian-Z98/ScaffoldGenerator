@@ -6,10 +6,11 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="scaffoldTest" />
+        <module name="CDK" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="CDK" target="11" />
       <module name="scaffoldTest" target="11" />
     </bytecodeTargetLevel>
   </component>
