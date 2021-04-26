@@ -4,6 +4,10 @@
 # Log file
 *.log
 
-# idea files #
+# Idea files #
 .idea/
 *iml
+
+# Output fles #
+
+/scaffoldTestOutput/*

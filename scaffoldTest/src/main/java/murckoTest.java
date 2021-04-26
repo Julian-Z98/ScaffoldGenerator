@@ -12,12 +12,17 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.net.URL;
 import java.util.*;
 
 public class murckoTest {
-    public static void main(String[] args) throws IOException, CDKException {
+    public static void main(String[] args) throws IOException, CDKException, ClassNotFoundException {
         //Load molecule
-        InputStream inputStream = new FileInputStream("MOL_Files/Test8.mol"); // Try 6,8,9 for Schuffenhauer Test
+        Class cls = Class.forName("murckoTest");
+        ClassLoader cLoader = cls.getClassLoader();
+        URL url = cLoader.getResource("Test8.mol");
+        System.out.println(String.valueOf(url));
+        InputStream inputStream = new FileInputStream(String.valueOf(url)); // Try 6,8,9 for Schuffenhauer Test
         MDLV3000Reader reader = new MDLV3000Reader(inputStream);
         IAtomContainer testMol = reader.read(new AtomContainer());
         //Mark the carbons to which an oxygen is double bonded and save the oxygens with double bonds.
