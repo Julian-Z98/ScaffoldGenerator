@@ -63,7 +63,7 @@ public class murckoTest {
             JLabel tmpLblFra = new JLabel();
             tmpLblFra.setIcon(tmpIconFra);
             tmpLblFra.setText("Fragment "+tmpCountFra);
-            //frame.add(tmpLblFra);
+            frame.add(tmpLblFra);
         }
         //Generate pictures of the rings
         int tmpCountRgs = 0;
@@ -77,7 +77,7 @@ public class murckoTest {
             JLabel tmpLblRgs = new JLabel();
             tmpLblRgs.setIcon(tmpIconRgs);
             tmpLblRgs.setText("Ring "+tmpCountRgs);
-            //frame.add(tmpLblRgs);
+            frame.add(tmpLblRgs);
         }
         //Generate pictures of the frameworks
         int tmpCountFrw = 0;
