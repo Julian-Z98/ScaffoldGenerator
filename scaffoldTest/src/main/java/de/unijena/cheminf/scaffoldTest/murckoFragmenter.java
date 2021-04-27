@@ -26,18 +26,22 @@
 
 package de.unijena.cheminf.scaffoldTest;
 
+import org.openscience.cdk.Atom;
 import org.openscience.cdk.AtomContainer;
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.depict.DepictionGenerator;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.fragment.MurckoFragmenter;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObjectBuilder;
+import org.openscience.cdk.io.MDLV2000Reader;
 import org.openscience.cdk.io.MDLV3000Reader;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
+import org.openscience.cdk.tools.CDKHydrogenAdder;
+import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -47,122 +51,103 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class murckoFragmenter {
-    public static void main(String[] args) throws CDKException {
+    public static void main(String[] args) {
+
+    }
+    /**
+     * @param tmpFileName Name of the file to be loaded. File is loaded from the resources folder.
+     * @throws CDKException if file cant be read as IAtomContainer
+     * @throws IOException if Image cant saved in directory
+     */
+    public void getSchuffenhauerScaffold(String tmpFileName) throws CDKException, IOException {
         //Load molecule
-        InputStream inputStream= murckoFragmenter.class.getClassLoader().getSystemResourceAsStream("Test8.mol");// Try 6,8,9 for Schuffenhauer Test
-        MDLV3000Reader reader = new MDLV3000Reader(inputStream);
-        IAtomContainer testMol = reader.read(new AtomContainer());
-        //Mark the carbons to which an oxygen is double bonded and save the oxygens with double bonds.
-        List<Integer> addAtomList = new ArrayList<>();//Stores positions of double bounded O in the testMol
-        for (IAtom tmpAtom : testMol.atoms()){
-            if(tmpAtom.getSymbol().equals("O")){
-                for (IBond tmpBond : tmpAtom.bonds()){
-                    if(tmpBond.getElectronCount() == 4){
-                        addAtomList.add(testMol.getAtomNumber(tmpAtom));
-                        tmpBond.getAtom(0).setFlag(CDKConstants.DUMMY_POINTER,true);//Flag all Carbons with double bounded O
-                    }
+        InputStream tmpInputStream= murckoFragmenter.class.getClassLoader().getSystemResourceAsStream(tmpFileName+".mol");
+        MDLV2000Reader tmpReader = new MDLV2000Reader(tmpInputStream);
+        IChemObjectBuilder tmpBuilder = SilentChemObjectBuilder.getInstance();
+        IAtomContainer tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
+        //IAtomContainer tmpMolecule = tmpReader.read(new AtomContainer()); Dont use new AtomContainer. Makes trouble: https://github.com/cdk/cdk/issues/687
+
+        //Mark each atom with ascending number
+        tmpMolecule.getBondCount();
+        Integer tmpCounter = 0;
+        List<Integer> tmpAddAtomList = new ArrayList<>();//Stores positions of double bounded O in the testMol
+        for(IAtom tmpAtom : tmpMolecule.atoms()) {
+            tmpCounter++;
+            tmpAtom.setProperty("AtomCounter", tmpCounter);
+        }
+        for(IBond tmpBond: tmpMolecule.bonds()){
+            if(tmpBond.getOrder() == IBond.Order.DOUBLE){
+                if(tmpBond.getAtom(0).getSymbol() == "C" && tmpBond.getAtom(1).getSymbol() == "O"){
+                    //addAtomList.add(Integer.parseInt(tmpBond.getAtom(0).getProperty("AtomCounter")));
+                    tmpAddAtomList.add(tmpBond.getAtom(0).getProperty("AtomCounter"));
+                }
+                if(tmpBond.getAtom(0).getSymbol() == "O" && tmpBond.getAtom(1).getSymbol() == "C"){
+                    //addAtomList.add(Integer.parseInt(tmpBond.getAtom(1).getProperty("AtomCounter")));
+                    tmpAddAtomList.add(tmpBond.getAtom(1).getProperty("AtomCounter"));
                 }
             }
         }
-        //Generate picture of the original molecule
-        DepictionGenerator generator = new DepictionGenerator();
-        generator.withSize(300, 350).withMolTitle().withTitleColor(Color.BLACK);
-        BufferedImage imgOri = generator.depict(testMol).toImg();
-        ImageIcon iconOri = new ImageIcon(imgOri);
-        JFrame frame= new JFrame();
-        frame.setLayout(new FlowLayout());
-        frame.setSize(1000,800);
-        JLabel lblOri = new JLabel();
-        lblOri.setIcon(iconOri);
-        lblOri.setText("Original");
-        frame.add(lblOri);
-        //Generate fragments, rings and frameworks
-        MurckoFragmenter murckoFragmenter = new MurckoFragmenter(false,1);
-        murckoFragmenter.setComputeRingFragments(true);
-        murckoFragmenter.generateFragments(testMol);
-        IAtomContainer[] fragments = murckoFragmenter.getFragmentsAsContainers();
-        IAtomContainer[] rings = murckoFragmenter.getRingSystemsAsContainers();
-        IAtomContainer[] frameworks = murckoFragmenter.getFrameworksAsContainers();
-        //Generate pictures of the fragments
-        int tmpCountFra = 0;
-        for(IAtomContainer tmpFragment : fragments) {
-            tmpCountFra++;
-            BufferedImage tmpImgFra = generator.withBackgroundColor(Color.LIGHT_GRAY).depict(tmpFragment).toImg();
-            ImageIcon tmpIconFra = new ImageIcon(tmpImgFra);
-            JFrame tmpFrameFra = new JFrame();
-            tmpFrameFra.setLayout(new FlowLayout());
-            tmpFrameFra.setSize(320,370);
-            JLabel tmpLblFra = new JLabel();
-            tmpLblFra.setIcon(tmpIconFra);
-            tmpLblFra.setText("Fragment "+tmpCountFra);
-            frame.add(tmpLblFra);
-        }
-        //Generate pictures of the rings
-        int tmpCountRgs = 0;
-        for(IAtomContainer tmpRing : rings) {
-            tmpCountRgs++;
-            BufferedImage tmpImgRgs = generator.withBackgroundColor(Color.GRAY).depict(tmpRing).toImg();
-            ImageIcon tmpIconRgs = new ImageIcon(tmpImgRgs);
-            JFrame tmpFrameRgs = new JFrame();
-            tmpFrameRgs.setLayout(new FlowLayout());
-            tmpFrameRgs.setSize(320,370);
-            JLabel tmpLblRgs = new JLabel();
-            tmpLblRgs.setIcon(tmpIconRgs);
-            tmpLblRgs.setText("Ring "+tmpCountRgs);
-            frame.add(tmpLblRgs);
-        }
-        //Generate pictures of the frameworks
-        int tmpCountFrw = 0;
-        for(IAtomContainer tmpFramework : frameworks) {
-            tmpCountFrw++;
-            BufferedImage tmpImgFrw = generator.withBackgroundColor(Color.PINK).depict(tmpFramework).toImg();
-            ImageIcon tmpIconFrw = new ImageIcon(tmpImgFrw);
-            JFrame tmpFrameFrw = new JFrame();
-            tmpFrameFrw.setLayout(new FlowLayout());
-            tmpFrameFrw.setSize(320,370);
-            JLabel tmpLblFrw = new JLabel();
-            tmpLblFrw.setIcon(tmpIconFrw);
-            tmpLblFrw.setText("Framework "+tmpCountFrw);
-            frame.add(tmpLblFrw);
-        }
-        //Adds previously removed double-bonded oxygens to the framework to obtain Schuffenhauer frameworks.
-        IAtomContainer tmpSFramework = frameworks[0];
-        int tmpListNumber = 0;
-            for (IAtom tmpAtom : tmpSFramework.atoms()){
-                if(tmpAtom.getFlag(CDKConstants.DUMMY_POINTER)){
-                    double tmpMinDist = 1000;//Normal distances lower by a factor of 100
-                    //Oxygen with the smallest distance to a flagged carbon is selected
-                    for(int tmpONumber: addAtomList){
-                        double tmpDist = testMol.getAtom(tmpONumber).getPoint2d().distance(tmpAtom.getPoint2d());
-                        if(tmpDist<tmpMinDist){
-                            tmpMinDist = tmpDist;
-                            tmpListNumber = tmpONumber;
+        System.out.println(tmpAddAtomList);
+        //Store the number of each carbon with an oxygen double bond
+        /*for(IAtom tmpAtom : tmpMolecule.atoms()){
+            if(tmpAtom.getSymbol().equals("O")) {
+                for (IBond tmpBond : tmpAtom.bonds()) {
+                    if (tmpBond.getElectronCount() == 4) {
+                        if(tmpBond.getAtom(0).getSymbol() == "C"){
+                            //addAtomList.add(Integer.parseInt(tmpBond.getAtom(0).getProperty("AtomCounter")));
+                            tmpAddAtomList.add(tmpBond.getAtom(0).getProperty("AtomCounter"));
+                        }
+                        if(tmpBond.getAtom(1).getSymbol() == "C"){
+                            //addAtomList.add(Integer.parseInt(tmpBond.getAtom(1).getProperty("AtomCounter")));
+                            tmpAddAtomList.add(tmpBond.getAtom(1).getProperty("AtomCounter"));
                         }
                     }
-                    tmpSFramework.addAtom(testMol.getAtom(tmpListNumber));//Oxygen with the smallest distance to a flagged carbon is added
-                    tmpSFramework.addBond(tmpAtom.getIndex(), tmpSFramework.getAtomNumber(testMol.getAtom(tmpListNumber)), IBond.Order.DOUBLE);//Double bond inserted between carbon and oxygen
-
-                    //Alternative solution: Oxygen is newly generated and added to the DUMMY_POINTER carbons.
-                    //Problem: Positions of the oxygens do not correspond to the original ones.
-                    //tmpSFramework.addAtom(new Atom("O"));
-                    //tmpSFramework.addBond(tmpSFramework.getLastAtom().getIndex(),tmpAtom.getIndex(), IBond.Order.DOUBLE);
                 }
             }
+        }*/
+        //Generate the murckoFragment
+        MurckoFragmenter tmpMurckoFragmenter = new MurckoFragmenter(true,1);
+        tmpMurckoFragmenter.setComputeRingFragments(false);
+        tmpMurckoFragmenter.generateFragments(tmpMolecule);
+        IAtomContainer[] tmpFrameworks = tmpMurckoFragmenter.getFrameworksAsContainers();
+        //Get the longest murckoFragment
+        int tmpAtomCount = 0;
+        int tmpFragmentCounter = 0;
+        int tmpFragmentNumber = 0;
+        for(IAtomContainer tmpFragment : tmpFrameworks){
+            if(tmpFragment.getAtomCount()>tmpAtomCount){
+                tmpAtomCount = tmpFragment.getAtomCount();
+                tmpFragmentNumber = tmpFragmentCounter;
+            }
+            tmpFragmentCounter++;
+        }
+        IAtomContainer tmpLongFragment = tmpFrameworks[tmpFragmentNumber];
+        //Generate SchuffenhauerFragment
+        for(IAtom tmpAtom : tmpLongFragment.atoms()){
+            if(tmpAddAtomList.contains(tmpAtom.getProperty("AtomCounter"))){
+                tmpLongFragment.addAtom(new Atom("O"));
+                for(IAtom tmpNewAtom : tmpLongFragment.atoms()){
+                    if(tmpNewAtom.getProperty("AtomCounter") == null){
+                        tmpCounter++;
+                        tmpNewAtom.setProperty("AtomCounter", tmpCounter);
+                        tmpLongFragment.addBond(tmpNewAtom.getIndex(),tmpAtom.getIndex(), IBond.Order.DOUBLE);
+                    }
+                }
+            }
+        }
+        //Add back hydrogens removed by the MurckoFragmenter
+        AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpLongFragment);
+        CDKHydrogenAdder.getInstance(tmpLongFragment.getBuilder()).addImplicitHydrogens(tmpLongFragment);
+        //AtomContainerManipulator.convertImplicitToExplicitHydrogens(tmpFrameworks[0]);
+        //System.out.println(tmpTestGenerator.create(tmpFrameworks[0]));
 
-        //Generate picture of the SchuffenhauerFramework
-        BufferedImage tmpImgSFrw = generator.withBackgroundColor(Color.PINK).depict(tmpSFramework).toImg();
-        ImageIcon tmpIconSFrw = new ImageIcon(tmpImgSFrw);
-        JFrame tmpFrameSFrw = new JFrame();
-        tmpFrameSFrw.setLayout(new FlowLayout());
-        tmpFrameSFrw.setSize(320,370);
-        JLabel tmpLblSFrw = new JLabel();
-        tmpLblSFrw.setIcon(tmpIconSFrw);
-        tmpLblSFrw.setText("Schuffenhauer");
-        frame.add(tmpLblSFrw);
-
-        //Show window
-        frame.setVisible(true);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        //Generate picture of the SchuffenhauerScaffold
+        DepictionGenerator tmpGenerator = new DepictionGenerator();
+        tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
+        BufferedImage tmpImgSchuff = tmpGenerator.depict(tmpLongFragment).toImg();
+        new File(System.getProperty("user.dir") + "/src/test/scaffoldTestOutput/" + tmpFileName + "/SchuffenhauerScaffold.png").mkdirs();
+        File tmpOutputOri = new File(System.getProperty("user.dir") + "/src/test/scaffoldTestOutput/" + tmpFileName + "/SchuffenhauerScaffold.png");
+        ImageIO.write(tmpImgSchuff, "png" ,tmpOutputOri);
     }
 
     /**
@@ -171,6 +156,7 @@ public class murckoFragmenter {
      * The subfolder has the name of the file.
      * @param tmpFileName Name of the file to be loaded. File is loaded from the resources folder.
      * @throws CDKException if file cant be read as IAtomContainer
+     * @throws IOException if Image cant saved in directory
      */
     public void getMurckoFragments(String tmpFileName) throws IOException, CDKException {
         //Load molecule

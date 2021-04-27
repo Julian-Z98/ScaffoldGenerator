@@ -45,5 +45,6 @@ public class murckoFragmenterTest {
         for (int tmpCount = 1; tmpCount < 10; tmpCount++) {
             fragmenter.getMurckoFragments("Test" + tmpCount);
         }
+        fragmenter.getSchuffenhauerScaffold("TestO");
     }
 }
