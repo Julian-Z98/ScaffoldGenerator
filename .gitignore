@@ -4,9 +4,10 @@
 # Log file
 *.log
 
-# Idea files #
+# Idea files and folders #
 .idea/
 *iml
+target/
 
 # Output fles #
 
