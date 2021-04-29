@@ -1,6 +1,6 @@
 # Scaffold-Master
 ## ScaffoldGeneratorTest
-__Class ScaffoldGeneratorTest shows the funktions of the ScaffoldGenerator
+__Class ScaffoldGeneratorTest shows the funktions of the ScaffoldGenerator__
 
   A set of mol files is loaded from the resources folder, processed with the ScaffoldGenerator and saved as image in the generated scaffoldTestOutput. 
   The ScaffoldGenerator method getSchuffenhauerScaffold() transforms the molecules in Schuffenhauer scaffolds.
