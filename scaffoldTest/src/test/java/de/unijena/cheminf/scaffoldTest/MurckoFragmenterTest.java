@@ -80,7 +80,7 @@ public class MurckoFragmenterTest {
                 IChemObjectBuilder tmpBuilder = SilentChemObjectBuilder.getInstance();
                 tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
                 //Load V3000 mol file
-            } else if(tmpFormat.getReaderClassName().contains("V3000")){
+            } else if(tmpFormat.getReaderClassName().contains("V3000")) {
                 MDLV3000Reader tmpReader = new MDLV3000Reader(tmpInputStream);
                 IChemObjectBuilder tmpBuilder = SilentChemObjectBuilder.getInstance();
                 tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());

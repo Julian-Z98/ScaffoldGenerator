@@ -43,6 +43,7 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.util.List;
 
 /**
  * JUnit test class for the ScaffoldGenerator
@@ -80,7 +81,7 @@ public class ScaffoldGeneratorTest {
                 IChemObjectBuilder tmpBuilder = SilentChemObjectBuilder.getInstance();
                 tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
                 //Load V3000 mol file
-            } else if(tmpFormat.getReaderClassName().contains("V3000")){
+            } else if(tmpFormat.getReaderClassName().contains("V3000")) {
                 MDLV3000Reader tmpReader = new MDLV3000Reader(tmpInputStream);
                 IChemObjectBuilder tmpBuilder = SilentChemObjectBuilder.getInstance();
                 tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
@@ -93,8 +94,57 @@ public class ScaffoldGeneratorTest {
             BufferedImage tmpImgSchuff = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
             //Save the picture
             new File(System.getProperty("user.dir") + "/src/test/scaffoldTestOutput/" + tmpFileName + "/SchuffenhauerScaffold.png").mkdirs();
-            File tmpOutputOri = new File(System.getProperty("user.dir") + "/src/test/scaffoldTestOutput/" + tmpFileName + "/SchuffenhauerScaffold.png");
-            ImageIO.write(tmpImgSchuff, "png" ,tmpOutputOri);
+            File tmpOutputSchuff = new File(System.getProperty("user.dir") + "/src/test/scaffoldTestOutput/" + tmpFileName + "/SchuffenhauerScaffold.png");
+            ImageIO.write(tmpImgSchuff, "png" ,tmpOutputSchuff);
+        }
+    }
+    /**
+     * Test of ScaffoldGenerator.getRings() with V2000 and V3000 mol files.
+     * Loads the 11 Test(Test1.mol-Test11.mol) molfiles from the Resources folder and creates the rings of the SchuffenhauerScaffold with getRings().
+     * All generated Rings are saved as images in a subfolder of the scaffoldTestOutput folder.
+     * The subfolder has the name of the input file.
+     * @throws IOException if file format cant be detected
+     * @throws CDKException if file cant be read
+     */
+    @Test
+    public void getRingsTest() throws IOException, CDKException {
+        for (int tmpCount = 1; tmpCount < 12; tmpCount++) {
+            String tmpFileName = "Test" + tmpCount;
+            //Get molecule path
+            //InputStream tmpInputStream = ScaffoldGenerator.class.getClassLoader().getSystemResourceAsStream(tmpFileName+".mol");
+            File tmpResourcesDirectory = new File("src/test/resources/" + tmpFileName + ".mol");
+            BufferedInputStream tmpInputStream = new BufferedInputStream(new FileInputStream(tmpResourcesDirectory));
+            //Get mol file version
+            FormatFactory tmpFactory = new FormatFactory();
+            IChemFormat tmpFormat = tmpFactory.guessFormat(tmpInputStream);
+            IAtomContainer tmpMolecule = new AtomContainer();
+            //Load V2000 mol file
+            if (tmpFormat.getReaderClassName().contains("V2000")) {
+                MDLV2000Reader tmpReader = new MDLV2000Reader(tmpInputStream);
+                IChemObjectBuilder tmpBuilder = SilentChemObjectBuilder.getInstance();
+                tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
+                //Load V3000 mol file
+            } else if (tmpFormat.getReaderClassName().contains("V3000")) {
+                MDLV3000Reader tmpReader = new MDLV3000Reader(tmpInputStream);
+                IChemObjectBuilder tmpBuilder = SilentChemObjectBuilder.getInstance();
+                tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
+            }
+            //Generate the SchuffenhauerScaffold
+            tmpMolecule = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
+            //Generate rings
+            List<AtomContainer> tmpRings = scaffoldGenerator.getRings(tmpMolecule);
+            //Generate pictures of the rings
+            DepictionGenerator tmpGenerator = new DepictionGenerator();
+            tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
+            int tmpCounter = 0;
+            for (IAtomContainer tmpRing : tmpRings) {
+                tmpCounter++;
+                BufferedImage tmpImgRing = tmpGenerator.depict(tmpRing).toImg();
+                //Save the picture
+                new File(System.getProperty("user.dir") + "/src/test/scaffoldTestOutput/" + tmpFileName + "/GeneratedRing" + tmpCounter + ".png").mkdirs();
+                File tmpOutputRing = new File(System.getProperty("user.dir") + "/src/test/scaffoldTestOutput/" + tmpFileName + "/GeneratedRing" + tmpCounter + ".png");
+                ImageIO.write(tmpImgRing, "png", tmpOutputRing);
+            }
         }
     }
 }
