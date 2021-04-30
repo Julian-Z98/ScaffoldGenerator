@@ -42,9 +42,7 @@ import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
 /**
  * JUnit test class for the ScaffoldGenerator
@@ -69,7 +67,9 @@ public class ScaffoldGeneratorTest {
         for (int tmpCount = 1; tmpCount < 12; tmpCount++) {
             String tmpFileName = "Test"+ tmpCount;
             //Get molecule path
-            InputStream tmpInputStream = ScaffoldGenerator.class.getClassLoader().getSystemResourceAsStream(tmpFileName+".mol");
+            //InputStream tmpInputStream = ScaffoldGenerator.class.getClassLoader().getSystemResourceAsStream(tmpFileName+".mol");
+            File tmpResourcesDirectory = new File("src/test/resources/" + tmpFileName + ".mol");
+            BufferedInputStream tmpInputStream = new BufferedInputStream(new FileInputStream(tmpResourcesDirectory));
             //Get mol file version
             FormatFactory tmpFactory = new FormatFactory();
             IChemFormat tmpFormat = tmpFactory.guessFormat(tmpInputStream);
