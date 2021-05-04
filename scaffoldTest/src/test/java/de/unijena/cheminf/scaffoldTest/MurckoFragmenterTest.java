@@ -1,26 +1,26 @@
 /*
  *
- *  * MIT License
- *  *
- *  * Copyright (c) 2021 Julian Zander, Jonas Schaub,  Achim Zielesny
- *  *
- *  * Permission is hereby granted, free of charge, to any person obtaining a copy
- *  * of this software and associated documentation files (the "Software"), to deal
- *  * in the Software without restriction, including without limitation the rights
- *  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *  * copies of the Software, and to permit persons to whom the Software is
- *  * furnished to do so, subject to the following conditions:
- *  *
- *  * The above copyright notice and this permission notice shall be included in all
- *  * copies or substantial portions of the Software.
- *  *
- *  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- *  * SOFTWARE.
+ * MIT License
+ *
+ * Copyright (c) 2021 Julian Zander, Jonas Schaub,  Achim Zielesny
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in all
+ *  copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *  SOFTWARE.
  *
  */
 
@@ -29,6 +29,7 @@ package de.unijena.cheminf.scaffoldTest;
 import org.junit.Before;
 import org.junit.Test;
 import org.openscience.cdk.AtomContainer;
+import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.depict.DepictionGenerator;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.fragment.MurckoFragmenter;
@@ -38,12 +39,14 @@ import org.openscience.cdk.io.FormatFactory;
 import org.openscience.cdk.io.MDLV2000Reader;
 import org.openscience.cdk.io.MDLV3000Reader;
 import org.openscience.cdk.io.formats.IChemFormat;
-import org.openscience.cdk.silent.SilentChemObjectBuilder;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 
 /**
   * JUnit test class for the org.openscience.cdk.fragment.MurckoFragmenter
@@ -77,12 +80,12 @@ public class MurckoFragmenterTest {
             //Load V2000 mol file
             if(tmpFormat.getReaderClassName().contains("V2000")) {
                 MDLV2000Reader tmpReader = new MDLV2000Reader(tmpInputStream);
-                IChemObjectBuilder tmpBuilder = SilentChemObjectBuilder.getInstance();
+                IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
                 tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
                 //Load V3000 mol file
             } else if(tmpFormat.getReaderClassName().contains("V3000")) {
                 MDLV3000Reader tmpReader = new MDLV3000Reader(tmpInputStream);
-                IChemObjectBuilder tmpBuilder = SilentChemObjectBuilder.getInstance();
+                IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
                 tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
             }
             //Generate picture of the original molecule
@@ -90,8 +93,8 @@ public class MurckoFragmenterTest {
             tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
             BufferedImage tmpImgOri = tmpGenerator.depict(tmpMolecule).toImg();
             //Save picture of the original molecule
-            new File(System.getProperty("user.dir") + "/src/test/scaffoldTestOutput/" + tmpFileName + "/Original.png").mkdirs();
-            File tmpOutputOri = new File(System.getProperty("user.dir") + "/src/test/scaffoldTestOutput/" + tmpFileName + "/Original.png");
+            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Original.png").mkdirs();
+            File tmpOutputOri = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Original.png");
             ImageIO.write(tmpImgOri, "png" ,tmpOutputOri);
             //Generate fragments, rings and frameworks
             fragmenter.setComputeRingFragments(true);
@@ -104,8 +107,8 @@ public class MurckoFragmenterTest {
             for(IAtomContainer tmpFragment : tmpFragments) {
                 tmpCountFra++;
                 BufferedImage tmpImgFra = tmpGenerator.depict(tmpFragment).toImg();
-                new File(System.getProperty("user.dir")+"/src/test/scaffoldTestOutput/" + tmpFileName + "/Fragment"+tmpCountFra + ".png").mkdirs();
-                File tmpOutputFra = new File(System.getProperty("user.dir") + "/src/test/scaffoldTestOutput/" + tmpFileName + "/Fragment" + tmpCountFra+".png");
+                new File(System.getProperty("user.dir")+"/scaffoldTestOutput/" + tmpFileName + "/Fragment"+tmpCountFra + ".png").mkdirs();
+                File tmpOutputFra = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Fragment" + tmpCountFra+".png");
                 ImageIO.write(tmpImgFra, "png" ,tmpOutputFra);
             }
             //Generate and save pictures of the rings
@@ -113,8 +116,8 @@ public class MurckoFragmenterTest {
             for(IAtomContainer tmpRing : tmpRings) {
                 tmpCountRgs++;
                 BufferedImage tmpImgRgs = tmpGenerator.depict(tmpRing).toImg();
-                new File(System.getProperty("user.dir") + "/src/test/scaffoldTestOutput/" + tmpFileName + "/Ring" + tmpCountRgs + ".png").mkdirs();
-                File tmpOutputRgs = new File(System.getProperty("user.dir") + "/src/test/scaffoldTestOutput/" + tmpFileName+"/Ring" + tmpCountRgs + ".png");
+                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Ring" + tmpCountRgs + ".png").mkdirs();
+                File tmpOutputRgs = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName+"/Ring" + tmpCountRgs + ".png");
                 ImageIO.write(tmpImgRgs, "png" ,tmpOutputRgs);
             }
             //Generate and save pictures of the frameworks
@@ -122,8 +125,8 @@ public class MurckoFragmenterTest {
             for(IAtomContainer tmpFramework : tmpFrameworks) {
                 tmpCountFrw++;
                 BufferedImage tmpImgFrw = tmpGenerator.depict(tmpFramework).toImg();
-                new File(System.getProperty("user.dir") + "/src/test/scaffoldTestOutput/" + tmpFileName+"/Framework" + tmpCountFrw+".png").mkdirs();
-                File tmpOutputFrw = new File(System.getProperty("user.dir") + "/src/test/scaffoldTestOutput/" + tmpFileName+"/Framework" + tmpCountFrw+".png");
+                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName+"/Framework" + tmpCountFrw+".png").mkdirs();
+                File tmpOutputFrw = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName+"/Framework" + tmpCountFrw+".png");
                 ImageIO.write(tmpImgFrw, "png" ,tmpOutputFrw);
             }
         }
