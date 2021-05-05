@@ -38,6 +38,7 @@ import org.openscience.cdk.io.FormatFactory;
 import org.openscience.cdk.io.MDLV2000Reader;
 import org.openscience.cdk.io.MDLV3000Reader;
 import org.openscience.cdk.io.formats.IChemFormat;
+import org.openscience.cdk.smiles.SmilesParser;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -90,6 +91,11 @@ public class ScaffoldGeneratorTest {
                 IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
                 tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
             }
+            /** ----SMILES test----
+             * Loads Flucloxacillin(Test11) as SMILES and generates SchuffenhauerScaffold
+             * SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+             * tmpMolecule   = tmpParser.parseSmiles("CC1=C(C(=NO1)C2=C(C=CC=C2Cl)F)C(=O)NC3C4N(C3=O)C(C(S4)(C)C)C(=O)O");
+             */
             //Generate SchuffenhauerScaffold
             IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
             //Generate picture of the SchuffenhauerScaffold
@@ -103,7 +109,7 @@ public class ScaffoldGeneratorTest {
         }
     }
     /**
-     * Test of ScaffoldGenerator.getRings() with V2000 and V3000 mol files.
+     * Test of Cycles.mcb() with V2000 and V3000 mol files.
      * Loads the 11 Test(Test1.mol-Test11.mol) molfiles from the Resources folder and creates the rings of the SchuffenhauerScaffold with getRings().
      * All generated Rings are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
@@ -141,14 +147,14 @@ public class ScaffoldGeneratorTest {
             //Generate pictures of the rings
             DepictionGenerator tmpGenerator = new DepictionGenerator();
             tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
-            int tmpCounter = 0;
+            int tmpCounter = 1;
             for (IAtomContainer tmpRing : tmpRings) {
-                tmpCounter++;
                 BufferedImage tmpImgRing = tmpGenerator.depict(tmpRing).toImg();
                 //Save the picture
                 new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/GeneratedRing" + tmpCounter + ".png").mkdirs();
                 File tmpOutputRing = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/GeneratedRing" + tmpCounter + ".png");
                 ImageIO.write(tmpImgRing, "png", tmpOutputRing);
+                tmpCounter++;
             }
         }
     }

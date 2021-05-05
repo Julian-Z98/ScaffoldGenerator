@@ -29,8 +29,7 @@ package de.unijena.cheminf.scaffoldTest;
 import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.fragment.MurckoFragmenter;
-import org.openscience.cdk.graph.GraphUtil;
-import org.openscience.cdk.graph.MinimumCycleBasis;
+import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -57,7 +56,7 @@ public class ScaffoldGenerator {
             tmpCounter++;
         }
         //Store all pairs of double bounded C and O in HashMap
-        HashMap<Integer,Integer> tmpAddAtomMap = new HashMap(tmpMolecule.getAtomCount());//HashMap cannot be larger than the total number of atoms.Key = C and Val = O
+        HashMap<Integer,Integer> tmpAddAtomMap = new HashMap(tmpMolecule.getAtomCount());//HashMap cannot be larger than the total number of atoms. Key = C and Val = O
         for(IBond tmpBond: tmpMolecule.bonds()) {
             if(tmpBond.getOrder() == IBond.Order.DOUBLE) {
                 if(tmpBond.getAtom(0).getSymbol().equals("C") && tmpBond.getAtom(1).getSymbol().equals("O")) {
@@ -89,7 +88,7 @@ public class ScaffoldGenerator {
                             if(tmpOriginalAtom.getProperty("AtomCounter") == tmpAddAtomMap.get(tmpAtom.getProperty("AtomCounter"))) { //Get the O from the original molecule
                                 tmpOriginalO = tmpOriginalAtom;
                             }
-                            if(tmpOriginalAtom.getProperty("AtomCounter") == tmpAtom.getProperty("AtomCounter")) { //Get the O from the original molecule
+                            if(tmpOriginalAtom.getProperty("AtomCounter") == tmpAtom.getProperty("AtomCounter")) { //Get the C from the original molecule
                                 tmpOriginalC = tmpOriginalAtom;
                             }
                         }
@@ -116,44 +115,16 @@ public class ScaffoldGenerator {
     }
 
     /**
-     * Generates the smallest set of smallest rings(SSSR) with MinimumCycleBasis.paths() for the entered molecule and returns it.
+     * Generates the smallest set of smallest rings(SSSR) with Cycles.mcb() for the entered molecule and returns it.
      * @param tmpMolecule molecule whose rings are produced.
      * @return rings of the inserted molecule.
-     * @throws CDKException if the CDKHydrogenAdder has a problem.
      */
-    public List<AtomContainer> getRings(IAtomContainer tmpMolecule) throws CDKException {
-        //Convert molecule into a graph
-        int[][] tmpMatrix = GraphUtil.toAdjList(tmpMolecule);
-        //Create SSSR graph
-        MinimumCycleBasis tmpMCB = new MinimumCycleBasis((tmpMatrix));
-        int[][] tmpPaths = tmpMCB.paths();
-        //Create molecules from SSSR graph
+    public List<AtomContainer> getRings(IAtomContainer tmpMolecule) {
+        Cycles tmpNewCycles = Cycles.mcb(tmpMolecule); //Generate cycles
         List<AtomContainer> tmpCycles = new ArrayList<>();
-        IAtom tmpTestAtom;
-        for (int tmpRow = 0; tmpRow <  tmpPaths.length; tmpRow++) {//Go through the individual rings
-            AtomContainer tmpCycle = new AtomContainer();
-            for (int tmpCol = 0; tmpCol < tmpPaths[tmpRow].length; tmpCol++) {//Go though the atoms of each ring
-                //Identify the ring atoms in the complete molecule and add them to the AtomContainer tmpCycle
-                tmpTestAtom = tmpMolecule.getAtom(tmpPaths[tmpRow][tmpCol]);
-                tmpCycle.addAtom(tmpTestAtom);
-            }
-            //Identify the bonds between the ring atoms and add them to the AtomContainer tmpCycle
-            for (IAtom tmpBondAtom : tmpCycle.atoms()) {
-                List<IBond> tmpBondList = tmpMolecule.getConnectedBondsList(tmpBondAtom);
-                for(IBond tmpBond : tmpBondList) {//Go through all bonds of the ring atom
-                    //If both binding partners are contained in the ring, add the bond to the AtomContainer tmpCycle
-                    if(tmpCycle.contains(tmpBond.getAtom(0)) && tmpCycle.contains(tmpBond.getAtom(1))) {
-                        if(!tmpCycle.contains(tmpBond)) {
-                            tmpCycle.addBond(tmpBond);
-                        }
-                    }
-                }
-            }
-            //Add back hydrogens removed by the MinimumCycleBasis()
-            AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpCycle);
-            CDKHydrogenAdder.getInstance(tmpCycle.getBuilder()).addImplicitHydrogens(tmpCycle);
-            //Add the completed ring to the ring list
-            tmpCycles.add(tmpCycle);
+        for(int tmpCount = 0; tmpCount < tmpNewCycles.numberOfCycles(); tmpCount++) { //Go through all generated rings
+            IAtomContainer tmpCycle = tmpNewCycles.toRingSet().getAtomContainer(tmpCount); //Store rings as AtomContainer
+            tmpCycles.add((AtomContainer) tmpCycle); //Add rings to list
         }
         return tmpCycles;
     }

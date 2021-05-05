@@ -103,31 +103,31 @@ public class MurckoFragmenterTest {
             IAtomContainer[] tmpRings = fragmenter.getRingSystemsAsContainers();
             IAtomContainer[] tmpFrameworks = fragmenter.getFrameworksAsContainers();
             //Generate and save pictures of the fragments
-            int tmpCountFra = 0;
+            int tmpCountFra = 1;
             for(IAtomContainer tmpFragment : tmpFragments) {
-                tmpCountFra++;
                 BufferedImage tmpImgFra = tmpGenerator.depict(tmpFragment).toImg();
                 new File(System.getProperty("user.dir")+"/scaffoldTestOutput/" + tmpFileName + "/Fragment"+tmpCountFra + ".png").mkdirs();
                 File tmpOutputFra = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Fragment" + tmpCountFra+".png");
                 ImageIO.write(tmpImgFra, "png" ,tmpOutputFra);
+                tmpCountFra++;
             }
             //Generate and save pictures of the rings
-            int tmpCountRgs = 0;
+            int tmpCountRgs = 1;
             for(IAtomContainer tmpRing : tmpRings) {
-                tmpCountRgs++;
                 BufferedImage tmpImgRgs = tmpGenerator.depict(tmpRing).toImg();
                 new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Ring" + tmpCountRgs + ".png").mkdirs();
                 File tmpOutputRgs = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName+"/Ring" + tmpCountRgs + ".png");
                 ImageIO.write(tmpImgRgs, "png" ,tmpOutputRgs);
+                tmpCountRgs++;
             }
             //Generate and save pictures of the frameworks
-            int tmpCountFrw = 0;
+            int tmpCountFrw = 1;
             for(IAtomContainer tmpFramework : tmpFrameworks) {
-                tmpCountFrw++;
                 BufferedImage tmpImgFrw = tmpGenerator.depict(tmpFramework).toImg();
                 new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName+"/Framework" + tmpCountFrw+".png").mkdirs();
                 File tmpOutputFrw = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName+"/Framework" + tmpCountFrw+".png");
                 ImageIO.write(tmpImgFrw, "png" ,tmpOutputFrw);
+                tmpCountFrw++;
             }
         }
     }
