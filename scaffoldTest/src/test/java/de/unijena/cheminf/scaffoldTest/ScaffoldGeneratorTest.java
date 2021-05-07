@@ -38,15 +38,13 @@ import org.openscience.cdk.io.FormatFactory;
 import org.openscience.cdk.io.MDLV2000Reader;
 import org.openscience.cdk.io.MDLV3000Reader;
 import org.openscience.cdk.io.formats.IChemFormat;
+import org.openscience.cdk.io.iterator.IteratingSDFReader;
 import org.openscience.cdk.smiles.SmilesParser;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.List;
 
 /**
@@ -231,6 +229,40 @@ public class ScaffoldGeneratorTest {
                 tmpCounter++;
             }
         }
+    }
+    /**
+     * Speed test for the getSchuffenhauerScaffold() Method with over 400000 molecules from the COCONUT DB.
+     * @throws FileNotFoundException if file not found
+     */
+    @Test
+    public void getSchuffenhauerScaffoldSpeedTest() throws FileNotFoundException {
+        int tmpExceptionCounter = 0;
+        int tmpNumberCounter = 0;
+        File tmpResourcesDirectory = new File("src/test/resources/COCONUT_DB.sdf");
+        IteratingSDFReader reader = new IteratingSDFReader( new FileInputStream(tmpResourcesDirectory), DefaultChemObjectBuilder.getInstance());
+        while (reader.hasNext()) {
+            try {
+                IAtomContainer tmpMolecule = (IAtomContainer) reader.next();
+                tmpMolecule = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
+                /**
+                 tmpNumberCounter++;
+                 if(tmpNumberCounter == 12345) {
+                 //Generate picture of the SchuffenhauerScaffold with removed ring
+                 DepictionGenerator tmpGenerator = new DepictionGenerator();
+                 tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
+                 BufferedImage tmpImgRemove = tmpGenerator.depict(tmpMolecule).toImg();
+                 //Save the picture
+                 new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest1.png").mkdirs();
+                 File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest1.png");
+                 ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
 
+                 }
+                 */
+            }
+            catch(Exception e) {
+                tmpExceptionCounter++;
+            }
+        }
+        System.out.println("Number of Exceptions:"+ tmpExceptionCounter);
     }
 }
