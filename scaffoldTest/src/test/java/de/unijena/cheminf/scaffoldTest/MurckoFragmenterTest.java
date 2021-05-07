@@ -59,7 +59,7 @@ public class MurckoFragmenterTest {
     }
 
      /**
-      * Tests the MurckoFragmenter: Loads the 11 Test(Test1.mol-Test11.mol) molfiles(V2000 and V3000) from the Resources folder and creates all fragments that can be generated with the MurckoFragmenter.
+      * Tests the MurckoFragmenter: Loads the 12 Test(Test1.mol-Test12.mol) molfiles(V2000 and V3000) from the Resources folder and creates all fragments that can be generated with the MurckoFragmenter.
       * The unmodified molecule (original) and all generated fragments are saved as images in a subfolder of the generated scaffoldTestOutput folder.
       * The subfolder has the name of the input file.
       * @throws IOException if file format cant be detected
@@ -67,7 +67,7 @@ public class MurckoFragmenterTest {
       */
     @Test
     public void testFragmenter() throws IOException, CDKException {
-        for (int tmpCount = 1; tmpCount < 12; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 13; tmpCount++) {
             String tmpFileName = "Test"+ tmpCount;
             //Get molecule path
             //InputStream tmpInputStream = ScaffoldGenerator.class.getClassLoader().getSystemResourceAsStream(tmpFileName+".mol");
