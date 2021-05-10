@@ -12,3 +12,6 @@ target/
 # Output fles #
 
 scaffoldTestOutput/
+
+# Large input files #
+*.sdf
