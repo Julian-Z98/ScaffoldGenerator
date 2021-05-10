@@ -244,9 +244,9 @@ public class ScaffoldGeneratorTest {
             try {
                 IAtomContainer tmpMolecule = (IAtomContainer) reader.next();
                 tmpMolecule = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
-                /**
+                ///**
                  tmpNumberCounter++;
-                 if(tmpNumberCounter == 12345) {
+                 if(tmpNumberCounter == 4242) {
                  //Generate picture of the SchuffenhauerScaffold with removed ring
                  DepictionGenerator tmpGenerator = new DepictionGenerator();
                  tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
@@ -257,7 +257,7 @@ public class ScaffoldGeneratorTest {
                  ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
 
                  }
-                 */
+                 //*/
             }
             catch(Exception e) {
                 tmpExceptionCounter++;

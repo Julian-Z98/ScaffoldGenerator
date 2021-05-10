@@ -56,57 +56,41 @@ public class ScaffoldGenerator {
             tmpAtom.setProperty("AtomCounter", tmpCounter);
             tmpCounter++;
         }
-        //Store all pairs of double bounded C and O in HashMap
-        HashMap<Integer,Integer> tmpAddAtomMap = new HashMap(tmpMolecule.getAtomCount());//HashMap cannot be larger than the total number of atoms. Key = C and Val = O
+        //Store the number of each C that is double-bonded to O and the respective bond
+        HashMap<Object, IBond> tmpAddAtomMap = new HashMap(tmpMolecule.getAtomCount()); //HashMap cannot be larger than the total number of atoms. Key = C and Val = Bond
         for(IBond tmpBond: tmpMolecule.bonds()) {
             if(tmpBond.getOrder() == IBond.Order.DOUBLE) {
-                if(tmpBond.getAtom(0).getSymbol().equals("C") && tmpBond.getAtom(1).getSymbol().equals("O")) {
-                    tmpAddAtomMap.put(tmpBond.getAtom(0).getProperty("AtomCounter"),tmpBond.getAtom(1).getProperty("AtomCounter"));
+                if(tmpBond.getAtom(0).getSymbol().equals("C") && tmpBond.getAtom(1).getSymbol().equals("O")) { //C in first position in the bond and O in second position
+                    tmpAddAtomMap.put(tmpBond.getAtom(0).getProperty("AtomCounter"),tmpBond);
                 }
-                if(tmpBond.getAtom(0).getSymbol().equals("O") && tmpBond.getAtom(1).getSymbol().equals("C")) {
-                    tmpAddAtomMap.put(tmpBond.getAtom(1).getProperty("AtomCounter"),tmpBond.getAtom(0).getProperty("AtomCounter"));
+                if(tmpBond.getAtom(0).getSymbol().equals("O") && tmpBond.getAtom(1).getSymbol().equals("C")) { //O in first position in the bond and C in second position
+                    tmpAddAtomMap.put(tmpBond.getAtom(1).getProperty("AtomCounter"),tmpBond);
                 }
             }
         }
         //Generate the murckoFragment
         MurckoFragmenter tmpMurckoFragmenter = new MurckoFragmenter(true,1);
         tmpMurckoFragmenter.setComputeRingFragments(false);
-        tmpMurckoFragmenter.generateFragments(tmpMolecule);
         IAtomContainer tmpMurckoFragment = tmpMurckoFragmenter.scaffold(tmpMolecule);
-        //Generate SchuffenhauerScaffold
+        //Add the missing O and the respective bond
         for(IAtom tmpAtom : tmpMurckoFragment.atoms()) {
             if(tmpAddAtomMap.containsKey(tmpAtom.getProperty("AtomCounter"))) { //Every C that occurs in the tmpAddAtomMap and in the SchuffenhauerScaffold
-                for(IAtom tmpOriginalAtom : tmpMolecule.atoms()) {
-                    if(tmpOriginalAtom.getProperty("AtomCounter") == tmpAddAtomMap.get(tmpAtom.getProperty("AtomCounter"))) { //Get the O belonging to the C
-                        tmpMurckoFragment.addAtom(tmpOriginalAtom.clone()); //Add the clone of the associated O
-                    }
+                IBond tmpNewBond = null;
+                if(tmpAddAtomMap.get(tmpAtom.getProperty("AtomCounter")).getAtom(0).getSymbol() == "C") { //C in first position in the bond and O in second position
+                    IAtom tmpClonedO = tmpAddAtomMap.get(tmpAtom.getProperty("AtomCounter")).getAtom(1).clone();
+                    tmpMurckoFragment.addAtom(tmpClonedO); //Add cloned O to the molecule
+                    tmpNewBond = tmpAddAtomMap.get(tmpAtom.getProperty("AtomCounter")).clone(); //Clone the bond from the original molecule
+                    tmpNewBond.setAtom(tmpAtom,0); //Add tmpMurckoFragment C to the bond
+                    tmpNewBond.setAtom(tmpClonedO,1); //Add cloned O to the bond
                 }
-                for(IAtom tmpNewAtom : tmpMurckoFragment.atoms()) {
-                    if(tmpNewAtom.getProperty("AtomCounter") == tmpAddAtomMap.get(tmpAtom.getProperty("AtomCounter"))) { //Get the newly added O
-                        IAtom tmpOriginalO = null;
-                        IAtom tmpOriginalC = null;
-                        for(IAtom tmpOriginalAtom : tmpMolecule.atoms()){
-                            if(tmpOriginalAtom.getProperty("AtomCounter") == tmpAddAtomMap.get(tmpAtom.getProperty("AtomCounter"))) { //Get the O from the original molecule
-                                tmpOriginalO = tmpOriginalAtom;
-                            }
-                            if(tmpOriginalAtom.getProperty("AtomCounter") == tmpAtom.getProperty("AtomCounter")) { //Get the C from the original molecule
-                                tmpOriginalC = tmpOriginalAtom;
-                            }
-                        }
-                        IBond tmpNewBond = tmpMolecule.getBond(tmpOriginalO,tmpOriginalC).clone(); //Clone the bond from the original molecule
-                        if(tmpMolecule.getBond(tmpOriginalO,tmpOriginalC).getAtom(0).getSymbol() == "C") { //The first atom of the bond is a C
-                            //Add the new atoms to the cloned bond
-                            tmpNewBond.setAtom(tmpNewAtom,1);
-                            tmpNewBond.setAtom(tmpAtom,0);
-                        }
-                        if(tmpMolecule.getBond(tmpOriginalO,tmpOriginalC).getAtom(0).getSymbol() == "O") { //The first atom of the bond is a O
-                            //Add the new atoms to the cloned bond
-                            tmpNewBond.setAtom(tmpNewAtom,0);
-                            tmpNewBond.setAtom(tmpAtom,1);
-                        }
-                        tmpMurckoFragment.addBond(tmpNewBond); //Add the new bond
-                    }
+                if(tmpAddAtomMap.get(tmpAtom.getProperty("AtomCounter")).getAtom(0).getSymbol() == "O") { //O in first position in the bond and C in second position
+                    IAtom tmpClonedO = tmpAddAtomMap.get(tmpAtom.getProperty("AtomCounter")).getAtom(0).clone();
+                    tmpMurckoFragment.addAtom(tmpClonedO); //Add cloned O to the molecule
+                    tmpNewBond = tmpAddAtomMap.get(tmpAtom.getProperty("AtomCounter")).clone(); //Clone the bond from the original molecule
+                    tmpNewBond.setAtom(tmpAtom,1); //Add tmpMurckoFragment C to the bond
+                    tmpNewBond.setAtom(tmpClonedO,0); //Add cloned O to the bond
                 }
+                tmpMurckoFragment.addBond(tmpNewBond); //Add the new bond
             }
         }
         //Add back hydrogens removed by the MurckoFragmenter
