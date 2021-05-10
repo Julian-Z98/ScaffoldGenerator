@@ -57,7 +57,7 @@ public class ScaffoldGenerator {
             tmpCounter++;
         }
         //Store the number of each C that is double-bonded to O and the respective bond
-        HashMap<Object, IBond> tmpAddAtomMap = new HashMap(tmpMolecule.getAtomCount()); //HashMap cannot be larger than the total number of atoms. Key = C and Val = Bond
+        HashMap<Object, IBond> tmpAddAtomMap = new HashMap((tmpMolecule.getAtomCount()/2), 1); //HashMap cannot be larger than the total number of atoms. Key = C and Val = Bond
         for(IBond tmpBond: tmpMolecule.bonds()) {
             if(tmpBond.getOrder() == IBond.Order.DOUBLE) {
                 if(tmpBond.getAtom(0).getSymbol().equals("C") && tmpBond.getAtom(1).getSymbol().equals("O")) { //C in first position in the bond and O in second position
