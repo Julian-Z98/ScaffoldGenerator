@@ -5,6 +5,8 @@ __Class ScaffoldGeneratorTest shows the funktions of the ScaffoldGenerator__
   A set of mol files is loaded from the resources folder, processed with the ScaffoldGenerator and saved as image in the generated scaffoldTestOutput. 
   The ScaffoldGenerator method getSchuffenhauerScaffold() transforms the molecules in Schuffenhauer scaffolds.
 
+https://coconut.naturalproducts.net/download
+
 ## MurckoFragmenterTest
 
 __Class MurckoFragmenterTest shows the funktions of the CDK MurckoFragmenter__
@@ -19,3 +21,7 @@ __Class MurckoFragmenterTest shows the funktions of the CDK MurckoFragmenter__
   * *Test1* shows that linkers are not further decomposed
   * *Test3* shows that ring systems are separated from one another
   * *Test6* shows that side chains of the ring systems are removed and ring systems are not further broken down into individual rings
+
+## Required ressources
+COCONUT DB for speed test: https://coconut.naturalproducts.net/download
+Add the COCONUT_DB.sdf file to src\test\resources
