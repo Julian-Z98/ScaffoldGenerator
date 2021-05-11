@@ -46,6 +46,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * JUnit test class for the ScaffoldGenerator
@@ -289,38 +290,149 @@ public class ScaffoldGeneratorTest {
         }
     }
     /**
-     * Speed test for the getSchuffenhauerScaffold() Method with over 400000 molecules from the COCONUT DB.
+     * Speed test for the getSchuffenhauerScaffold(), getRing() and removeRing() Method with over 400000 molecules from the COCONUT DB.
+     * Which methods are tested can be set via the booleans.
+     * To perform the test download the COCONUT DB(https://coconut.naturalproducts.net/download) and add the COCONUT_DB.sdf file to src\test\resources
      * @throws FileNotFoundException if file not found
      */
     @Test
-    public void getSchuffenhauerScaffoldSpeedTest() throws FileNotFoundException {
+    public void ScaffoldGeneratorSpeedTest() throws FileNotFoundException {
+        //Options
+        boolean tmpCalculateSchuffenhauerScaffold = false; //Generate SchuffenhauerScaffolds
+        boolean tmpCalculateRings = false; //Calculate Rings. The Schuffenhauer scaffolds are also calculated for this.
+        boolean tmpCalculateRemoveRings = true; //The molecules for which the rings have been removed from the Schuffenhauer scaffolds are calculated. The Schuffenhauer scaffolds and the Rings are also calculated for this.
+        boolean tmpGetPicture = true; //Show control pictures from one molecule.
+        int tmpPictureNumber = 4242; //Number of the molecule from which control images are to be taken(from 0 to 406000)
+        //Counter
         int tmpExceptionCounter = 0;
         int tmpNumberCounter = 0;
+        //Loading and reading the library
         File tmpResourcesDirectory = new File("src/test/resources/COCONUT_DB.sdf");
-        IteratingSDFReader reader = new IteratingSDFReader( new FileInputStream(tmpResourcesDirectory), DefaultChemObjectBuilder.getInstance());
-        while (reader.hasNext()) {
+        IteratingSDFReader tmpReader = new IteratingSDFReader( new FileInputStream(tmpResourcesDirectory), DefaultChemObjectBuilder.getInstance());
+        //Start timer
+        long tmpStartTime = System.nanoTime();
+        //Start report
+        System.out.println("-----START REPORT-----");
+        if(tmpCalculateSchuffenhauerScaffold == true && tmpCalculateRings == false) {
+            System.out.println("In this test, the Schuffenhauer scaffolds are calculated for all molecules.");
+        }
+        if(tmpCalculateRings == true && tmpCalculateRemoveRings == false) {
+            System.out.println("In this test, the Schuffenhauer scaffolds and their rings are calculated for all molecules.");
+        }
+        if(tmpCalculateRemoveRings == true){
+            System.out.println("In this test, the Schuffenhauer scaffolds and their rings are calculated for all molecules.");
+            System.out.println("In addition, the molecules for which the rings have been removed from the Schuffenhauer scaffolds are calculated.");
+        }
+        // Going through the library
+        while (tmpReader.hasNext()) {
             try {
-                IAtomContainer tmpMolecule = (IAtomContainer) reader.next();
-                tmpMolecule = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
-                ///**
-                 tmpNumberCounter++;
+                IAtomContainer tmpMolecule = (IAtomContainer) tmpReader.next();
+                //Calculate SchuffenhauerScaffolds
+                if(tmpCalculateSchuffenhauerScaffold == true && tmpCalculateRings == false) {
+                    tmpMolecule = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
+                    //Generate control picture
+                    if(tmpGetPicture && (tmpPictureNumber-1) == tmpNumberCounter) {
+                        DepictionGenerator tmpGenerator = new DepictionGenerator();
+                        tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
+                        //Generate and save molecule picture
+                        BufferedImage tmpImgMol = tmpGenerator.depict(tmpMolecule).toImg();
+                        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest/SpeedTestMol.png").mkdirs();
+                        File tmpOutputMol = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest/SpeedTestMol.png");
+                        ImageIO.write(tmpImgMol, "png", tmpOutputMol);
+                    }
+                }
+                //Calculate SchuffenhauerScaffolds and Rings
+                if(tmpCalculateRings == true && tmpCalculateRemoveRings == false) {
+                    tmpMolecule = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
+                    List<AtomContainer> tmpRings = scaffoldGenerator.getRings(tmpMolecule,true);
+                    //Generate control pictures
+                    if(tmpGetPicture && (tmpPictureNumber-1) == tmpNumberCounter) {
+                        IAtomContainer tmpRing = tmpRings.get(tmpRings.size()-1);
+                        DepictionGenerator tmpGenerator = new DepictionGenerator();
+                        tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
+                        //Generate and save molecule picture
+                        BufferedImage tmpImgMol = tmpGenerator.depict(tmpMolecule).toImg();
+                        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest/SpeedTestMol.png").mkdirs();
+                        File tmpOutputMol = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest/SpeedTestMol.png");
+                        ImageIO.write(tmpImgMol, "png", tmpOutputMol);
+                        //Generate and save ring picture
+                        BufferedImage tmpImgRing = tmpGenerator.depict(tmpRing).toImg();
+                        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest/SpeedTestRing.png").mkdirs();
+                        File tmpOutputRing = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest/SpeedTestRing.png");
+                        ImageIO.write(tmpImgRing, "png", tmpOutputRing);
+                    }
+                }
+                //Calculate SchuffenhauerScaffolds, Rings and the molecules for which the rings have been removed from the Schuffenhauer scaffolds
+                if(tmpCalculateRemoveRings == true){
+                    tmpMolecule = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
+                    List<AtomContainer> tmpRings = scaffoldGenerator.getRings(tmpMolecule,true);
+                    for(IAtomContainer tmpRing : tmpRings) {
+                        IAtomContainer tmpRemoveMol = scaffoldGenerator.removeRing(tmpMolecule, tmpRing);
+                        //Generate control pictures
+                        if(tmpGetPicture && (tmpPictureNumber-1) == tmpNumberCounter) {
+                            DepictionGenerator tmpGenerator = new DepictionGenerator();
+                            tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
+                            //Generate and save molecule picture
+                            BufferedImage tmpImgMol = tmpGenerator.depict(tmpMolecule).toImg();
+                            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest/SpeedTestMol.png").mkdirs();
+                            File tmpOutputMol = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest/SpeedTestMol.png");
+                            ImageIO.write(tmpImgMol, "png", tmpOutputMol);
+                            //Generate and save ring picture
+                            BufferedImage tmpImgRing = tmpGenerator.depict(tmpRing).toImg();
+                            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest/SpeedTestRing.png").mkdirs();
+                            File tmpOutputRing = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest/SpeedTestRing.png");
+                            ImageIO.write(tmpImgRing, "png", tmpOutputRing);
+                            //Generate and save removed ring picture
+                            BufferedImage tmpImgRemove = tmpGenerator.depict(tmpRemoveMol).toImg();
+                            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest/SpeedTestRingRemoved.png").mkdirs();
+                            File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest/SpeedTestRingRemoved.png");
+                            ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
+                        }
+                    }
+                }
+                //First status report
+                if(tmpNumberCounter == 100000) {
+                    System.out.println("-----STATUS REPORT(1/4)-----");
+                    System.out.println("A quarter of all molecules completed");
+                    System.out.println("Number of exceptions: " + tmpExceptionCounter);
+                    System.out.println("Runtime: " + TimeUnit.NANOSECONDS.toSeconds((System.nanoTime() - tmpStartTime)) + " seconds");
+                }
+                //Second status report
+                if(tmpNumberCounter == 200000) {
+                    System.out.println("-----STATUS REPORT(2/4)-----");
+                    System.out.println("A half of all molecules completed");
+                    System.out.println("Number of exceptions: " + tmpExceptionCounter);
+                    System.out.println("Runtime: " + TimeUnit.NANOSECONDS.toSeconds((System.nanoTime() - tmpStartTime)) + " seconds");
+                }
+                //Third status report
+                if(tmpNumberCounter == 300000) {
+                    System.out.println("-----STATUS REPORT(3/4)-----");
+                    System.out.println("Two thirds of all molecules completed");
+                    System.out.println("Number of exceptions: " + tmpExceptionCounter);
+                    System.out.println("Runtime: " + TimeUnit.NANOSECONDS.toSeconds((System.nanoTime() - tmpStartTime)) + " seconds");
+                }
+                tmpNumberCounter++;
+                /** //Generate control picture
                  if(tmpNumberCounter == 4242) {
-                 //Generate picture of the SchuffenhauerScaffold with removed ring
-                 DepictionGenerator tmpGenerator = new DepictionGenerator();
-                 tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
-                 BufferedImage tmpImgRemove = tmpGenerator.depict(tmpMolecule).toImg();
-                 //Save the picture
-                 new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest1.png").mkdirs();
-                 File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest1.png");
-                 ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
-
+                     DepictionGenerator tmpGenerator = new DepictionGenerator();
+                     tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
+                     BufferedImage tmpImgRemove = tmpGenerator.depict(tmpMolecule).toImg();
+                     //Save the picture
+                     new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest1.png").mkdirs();
+                     File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest1.png");
+                     ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
                  }
-                 //*/
+                 */
             }
+            //Count exceptions
             catch(Exception e) {
                 tmpExceptionCounter++;
             }
         }
-        System.out.println("Number of Exceptions:"+ tmpExceptionCounter);
+        //End report
+        System.out.println("-----END REPORT-----");
+        System.out.println("All molecules completed");
+        System.out.println("Total number of exceptions: " + tmpExceptionCounter);
+        System.out.println("total Runtime: " + TimeUnit.NANOSECONDS.toSeconds((System.nanoTime() - tmpStartTime)) + " seconds");
     }
 }
