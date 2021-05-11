@@ -41,9 +41,9 @@
 
     <dependencies>
         <dependency>
-            <artifactId>cdk-bundle</artifactId>
             <groupId>org.openscience.cdk</groupId>
-            <version>2.3</version>
+            <artifactId>cdk-bundle</artifactId>
+            <version>2.5</version>
         </dependency>
     </dependencies>
 </project>

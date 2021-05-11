@@ -177,7 +177,7 @@ public class ScaffoldGeneratorTest {
         }
     }
     /**
-     * Test of Cycles.mcb() with V2000 and V3000 mol files.
+     * Test of removeRing() with V2000 and V3000 mol files.
      * Loads the 12 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and creates for each generated ring, the corresponding total molecule with removed ring.
      * All generated molecules are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
@@ -226,6 +226,64 @@ public class ScaffoldGeneratorTest {
                 new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/RingRemove" + tmpCounter + ".png").mkdirs();
                 File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/RingRemove" + tmpCounter + ".png");
                 ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
+                tmpCounter++;
+            }
+        }
+    }
+
+    /**
+     * Test of isRingTerminal() with V2000 and V3000 mol files.
+     * Loads the 12 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and creates for each generated terminal ring, the corresponding total molecule with removed ring.
+     * All generated molecules are saved as images in a subfolder of the scaffoldTestOutput folder.
+     * The subfolder has the name of the input file.
+     * @throws IOException if file format cant be detected
+     * @throws CDKException if file cant be read
+     * @throws CloneNotSupportedException if cloning is not possible
+     */
+    @Test
+    public void isRingTerminalTest() throws CDKException, CloneNotSupportedException, IOException {
+        for (int tmpCount = 2; tmpCount < 13; tmpCount++) {
+            String tmpFileName = "Test"+tmpCount;
+            //Get molecule path
+            //InputStream tmpInputStream = ScaffoldGenerator.class.getClassLoader().getSystemResourceAsStream(tmpFileName+".mol");
+            File tmpResourcesDirectory = new File("src/test/resources/" + tmpFileName + ".mol");
+            IAtomContainer tmpMolecule;
+            try (BufferedInputStream tmpInputStream = new BufferedInputStream(new FileInputStream(tmpResourcesDirectory))) {
+                //Get mol file version
+                FormatFactory tmpFactory = new FormatFactory();
+                IChemFormat tmpFormat = tmpFactory.guessFormat(tmpInputStream);
+                tmpMolecule = new AtomContainer();
+                //Load V2000 mol file
+                if (tmpFormat.getReaderClassName().contains("V2000")) {
+                    MDLV2000Reader tmpReader = new MDLV2000Reader(tmpInputStream);
+                    IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
+                    tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
+                    //Load V3000 mol file
+                } else if (tmpFormat.getReaderClassName().contains("V3000")) {
+                    MDLV3000Reader tmpReader = new MDLV3000Reader(tmpInputStream);
+                    IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
+                    tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
+                }
+            }
+            //Generate SchuffenhauerScaffold
+            IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
+            //Generate Rings
+            List<AtomContainer> tmpRings = scaffoldGenerator.getRings(tmpMolecule, true);
+            int tmpCounter = 1;
+            for (IAtomContainer tmpRing : tmpRings) {
+                //Check that rings are terminal
+                if(scaffoldGenerator.isRingTerminal(tmpSchuffenhauerScaffold, tmpRing)) {
+                    //Generate SchuffenhauerScaffold with removed ring
+                    IAtomContainer tmpRemovedSchuff = scaffoldGenerator.removeRing(tmpSchuffenhauerScaffold, tmpRing);
+                    //Generate picture of the SchuffenhauerScaffold with removed ring
+                    DepictionGenerator tmpGenerator = new DepictionGenerator();
+                    tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
+                    BufferedImage tmpImgRemove = tmpGenerator.depict(tmpRemovedSchuff).toImg();
+                    //Save the picture
+                    new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/TerminalRingRemove" + tmpCounter + ".png").mkdirs();
+                    File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/TerminalRingRemove" + tmpCounter + ".png");
+                    ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
+                }
                 tmpCounter++;
             }
         }
