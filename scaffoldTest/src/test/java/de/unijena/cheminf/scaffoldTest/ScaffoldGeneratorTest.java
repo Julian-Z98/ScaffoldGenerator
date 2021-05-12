@@ -162,7 +162,7 @@ public class ScaffoldGeneratorTest {
             //Generate the SchuffenhauerScaffold
             tmpMolecule = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
             //Generate rings
-            List<AtomContainer> tmpRings = scaffoldGenerator.getRings(tmpMolecule,true);
+            List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(tmpMolecule,true);
             //Generate pictures of the rings
             DepictionGenerator tmpGenerator = new DepictionGenerator();
             tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
@@ -214,7 +214,7 @@ public class ScaffoldGeneratorTest {
             //Generate SchuffenhauerScaffold
             IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
             //Generate Rings
-            List<AtomContainer> tmpRings = scaffoldGenerator.getRings(tmpMolecule, true);
+            List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(tmpMolecule, true);
             int tmpCounter = 1;
             for (IAtomContainer tmpRing : tmpRings) {
                 //Generate SchuffenhauerScaffold with removed ring
@@ -269,7 +269,7 @@ public class ScaffoldGeneratorTest {
             //Generate SchuffenhauerScaffold
             IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
             //Generate Rings
-            List<AtomContainer> tmpRings = scaffoldGenerator.getRings(tmpMolecule, true);
+            List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(tmpMolecule, true);
             int tmpCounter = 1;
             for (IAtomContainer tmpRing : tmpRings) {
                 //Check that rings are terminal
@@ -289,6 +289,49 @@ public class ScaffoldGeneratorTest {
             }
         }
     }
+
+    @Test
+    public void getIterativeRemovalTest() throws CDKException, CloneNotSupportedException, IOException {
+        for (int tmpCount = 2; tmpCount < 13; tmpCount++) {
+            String tmpFileName = "Test"+ tmpCount;
+            //Get molecule path
+            //InputStream tmpInputStream = ScaffoldGenerator.class.getClassLoader().getSystemResourceAsStream(tmpFileName+".mol");
+            File tmpResourcesDirectory = new File("src/test/resources/" + tmpFileName + ".mol");
+            IAtomContainer tmpMolecule;
+            try (BufferedInputStream tmpInputStream = new BufferedInputStream(new FileInputStream(tmpResourcesDirectory))) {
+                //Get mol file version
+                FormatFactory tmpFactory = new FormatFactory();
+                IChemFormat tmpFormat = tmpFactory.guessFormat(tmpInputStream);
+                tmpMolecule = new AtomContainer();
+                //Load V2000 mol file
+                if (tmpFormat.getReaderClassName().contains("V2000")) {
+                    MDLV2000Reader tmpReader = new MDLV2000Reader(tmpInputStream);
+                    IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
+                    tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
+                    //Load V3000 mol file
+                } else if (tmpFormat.getReaderClassName().contains("V3000")) {
+                    MDLV3000Reader tmpReader = new MDLV3000Reader(tmpInputStream);
+                    IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
+                    tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
+                }
+            }
+            //Generate Iterative Removal
+            List<IAtomContainer> tmpMolecules = scaffoldGenerator.getIterativeRemoval(tmpMolecule);
+            int tmpCounter = 1;
+            for (IAtomContainer tmpIterative : tmpMolecules) {
+                //Generate picture of the iterativ
+                DepictionGenerator tmpGenerator = new DepictionGenerator();
+                tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
+                BufferedImage tmpImgRemove = tmpGenerator.depict(tmpIterative).toImg();
+                //Save the picture
+                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Iterative" + tmpCounter + ".png").mkdirs();
+                File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Iterative" + tmpCounter + ".png");
+                ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
+                tmpCounter++;
+            }
+        }
+    }
+
     /**
      * Speed test for the getSchuffenhauerScaffold(), getRing() and removeRing() Method with over 400000 molecules from the COCONUT DB.
      * Which methods are tested can be set via the booleans.
@@ -344,7 +387,7 @@ public class ScaffoldGeneratorTest {
                 //Calculate SchuffenhauerScaffolds and Rings
                 if(tmpCalculateRings == true && tmpCalculateRemoveRings == false) {
                     tmpMolecule = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
-                    List<AtomContainer> tmpRings = scaffoldGenerator.getRings(tmpMolecule,true);
+                    List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(tmpMolecule,true);
                     //Generate control pictures
                     if(tmpGetPicture && (tmpPictureNumber-1) == tmpNumberCounter) {
                         IAtomContainer tmpRing = tmpRings.get(tmpRings.size()-1);
@@ -365,7 +408,7 @@ public class ScaffoldGeneratorTest {
                 //Calculate SchuffenhauerScaffolds, Rings and the molecules for which the rings have been removed from the Schuffenhauer scaffolds
                 if(tmpCalculateRemoveRings == true){
                     tmpMolecule = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
-                    List<AtomContainer> tmpRings = scaffoldGenerator.getRings(tmpMolecule,true);
+                    List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(tmpMolecule,true);
                     for(IAtomContainer tmpRing : tmpRings) {
                         IAtomContainer tmpRemoveMol = scaffoldGenerator.removeRing(tmpMolecule, tmpRing);
                         //Generate control pictures

@@ -26,6 +26,7 @@
 
 package de.unijena.cheminf.scaffoldTest;
 
+import org.openscience.cdk.Atom;
 import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.fragment.MurckoFragmenter;
@@ -36,6 +37,7 @@ import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IRingSet;
 import org.openscience.cdk.tools.CDKHydrogenAdder;
+import org.openscience.cdk.tools.manipulator.AtomContainerComparator;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
 import java.util.ArrayList;
@@ -111,7 +113,7 @@ public class ScaffoldGenerator {
      * @param tmpWithDoubleO if true, double bonded oxygens are retained on the ring.
      * @return rings of the inserted molecule.
      */
-    public List<AtomContainer> getRings(IAtomContainer tmpMolecule, boolean tmpWithDoubleO) throws CloneNotSupportedException {
+    public List<IAtomContainer> getRings(IAtomContainer tmpMolecule, boolean tmpWithDoubleO) throws CloneNotSupportedException {
         //Store the number of each C that is double-bonded to O and the respective bond
         HashMap<Object, IBond> tmpAddAtomMap = new HashMap((tmpMolecule.getAtomCount()/2), 1); //HashMap cannot be larger than the total number of atoms. Key = C and Val = Bond
         for(IBond tmpBond: tmpMolecule.bonds()) {
@@ -127,31 +129,33 @@ public class ScaffoldGenerator {
         //Generate cycles
         Cycles tmpNewCycles = Cycles.mcb(tmpMolecule);
         IRingSet tmpRingSet = tmpNewCycles.toRingSet();
-        List<AtomContainer> tmpCycles = new ArrayList<>(tmpNewCycles.numberOfCycles());
+        List<IAtomContainer> tmpCycles = new ArrayList<>(tmpNewCycles.numberOfCycles());
         for(int tmpCount = 0; tmpCount < tmpNewCycles.numberOfCycles(); tmpCount++) { //Go through all generated rings
             IAtomContainer tmpCycle = tmpRingSet.getAtomContainer(tmpCount); //Store rings as AtomContainer
             //Add the missing O and the respective bond
-            for(IAtom tmpAtom : tmpCycle.atoms()) {
-                if(tmpAddAtomMap.containsKey(tmpAtom.getProperty(this.atomCounter))) { //Every C that occurs in the tmpAddAtomMap and in the SchuffenhauerScaffold
-                    IBond tmpNewBond = null;
-                    if(tmpAddAtomMap.get(tmpAtom.getProperty(this.atomCounter)).getAtom(0).getSymbol() == "C") { //C in first position in the bond and O in second position
-                        IAtom tmpClonedO = tmpAddAtomMap.get(tmpAtom.getProperty(this.atomCounter)).getAtom(1).clone();
-                        tmpCycle.addAtom(tmpClonedO); //Add cloned O to the molecule
-                        tmpNewBond = tmpAddAtomMap.get(tmpAtom.getProperty(this.atomCounter)).clone(); //Clone the bond from the original molecule
-                        tmpNewBond.setAtom(tmpAtom,0); //Add tmpMurckoFragment C to the bond
-                        tmpNewBond.setAtom(tmpClonedO,1); //Add cloned O to the bond
+            if(tmpWithDoubleO == true) {
+                for(IAtom tmpAtom : tmpCycle.atoms()) {
+                    if(tmpAddAtomMap.containsKey(tmpAtom.getProperty(this.atomCounter))) { //Every C that occurs in the tmpAddAtomMap and in the SchuffenhauerScaffold
+                        IBond tmpNewBond = null;
+                        if(tmpAddAtomMap.get(tmpAtom.getProperty(this.atomCounter)).getAtom(0).getSymbol() == "C") { //C in first position in the bond and O in second position
+                            IAtom tmpClonedO = tmpAddAtomMap.get(tmpAtom.getProperty(this.atomCounter)).getAtom(1).clone();
+                            tmpCycle.addAtom(tmpClonedO); //Add cloned O to the molecule
+                            tmpNewBond = tmpAddAtomMap.get(tmpAtom.getProperty(this.atomCounter)).clone(); //Clone the bond from the original molecule
+                            tmpNewBond.setAtom(tmpAtom,0); //Add tmpMurckoFragment C to the bond
+                            tmpNewBond.setAtom(tmpClonedO,1); //Add cloned O to the bond
+                        }
+                        if(tmpAddAtomMap.get(tmpAtom.getProperty(this.atomCounter)).getAtom(0).getSymbol() == "O") { //O in first position in the bond and C in second position
+                            IAtom tmpClonedO = tmpAddAtomMap.get(tmpAtom.getProperty(this.atomCounter)).getAtom(0).clone();
+                            tmpCycle.addAtom(tmpClonedO); //Add cloned O to the molecule
+                            tmpNewBond = tmpAddAtomMap.get(tmpAtom.getProperty(this.atomCounter)).clone(); //Clone the bond from the original molecule
+                            tmpNewBond.setAtom(tmpAtom,1); //Add tmpMurckoFragment C to the bond
+                            tmpNewBond.setAtom(tmpClonedO,0); //Add cloned O to the bond
+                        }
+                        tmpCycle.addBond(tmpNewBond); //Add the new bond
                     }
-                    if(tmpAddAtomMap.get(tmpAtom.getProperty(this.atomCounter)).getAtom(0).getSymbol() == "O") { //O in first position in the bond and C in second position
-                        IAtom tmpClonedO = tmpAddAtomMap.get(tmpAtom.getProperty(this.atomCounter)).getAtom(0).clone();
-                        tmpCycle.addAtom(tmpClonedO); //Add cloned O to the molecule
-                        tmpNewBond = tmpAddAtomMap.get(tmpAtom.getProperty(this.atomCounter)).clone(); //Clone the bond from the original molecule
-                        tmpNewBond.setAtom(tmpAtom,1); //Add tmpMurckoFragment C to the bond
-                        tmpNewBond.setAtom(tmpClonedO,0); //Add cloned O to the bond
-                    }
-                    tmpCycle.addBond(tmpNewBond); //Add the new bond
                 }
             }
-            tmpCycles.add((AtomContainer) tmpCycle); //Add rings to list
+            tmpCycles.add((IAtomContainer) tmpCycle); //Add rings to list
         }
         return tmpCycles;
     }
@@ -222,7 +226,6 @@ public class ScaffoldGenerator {
         return tmpMoleculeClone;
     }
 
-
     /**
      * Checks whether the tmpRing in the tmpMolecule is terminal. This means whether it can be removed without creating several unconnected parts.
      * Important: Property (this.atomCounter) must be set for tmpMolecule/tmpRing and match.
@@ -247,5 +250,39 @@ public class ScaffoldGenerator {
         ConnectivityChecker tmpChecker = new ConnectivityChecker();
         boolean tmpRingisTerminal = tmpChecker.isConnected(tmpClonedMolecule);
         return tmpRingisTerminal;
+    }
+
+    /**
+     * Iteratively removes the terminal rings. All resulting Schuffenhauer scaffolds are returned. Duplicates are not permitted.
+     * The Schuffenhauer scaffold of the entire entered molecule is stored first in the list.
+     * @param tmpMolecule Molecule to be disassembled.
+     * @return List with all resulting Schuffenhauer scaffolds.
+     * @throws CDKException if the CDKHydrogenAdder has a problem.
+     * @throws CloneNotSupportedException if cloning is not possible.
+     */
+    public List<IAtomContainer> getIterativeRemoval(IAtomContainer tmpMolecule) throws CDKException, CloneNotSupportedException {
+        List<IAtomContainer> tmpIterationList = new ArrayList<>();//Größe??
+        tmpIterationList.add(this.getSchuffenhauerScaffold(tmpMolecule)); //Add origin SchuffenhauerScaffold
+        AtomContainerComparator tmpComparator = new AtomContainerComparator();
+        for(int tmpCounter = 0 ; tmpCounter < tmpIterationList.size(); tmpCounter++) { //Go through all the molecules created
+            IAtomContainer tmpIterMol = tmpIterationList.get(tmpCounter); //Take the next molecule from the list
+            for(IAtomContainer tmpRing : this.getRings(tmpIterMol,true)) { //Go through all rings
+                if(this.getRings(tmpIterMol,true).size() < 2) { //Skip molcule if it has less than 2 rings
+                    continue;
+                }
+                if(this.isRingTerminal(tmpIterMol, tmpRing)) { //Consider all terminal rings
+                    boolean tmpIsInList = false;
+                    for(IAtomContainer tmpSavedMol : tmpIterationList) { //Go through the list of all molecules already created
+                        if(tmpComparator.compare(tmpSavedMol,this.getSchuffenhauerScaffold(this.removeRing(tmpIterMol, tmpRing)))== 0) {// Check if the molecule has already been added to the list
+                            tmpIsInList = true;
+                        }
+                    }
+                    if(tmpIsInList == false) { //Add the molecule only if it is not already in the list
+                        tmpIterationList.add(this.getSchuffenhauerScaffold(this.removeRing(tmpIterMol, tmpRing)));
+                    }
+                }
+            }
+        }
+        return tmpIterationList;
     }
 }
