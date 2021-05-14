@@ -39,6 +39,8 @@ import org.openscience.cdk.io.MDLV2000Reader;
 import org.openscience.cdk.io.MDLV3000Reader;
 import org.openscience.cdk.io.formats.IChemFormat;
 import org.openscience.cdk.io.iterator.IteratingSDFReader;
+import org.openscience.cdk.smiles.SmiFlavor;
+import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.smiles.SmilesParser;
 
 import javax.imageio.ImageIO;
@@ -84,7 +86,7 @@ public class ScaffoldGeneratorTest {
                 MDLV2000Reader tmpReader = new MDLV2000Reader(tmpInputStream);
                 IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
                 tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
-                //Load V3000 mol file
+            //Load V3000 mol file
             } else if(tmpFormat.getReaderClassName().contains("V3000")) {
                 MDLV3000Reader tmpReader = new MDLV3000Reader(tmpInputStream);
                 IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
@@ -153,7 +155,7 @@ public class ScaffoldGeneratorTest {
                 MDLV2000Reader tmpReader = new MDLV2000Reader(tmpInputStream);
                 IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
                 tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
-                //Load V3000 mol file
+            //Load V3000 mol file
             } else if (tmpFormat.getReaderClassName().contains("V3000")) {
                 MDLV3000Reader tmpReader = new MDLV3000Reader(tmpInputStream);
                 IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
@@ -204,7 +206,7 @@ public class ScaffoldGeneratorTest {
                     MDLV2000Reader tmpReader = new MDLV2000Reader(tmpInputStream);
                     IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
                     tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
-                    //Load V3000 mol file
+                //Load V3000 mol file
                 } else if (tmpFormat.getReaderClassName().contains("V3000")) {
                     MDLV3000Reader tmpReader = new MDLV3000Reader(tmpInputStream);
                     IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
@@ -259,7 +261,7 @@ public class ScaffoldGeneratorTest {
                     MDLV2000Reader tmpReader = new MDLV2000Reader(tmpInputStream);
                     IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
                     tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
-                    //Load V3000 mol file
+                //Load V3000 mol file
                 } else if (tmpFormat.getReaderClassName().contains("V3000")) {
                     MDLV3000Reader tmpReader = new MDLV3000Reader(tmpInputStream);
                     IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
@@ -290,9 +292,18 @@ public class ScaffoldGeneratorTest {
         }
     }
 
+    /**
+     * Test of getIterativeRemoval() with V2000 and V3000 mol files.
+     * Loads the 12 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and iteratively removes the terminal rings.
+     * All generated molecules are saved as images in a subfolder of the scaffoldTestOutput folder.
+     * The subfolder has the name of the input file.
+     * @throws IOException if file format cant be detected
+     * @throws CDKException if file cant be read
+     * @throws CloneNotSupportedException if cloning is not possible
+     */
     @Test
     public void getIterativeRemovalTest() throws CDKException, CloneNotSupportedException, IOException {
-        for (int tmpCount = 2; tmpCount < 13; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 13; tmpCount++) {
             String tmpFileName = "Test"+ tmpCount;
             //Get molecule path
             //InputStream tmpInputStream = ScaffoldGenerator.class.getClassLoader().getSystemResourceAsStream(tmpFileName+".mol");
@@ -308,18 +319,18 @@ public class ScaffoldGeneratorTest {
                     MDLV2000Reader tmpReader = new MDLV2000Reader(tmpInputStream);
                     IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
                     tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
-                    //Load V3000 mol file
+                //Load V3000 mol file
                 } else if (tmpFormat.getReaderClassName().contains("V3000")) {
                     MDLV3000Reader tmpReader = new MDLV3000Reader(tmpInputStream);
                     IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
                     tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
                 }
             }
-            //Generate Iterative Removal
+            //Generate a list of molecules with iteratively removed terminal rings
             List<IAtomContainer> tmpMolecules = scaffoldGenerator.getIterativeRemoval(tmpMolecule);
             int tmpCounter = 1;
             for (IAtomContainer tmpIterative : tmpMolecules) {
-                //Generate picture of the iterativ
+                //Generate picture of the molecule
                 DepictionGenerator tmpGenerator = new DepictionGenerator();
                 tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
                 BufferedImage tmpImgRemove = tmpGenerator.depict(tmpIterative).toImg();
@@ -331,7 +342,6 @@ public class ScaffoldGeneratorTest {
             }
         }
     }
-
     /**
      * Speed test for the getSchuffenhauerScaffold(), getRing() and removeRing() Method with over 400000 molecules from the COCONUT DB.
      * Which methods are tested can be set via the booleans.
@@ -341,14 +351,16 @@ public class ScaffoldGeneratorTest {
     @Test
     public void ScaffoldGeneratorSpeedTest() throws FileNotFoundException {
         //Options
-        boolean tmpCalculateSchuffenhauerScaffold = false; //Generate SchuffenhauerScaffolds
+        boolean tmpCalculateSchuffenhauerScaffold = true; //Generate SchuffenhauerScaffolds
         boolean tmpCalculateRings = false; //Calculate Rings. The Schuffenhauer scaffolds are also calculated for this.
         boolean tmpCalculateRemoveRings = true; //The molecules for which the rings have been removed from the Schuffenhauer scaffolds are calculated. The Schuffenhauer scaffolds and the Rings are also calculated for this.
-        boolean tmpGetPicture = true; //Show control pictures from one molecule.
-        int tmpPictureNumber = 4242; //Number of the molecule from which control images are to be taken(from 0 to 406000)
+        boolean tmpIterativeRemoval = false; //Creates all molecules that are generated by iterative terminal removal of rings.
+        boolean tmpGetPicture = false; //Show control pictures from one molecule.
+        int tmpPictureNumber = 2461; //Number of the molecule from which control images are to be taken(from 0 to 406000)
         //Counter
         int tmpExceptionCounter = 0;
         int tmpNumberCounter = 0;
+        int tmpToManyRingsCounter = 0;
         //Loading and reading the library
         File tmpResourcesDirectory = new File("src/test/resources/COCONUT_DB.sdf");
         IteratingSDFReader tmpReader = new IteratingSDFReader( new FileInputStream(tmpResourcesDirectory), DefaultChemObjectBuilder.getInstance());
@@ -362,9 +374,14 @@ public class ScaffoldGeneratorTest {
         if(tmpCalculateRings == true && tmpCalculateRemoveRings == false) {
             System.out.println("In this test, the Schuffenhauer scaffolds and their rings are calculated for all molecules.");
         }
-        if(tmpCalculateRemoveRings == true){
+        if(tmpCalculateRemoveRings == true && tmpIterativeRemoval == false){
             System.out.println("In this test, the Schuffenhauer scaffolds and their rings are calculated for all molecules.");
             System.out.println("In addition, the molecules for which the rings have been removed from the Schuffenhauer scaffolds are calculated.");
+        }
+        if(tmpIterativeRemoval == true){
+            System.out.println("In this test, the Schuffenhauer scaffolds and their rings are calculated for all molecules.");
+            System.out.println("The molecules for which the rings have been removed from the Schuffenhauer scaffolds are calculated.");
+            System.out.println("In addition, all molecules with with iteratively removed terminal rings are calculated");
         }
         // Going through the library
         while (tmpReader.hasNext()) {
@@ -374,7 +391,7 @@ public class ScaffoldGeneratorTest {
                 if(tmpCalculateSchuffenhauerScaffold == true && tmpCalculateRings == false) {
                     tmpMolecule = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
                     //Generate control picture
-                    if(tmpGetPicture && (tmpPictureNumber-1) == tmpNumberCounter) {
+                    if(tmpGetPicture && (tmpPictureNumber) == tmpNumberCounter) {
                         DepictionGenerator tmpGenerator = new DepictionGenerator();
                         tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
                         //Generate and save molecule picture
@@ -389,7 +406,7 @@ public class ScaffoldGeneratorTest {
                     tmpMolecule = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
                     List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(tmpMolecule,true);
                     //Generate control pictures
-                    if(tmpGetPicture && (tmpPictureNumber-1) == tmpNumberCounter) {
+                    if(tmpGetPicture && (tmpPictureNumber) == tmpNumberCounter) {
                         IAtomContainer tmpRing = tmpRings.get(tmpRings.size()-1);
                         DepictionGenerator tmpGenerator = new DepictionGenerator();
                         tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
@@ -406,13 +423,13 @@ public class ScaffoldGeneratorTest {
                     }
                 }
                 //Calculate SchuffenhauerScaffolds, Rings and the molecules for which the rings have been removed from the Schuffenhauer scaffolds
-                if(tmpCalculateRemoveRings == true){
+                if(tmpCalculateRemoveRings == true && tmpIterativeRemoval == false) {
                     tmpMolecule = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
                     List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(tmpMolecule,true);
                     for(IAtomContainer tmpRing : tmpRings) {
                         IAtomContainer tmpRemoveMol = scaffoldGenerator.removeRing(tmpMolecule, tmpRing);
                         //Generate control pictures
-                        if(tmpGetPicture && (tmpPictureNumber-1) == tmpNumberCounter) {
+                        if(tmpGetPicture && (tmpPictureNumber) == tmpNumberCounter) {
                             DepictionGenerator tmpGenerator = new DepictionGenerator();
                             tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
                             //Generate and save molecule picture
@@ -433,6 +450,32 @@ public class ScaffoldGeneratorTest {
                         }
                     }
                 }
+                //Calculate a list of molecules with iteratively removed terminal rings
+                if(tmpIterativeRemoval == true) {
+                    if(scaffoldGenerator.getRings(tmpMolecule,false).size() > 10) {
+                        tmpToManyRingsCounter++;
+                        continue;
+                    }
+                    List<IAtomContainer> tmpIterations = scaffoldGenerator.getIterativeRemoval(tmpMolecule);
+                    if(tmpGetPicture && (tmpPictureNumber) == tmpNumberCounter) {
+                        for(IAtomContainer tmpIteration : tmpIterations) {
+                        //Generate control pictures
+                            DepictionGenerator tmpGenerator = new DepictionGenerator();
+                            tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
+                            //Generate and save molecule picture
+                            BufferedImage tmpImgMol = tmpGenerator.depict(tmpMolecule).toImg();
+                            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest/SpeedTestMol.png").mkdirs();
+                            File tmpOutputMol = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest/SpeedTestMol.png");
+                            ImageIO.write(tmpImgMol, "png", tmpOutputMol);
+                            //Generate picture of the Iteration
+                            BufferedImage tmpImgIter = tmpGenerator.depict(tmpIteration).toImg();
+                            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest/SpeedTestIteration.png").mkdirs();
+                            File tmpOutputIter = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest/SpeedTestIteration.png");
+                            ImageIO.write(tmpImgIter, "png", tmpOutputIter);
+                        }
+                    }
+                }
+
                 //First status report
                 if(tmpNumberCounter == 100000) {
                     System.out.println("-----STATUS REPORT(1/4)-----");
@@ -455,17 +498,6 @@ public class ScaffoldGeneratorTest {
                     System.out.println("Runtime: " + TimeUnit.NANOSECONDS.toSeconds((System.nanoTime() - tmpStartTime)) + " seconds");
                 }
                 tmpNumberCounter++;
-                /** //Generate control picture
-                 if(tmpNumberCounter == 4242) {
-                     DepictionGenerator tmpGenerator = new DepictionGenerator();
-                     tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
-                     BufferedImage tmpImgRemove = tmpGenerator.depict(tmpMolecule).toImg();
-                     //Save the picture
-                     new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest1.png").mkdirs();
-                     File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest1.png");
-                     ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
-                 }
-                 */
             }
             //Count exceptions
             catch(Exception e) {
