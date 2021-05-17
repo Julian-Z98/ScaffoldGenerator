@@ -283,4 +283,37 @@ public class ScaffoldGenerator {
         }
         return tmpIterationList;
     }
+
+    /**
+     * Iteratively removes the terminal rings. All resulting Schuffenhauer scaffolds are saved in a tree.
+     * A new level is created with each removal step. Duplicates are permitted.
+     * The Schuffenhauer scaffold of the entire entered molecule is the root of the tree.
+     * @param tmpMolecule Molecule to be disassembled.
+     * @return List with all resulting Schuffenhauer scaffolds.
+     * @throws CDKException if the CDKHydrogenAdder has a problem.
+     * @throws CloneNotSupportedException if cloning is not possible.
+     */
+    public TreeNode<IAtomContainer> getRemovalTree(IAtomContainer tmpMolecule) throws CDKException, CloneNotSupportedException {
+        List<IAtomContainer> tmpIterationList = new ArrayList<>();//List of all fragments already created
+        List<TreeNode> tmpNodeList = new ArrayList<>();
+        tmpIterationList.add(this.getSchuffenhauerScaffold(tmpMolecule)); //Add origin SchuffenhauerScaffold
+        TreeNode<IAtomContainer> tmpParentTree = new TreeNode<IAtomContainer>(this.getSchuffenhauerScaffold(tmpMolecule)); //Set origin Schuffenhauer as root
+        tmpNodeList.add(tmpParentTree);
+        int tmpLevelCounter = 0; //Shows which level of the tree we are currently on.
+        for(int tmpCounter = 0 ; tmpCounter < tmpIterationList.size(); tmpCounter++) { //Go through all the molecules created
+            IAtomContainer tmpIterMol = tmpIterationList.get(tmpCounter); //Take the next molecule from the list
+            for(IAtomContainer tmpRing : this.getRings(tmpIterMol,true)) { //Go through all rings
+                if(this.getRings(tmpIterMol,true).size() < 2) { //Skip molcule if it has less than 2 rings
+                    continue;
+                }
+                if(this.isRingTerminal(tmpIterMol, tmpRing)) { //Consider all terminal rings
+                    tmpNodeList.add(tmpNodeList.get(tmpLevelCounter).addChild(this.getSchuffenhauerScaffold(this.removeRing(tmpIterMol, tmpRing)))); //Add next node to current Level
+                    tmpIterationList.add(this.getSchuffenhauerScaffold(this.removeRing(tmpIterMol, tmpRing))); // The molecule added to the tree is added to the list
+                }
+            }
+            tmpLevelCounter++; //Increases when a level is completed
+        }
+        return tmpParentTree;
+    }
+
 }
