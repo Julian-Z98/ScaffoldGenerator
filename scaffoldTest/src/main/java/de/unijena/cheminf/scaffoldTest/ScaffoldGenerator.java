@@ -294,16 +294,17 @@ public class ScaffoldGenerator {
      * @throws CloneNotSupportedException if cloning is not possible.
      */
     public TreeNode<IAtomContainer> getRemovalTree(IAtomContainer tmpMolecule) throws CDKException, CloneNotSupportedException {
-        List<IAtomContainer> tmpIterationList = new ArrayList<>();//List of all fragments already created
-        List<TreeNode> tmpNodeList = new ArrayList<>();
+        List<IAtomContainer> tmpIterationList = new ArrayList<>(); //List of all fragments already created
+        List<TreeNode> tmpNodeList = new ArrayList<>(); //List of all TreeNodes
         tmpIterationList.add(this.getSchuffenhauerScaffold(tmpMolecule)); //Add origin SchuffenhauerScaffold
         TreeNode<IAtomContainer> tmpParentTree = new TreeNode<IAtomContainer>(this.getSchuffenhauerScaffold(tmpMolecule)); //Set origin Schuffenhauer as root
         tmpNodeList.add(tmpParentTree);
         int tmpLevelCounter = 0; //Shows which level of the tree we are currently on.
         for(int tmpCounter = 0 ; tmpCounter < tmpIterationList.size(); tmpCounter++) { //Go through all the molecules created
             IAtomContainer tmpIterMol = tmpIterationList.get(tmpCounter); //Take the next molecule from the list
-            for(IAtomContainer tmpRing : this.getRings(tmpIterMol,true)) { //Go through all rings
-                if(this.getRings(tmpIterMol,true).size() < 2) { //Skip molcule if it has less than 2 rings
+            List<IAtomContainer> tmpRings = this.getRings(tmpIterMol,true);
+            for(IAtomContainer tmpRing : tmpRings) { //Go through all rings
+                if(tmpRings.size() < 2) { //Skip molecule if it has less than 2 rings
                     continue;
                 }
                 if(this.isRingTerminal(tmpIterMol, tmpRing)) { //Consider all terminal rings
@@ -315,5 +316,4 @@ public class ScaffoldGenerator {
         }
         return tmpParentTree;
     }
-
 }

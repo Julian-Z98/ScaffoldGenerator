@@ -47,6 +47,7 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -413,6 +414,73 @@ public class ScaffoldGeneratorTest {
                     ImageIO.write(tmpSecImgRemove, "png", tmpSecOutputRemove);
                 }
             }*/
+        }
+    }
+
+    /**
+     * Test of getRemovalTree() with V2000 and V3000 mol files.
+     * Loads one molecule(insert in tmpFileName)  from the Resources folder, iteratively removes the terminal rings and saves the molecules in a tree.
+     * Saves the parent and the children of one Node and saves them as images.
+     * Set file with: tmpFileName
+     * Set Node with: tmpTestNumber
+     * @throws IOException if file format cant be detected
+     * @throws CDKException if file cant be read
+     * @throws CloneNotSupportedException if cloning is not possible
+     */
+    @Test
+    public void getRemovalTreeStructureTest() throws CDKException, CloneNotSupportedException, IOException {
+        String tmpFileName = "Test13"; //File to be tested
+        int tmpTestNumber = 2; //Node whose children and parent are to be displayed
+        //Get molecule path
+        //InputStream tmpInputStream = ScaffoldGenerator.class.getClassLoader().getSystemResourceAsStream(tmpFileName+".mol");
+        File tmpResourcesDirectory = new File("src/test/resources/" + tmpFileName + ".mol");
+        IAtomContainer tmpMolecule;
+        try (BufferedInputStream tmpInputStream = new BufferedInputStream(new FileInputStream(tmpResourcesDirectory))) {
+            //Get mol file version
+            FormatFactory tmpFactory = new FormatFactory();
+            IChemFormat tmpFormat = tmpFactory.guessFormat(tmpInputStream);
+            tmpMolecule = new AtomContainer();
+            //Load V2000 mol file
+            if (tmpFormat.getReaderClassName().contains("V2000")) {
+                MDLV2000Reader tmpReader = new MDLV2000Reader(tmpInputStream);
+                IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
+                tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
+                //Load V3000 mol file
+            } else if (tmpFormat.getReaderClassName().contains("V3000")) {
+                MDLV3000Reader tmpReader = new MDLV3000Reader(tmpInputStream);
+                IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
+                tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
+            }
+        }
+        //Generate a tree of molecules with iteratively removed terminal rings
+        TreeNodeIter<IAtomContainer> tmpNodeIter = new TreeNodeIter<>(scaffoldGenerator.getRemovalTree(tmpMolecule));
+        int tmpCounter = 0;
+        while(tmpNodeIter.hasNext()) { // As long as there are still other molecules in the tree
+            TreeNode<IAtomContainer> tmpMoleculeNode = tmpNodeIter.next(); // Next molecule in tree
+            if(tmpCounter == tmpTestNumber -1){
+                //Save the picture of the test Node
+                DepictionGenerator tmpGenerator = new DepictionGenerator();
+                BufferedImage tmpNodeImg = tmpGenerator.depict(tmpMoleculeNode.data).toImg();
+                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/TestNode.png").mkdirs();
+                File tmpNodeFile = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/TestNode.png");
+                ImageIO.write(tmpNodeImg, "png", tmpNodeFile);
+                //Save the picture of the parent
+                BufferedImage tmpParentImg = tmpGenerator.depict(tmpMoleculeNode.parent.data).toImg();
+                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/ParentNode.png").mkdirs();
+                File tmpParentFile = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/ParentNode.png");
+                ImageIO.write(tmpParentImg, "png", tmpParentFile);
+                //Save pictures of the children
+                int tmpChildCounter = 0;
+                for(TreeNode<IAtomContainer> tmpNode : tmpMoleculeNode.children) {
+                    tmpChildCounter++;
+                    BufferedImage tmpChildImg = tmpGenerator.depict(tmpNode.data).toImg();
+                    new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/ChildNode" + tmpChildCounter + ".png").mkdirs();
+                    File tmpChildFile = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/ChildNode" + tmpChildCounter + ".png");
+                    ImageIO.write(tmpChildImg, "png", tmpChildFile);
+                }
+                break;
+            }
+            tmpCounter++;
         }
     }
     /**
