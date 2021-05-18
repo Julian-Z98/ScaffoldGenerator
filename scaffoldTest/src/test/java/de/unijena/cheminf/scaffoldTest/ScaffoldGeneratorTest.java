@@ -344,8 +344,8 @@ public class ScaffoldGeneratorTest {
     }
 
     /**
-     * Test of getIterativeRemoval() with V2000 and V3000 mol files.
-     * Loads the 12 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and iteratively removes the terminal rings.
+     * Test of getRemovalTree() with V2000 and V3000 mol files.
+     * Loads the 13 Test(Test1.mol-Test13.mol) molfiles from the Resources folder, iteratively removes the terminal rings and saves the molecules in a tree.
      * All generated molecules are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
      * @throws IOException if file format cant be detected
@@ -354,8 +354,8 @@ public class ScaffoldGeneratorTest {
      */
     @Test
     public void getRemovalTreeTest() throws CDKException, CloneNotSupportedException, IOException {
-        for (int tmpCount = 1; tmpCount < 2; tmpCount++) {
-            String tmpFileName = "Test13";
+        for (int tmpCount = 1; tmpCount < 14; tmpCount++) {
+            String tmpFileName = "Test" + tmpCount;
             //Get molecule path
             //InputStream tmpInputStream = ScaffoldGenerator.class.getClassLoader().getSystemResourceAsStream(tmpFileName+".mol");
             File tmpResourcesDirectory = new File("src/test/resources/" + tmpFileName + ".mol");
@@ -378,6 +378,20 @@ public class ScaffoldGeneratorTest {
                 }
             }
             //Generate a tree of molecules with iteratively removed terminal rings
+            TreeNodeIter<IAtomContainer> tmpNodeIter = new TreeNodeIter<>(scaffoldGenerator.getRemovalTree(tmpMolecule));
+            int tmpCounter = 0;
+            while(tmpNodeIter.hasNext()) { // As long as there are still other molecules in the tree
+                tmpCounter++;
+                TreeNode<IAtomContainer> tmpMoleculeNode = tmpNodeIter.next(); // Next molecule in tree
+                //Save the picture
+                DepictionGenerator tmpGenerator = new DepictionGenerator();
+                BufferedImage tmpSecImgRemove = tmpGenerator.depict(tmpMoleculeNode.data).toImg();
+                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/TreeTest" + tmpCounter  + "Level" + tmpMoleculeNode.getLevel() + ".png").mkdirs();
+                File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/TreeTest" + tmpCounter +  "Level" + tmpMoleculeNode.getLevel() + ".png");
+                ImageIO.write(tmpSecImgRemove, "png", tmpSecOutputRemove);
+            }
+            /**
+            //Code to check the tree structure
             TreeNode<IAtomContainer> tmpMoleculeTree = scaffoldGenerator.getRemovalTree(tmpMolecule);
             //First Level
             for(int tmpCounter = 0;tmpCounter < tmpMoleculeTree.children.size(); tmpCounter++) {
@@ -391,7 +405,6 @@ public class ScaffoldGeneratorTest {
                 ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
                 //Second Level
                 for(int tmpSecondCounter = 0;tmpSecondCounter < tmpMoleculeTree.children.get(tmpCounter).children.size(); tmpSecondCounter++ ){
-                    System.out.println(tmpMoleculeTree.children.get(tmpCounter).children.get(tmpSecondCounter).getLevel());
                     IAtomContainer tmpSecondMolecule = tmpMoleculeTree.children.get(tmpCounter).children.get(tmpSecondCounter).data;
                     BufferedImage tmpSecImgRemove = tmpGenerator.depict(tmpSecondMolecule).toImg();
                     //Save the picture
@@ -399,23 +412,7 @@ public class ScaffoldGeneratorTest {
                     File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/TreeTest" + tmpCounter + tmpSecondCounter +  ".png");
                     ImageIO.write(tmpSecImgRemove, "png", tmpSecOutputRemove);
                 }
-            }
-
-
-
-
-            /**for(int tmpCounter = 0 ; tmpCounter < tmpMoleculeTree.children.get(0).children.get(0).children.size(); tmpCounter++) {
-                IAtomContainer tmpPrintedMolecule = tmpMoleculeTree.children.get(0).children.get(tmpCounter).children.get(0).data;
-                //Generate picture of the molecule
-                DepictionGenerator tmpGenerator = new DepictionGenerator();
-                tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
-                BufferedImage tmpImgRemove = tmpGenerator.depict(tmpPrintedMolecule).toImg();
-                //Save the picture
-                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree00" + tmpCounter + ".png").mkdirs();
-                File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree00" + tmpCounter + ".png");
-                ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
             }*/
-
         }
     }
     /**
