@@ -71,7 +71,6 @@ public class TreeNodeIter<T> implements Iterator<TreeNode<T>> {
         }
 
         if (this.doNext == ProcessStages.ProcessChildSubNode) {
-            //if (childrenSubNodeIter != null && childrenSubNodeIter.hasNext()) {
             if (childrenSubNodeIter.hasNext()) {
                 this.next = childrenSubNodeIter.next();
                 return true;
