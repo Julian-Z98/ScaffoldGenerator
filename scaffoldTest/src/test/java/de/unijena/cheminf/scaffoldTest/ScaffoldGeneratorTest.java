@@ -188,8 +188,8 @@ public class ScaffoldGeneratorTest {
      */
     @Test
     public void removeRingTest() throws CDKException, CloneNotSupportedException, IOException {
-        for (int tmpCount = 2; tmpCount < 13; tmpCount++) {
-            String tmpFileName = "Test"+tmpCount;
+        for (int tmpCount = 2; tmpCount < 14; tmpCount++) {
+            String tmpFileName = "Test" + tmpCount;
             //Get molecule path
             //InputStream tmpInputStream = ScaffoldGenerator.class.getClassLoader().getSystemResourceAsStream(tmpFileName+".mol");
             File tmpResourcesDirectory = new File("src/test/resources/" + tmpFileName + ".mol");

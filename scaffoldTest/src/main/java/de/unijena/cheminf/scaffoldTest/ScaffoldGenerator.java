@@ -26,14 +26,13 @@
 
 package de.unijena.cheminf.scaffoldTest;
 
+import org.openscience.cdk.Atom;
+import org.openscience.cdk.Bond;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.fragment.MurckoFragmenter;
 import org.openscience.cdk.graph.ConnectivityChecker;
 import org.openscience.cdk.graph.Cycles;
-import org.openscience.cdk.interfaces.IAtom;
-import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.cdk.interfaces.IBond;
-import org.openscience.cdk.interfaces.IRingSet;
+import org.openscience.cdk.interfaces.*;
 import org.openscience.cdk.tools.CDKHydrogenAdder;
 import org.openscience.cdk.tools.manipulator.AtomContainerComparator;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
@@ -214,6 +213,20 @@ public class ScaffoldGenerator {
                     //All atoms of the ring in the original molecule that are not bound to the rest of the molecule
                     if ((tmpMolAtom.getProperty(this.atomCounter) == tmpRingAtom.getProperty(this.atomCounter)) && !tmpDontRemove.contains(tmpMolAtom.getProperty(this.atomCounter))) {
                         tmpMoleculeClone.removeAtom(tmpMolAtom); //Remove atoms
+                    }
+                }
+            }
+            //Set the hybridisation to sp3 for all C that have only single bonds
+            for(IAtom tmpMolAtom : tmpMoleculeClone.atoms()) {
+                if(tmpMolAtom.getSymbol() == "C" && tmpMolAtom.getHybridization() != IAtomType.Hybridization.SP3) { //All C that are not sp3 hybridised
+                    boolean tmpIsSp3 = true;
+                    for(IBond tmpBond : tmpMolAtom.bonds()) { //All bonds of the C
+                        if(tmpBond.getOrder() != IBond.Order.SINGLE) { //If it contains a non single bond it cannot be sp3
+                            tmpIsSp3 = false;
+                        }
+                    }
+                    if(tmpIsSp3) { //If the C contains only single bonds, it must be sp3
+                        tmpMolAtom.setHybridization(IAtomType.Hybridization.SP3); //Set sp3
                     }
                 }
             }
