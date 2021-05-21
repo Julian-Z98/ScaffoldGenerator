@@ -24,6 +24,8 @@
  *
  */
 
+//Source: https://github.com/gt4dev/yet-another-tree-structure
+
 package de.unijena.cheminf.scaffoldTest;
 
 import java.util.Iterator;
