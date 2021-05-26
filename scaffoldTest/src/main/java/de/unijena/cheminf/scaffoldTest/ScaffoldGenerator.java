@@ -26,13 +26,14 @@
 
 package de.unijena.cheminf.scaffoldTest;
 
-import org.openscience.cdk.Atom;
-import org.openscience.cdk.Bond;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.fragment.MurckoFragmenter;
 import org.openscience.cdk.graph.ConnectivityChecker;
 import org.openscience.cdk.graph.Cycles;
-import org.openscience.cdk.interfaces.*;
+import org.openscience.cdk.interfaces.IAtom;
+import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IRingSet;
 import org.openscience.cdk.tools.CDKHydrogenAdder;
 import org.openscience.cdk.tools.manipulator.AtomContainerComparator;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
@@ -216,7 +217,7 @@ public class ScaffoldGenerator {
                     }
                 }
             }
-            //Set the hybridisation to sp3 for all C that have only single bonds
+            /**Set the hybridisation to sp3 for all C that have only single bonds
             for(IAtom tmpMolAtom : tmpMoleculeClone.atoms()) {
                 if(tmpMolAtom.getSymbol() == "C" && tmpMolAtom.getHybridization() != IAtomType.Hybridization.SP3) { //All C that are not sp3 hybridised
                     boolean tmpIsSp3 = true;
@@ -229,9 +230,15 @@ public class ScaffoldGenerator {
                         tmpMolAtom.setHybridization(IAtomType.Hybridization.SP3); //Set sp3
                     }
                 }
-            }
+            }*/
         }
         //Add back hydrogens
+        AtomContainerManipulator.clearAtomConfigurations(tmpMoleculeClone);
+        for(IAtom tmpAtom : tmpMoleculeClone.atoms()) {
+            if(tmpAtom.getSymbol() == "B" || (tmpAtom.getSymbol() == "P" && tmpMoleculeClone.getConnectedBondsList(tmpAtom).size() == 4)) {
+                tmpAtom.setFormalCharge(0);
+            }
+        }
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpMoleculeClone);
         CDKHydrogenAdder.getInstance(tmpMoleculeClone.getBuilder()).addImplicitHydrogens(tmpMoleculeClone);
         return tmpMoleculeClone;
