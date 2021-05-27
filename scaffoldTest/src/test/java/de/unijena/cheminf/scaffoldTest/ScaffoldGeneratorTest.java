@@ -70,33 +70,22 @@ public class ScaffoldGeneratorTest {
      * @throws CloneNotSupportedException if cloning is not possible
      */
     @Test
-    public void getSchuffenhauerScaffoldTest() throws IOException, CDKException, CloneNotSupportedException {
-        for (int tmpCount = 1; tmpCount < 13; tmpCount++) {
+    public void getSchuffenhauerScaffoldTest() throws CloneNotSupportedException, CDKException, IOException {
+        for (int tmpCount = 1; tmpCount < 14; tmpCount++) {
             String tmpFileName = "Test"+ tmpCount;
-            //Get molecule path
-            //InputStream tmpInputStream = ScaffoldGenerator.class.getClassLoader().getSystemResourceAsStream(tmpFileName+".mol");
-            File tmpResourcesDirectory = new File("src/test/resources/" + tmpFileName + ".mol");
-            BufferedInputStream tmpInputStream = new BufferedInputStream(new FileInputStream(tmpResourcesDirectory));
-            //Get mol file version
-            FormatFactory tmpFactory = new FormatFactory();
-            IChemFormat tmpFormat = tmpFactory.guessFormat(tmpInputStream);
-            IAtomContainer tmpMolecule = new AtomContainer();
-            //Load V2000 mol file
-            if(tmpFormat.getReaderClassName().contains("V2000")) {
-                MDLV2000Reader tmpReader = new MDLV2000Reader(tmpInputStream);
-                IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
-                tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
-            //Load V3000 mol file
-            } else if(tmpFormat.getReaderClassName().contains("V3000")) {
-                MDLV3000Reader tmpReader = new MDLV3000Reader(tmpInputStream);
-                IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
-                tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
-            }
+            //Load molecule from molfile
+            IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
             //Generate SchuffenhauerScaffold
             IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
-            //Generate picture of the SchuffenhauerScaffold
+            //Generate picture of the original
             DepictionGenerator tmpGenerator = new DepictionGenerator();
             tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
+            BufferedImage tmpImgOriginal = tmpGenerator.depict(tmpMolecule).toImg();
+            //Save the original picture
+            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Original.png").mkdirs();
+            File tmpOutputOriginal = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Original.png");
+            ImageIO.write(tmpImgOriginal, "png" ,tmpOutputOriginal);
+            //Generate picture of the SchuffenhauerScaffold
             BufferedImage tmpImgSchuff = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
             //Save the picture
             new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/SchuffenhauerScaffold.png").mkdirs();
@@ -142,25 +131,8 @@ public class ScaffoldGeneratorTest {
     public void getRingsTest() throws IOException, CDKException, CloneNotSupportedException {
         for (int tmpCount = 1; tmpCount < 13; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
-            //Get molecule path
-            //InputStream tmpInputStream = ScaffoldGenerator.class.getClassLoader().getSystemResourceAsStream(tmpFileName+".mol");
-            File tmpResourcesDirectory = new File("src/test/resources/" + tmpFileName + ".mol");
-            BufferedInputStream tmpInputStream = new BufferedInputStream(new FileInputStream(tmpResourcesDirectory));
-            //Get mol file version
-            FormatFactory tmpFactory = new FormatFactory();
-            IChemFormat tmpFormat = tmpFactory.guessFormat(tmpInputStream);
-            IAtomContainer tmpMolecule = new AtomContainer();
-            //Load V2000 mol file
-            if (tmpFormat.getReaderClassName().contains("V2000")) {
-                MDLV2000Reader tmpReader = new MDLV2000Reader(tmpInputStream);
-                IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
-                tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
-            //Load V3000 mol file
-            } else if (tmpFormat.getReaderClassName().contains("V3000")) {
-                MDLV3000Reader tmpReader = new MDLV3000Reader(tmpInputStream);
-                IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
-                tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
-            }
+            //Load molecule from molfile
+            IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
             //Generate the SchuffenhauerScaffold
             tmpMolecule = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
             //Generate rings
@@ -192,27 +164,8 @@ public class ScaffoldGeneratorTest {
     public void removeRingTest() throws CDKException, CloneNotSupportedException, IOException {
         for (int tmpCount = 2; tmpCount < 14; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
-            //Get molecule path
-            //InputStream tmpInputStream = ScaffoldGenerator.class.getClassLoader().getSystemResourceAsStream(tmpFileName+".mol");
-            File tmpResourcesDirectory = new File("src/test/resources/" + tmpFileName + ".mol");
-            IAtomContainer tmpMolecule;
-            try (BufferedInputStream tmpInputStream = new BufferedInputStream(new FileInputStream(tmpResourcesDirectory))) {
-                //Get mol file version
-                FormatFactory tmpFactory = new FormatFactory();
-                IChemFormat tmpFormat = tmpFactory.guessFormat(tmpInputStream);
-                tmpMolecule = new AtomContainer();
-                //Load V2000 mol file
-                if (tmpFormat.getReaderClassName().contains("V2000")) {
-                    MDLV2000Reader tmpReader = new MDLV2000Reader(tmpInputStream);
-                    IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
-                    tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
-                //Load V3000 mol file
-                } else if (tmpFormat.getReaderClassName().contains("V3000")) {
-                    MDLV3000Reader tmpReader = new MDLV3000Reader(tmpInputStream);
-                    IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
-                    tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
-                }
-            }
+            //Load molecule from molfile
+            IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
             //Generate SchuffenhauerScaffold
             IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
             //Generate Rings
@@ -246,9 +199,14 @@ public class ScaffoldGeneratorTest {
         boolean tmpBypassError = false; //Pass the error or not
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = null;
-        //Two example molecules
-        //tmpMolecule = tmpParser.parseSmiles("[H]OB1OB2(OB(OB(O1)(O2)O[H])O[H])O[H]");  //B Exception
-        tmpMolecule = tmpParser.parseSmiles("[H]C=1C(=C([H])C([H])=C(C1[H])S(=O)(=O)N=P(C=2C([H])=C([H])C([H])=C([H])C2[H])(C=3C([H])=C([H])C([H])=C([H])C3[H])C=4C([H])=C([H])C([H])=C([H])C4[H])C([H])([H])[H]"); //P Exception
+        //P Examples:
+        tmpMolecule = tmpParser.parseSmiles("C1C2CC3CC1CC(C2)C3(CC(=O)C(=P(C4=CC=CC=C4)(C5=CC=CC=C5)C6=CC=CC=C6)C#N)C7=CC=C(C=C7)F"); //PubChem CID: 89041793
+        //tmpMolecule = tmpParser.parseSmiles("C1=CC=C(C=C1)C(=O)OCCCC[P+](C2=CC=CC=C2)(C3=CC=CC=C3)C4=CC=CC=C4"); //PubChem CID: 2755300
+        //tmpMolecule = tmpParser.parseSmiles("C1CCC(=C(C(=P(C2=CC=CC=C2)(C3=CC=CC=C3)C4=CC=CC=C4)C(=O)C(C(F)(F)F)(F)F)C(C(F)(F)F)(F)F)C1"); //PubChem CID: 2752540
+        //B Ecamples:
+        //tmpMolecule = tmpParser.parseSmiles("[B-](C1=CC=CC=C1)(C2=CC=CC=C2)(C3=CC=CC=C3)C4=CC=CC=C4"); //PubChem CID: 8934
+        //tmpMolecule = tmpParser.parseSmiles("[B-]123OC4C(=O)OC(CCC=CC=CCCC(CC(=O)C(C5CCC(C(O1)(O5)C(O2)C(=O)OC(CCC=CC=CCCC(CC(=O)C(C6CCC(C4(O3)O6)(C)O)C)O)C)(C)O)C)O)C"); //PubChem CID: 637168
+        //tmpMolecule = tmpParser.parseSmiles("[B-]123OC4C(=O)OC5CC(C=CCC(C(C6CCC(C(O1)(O6)C(O2)C(=O)OC7CC(C=CCC(C(C8CCC(C4(O3)O8)C)(C)C)O)OC7C)C)(C)C)O)OC5C"); //PubChem CID: 43587
         AtomContainerManipulator.clearAtomConfigurations(tmpMolecule);
         if(tmpBypassError) {
             //Avoid the error by setting the FormalCharge to 0
@@ -272,29 +230,10 @@ public class ScaffoldGeneratorTest {
      */
     @Test
     public void isRingTerminalTest() throws CDKException, CloneNotSupportedException, IOException {
-        for (int tmpCount = 2; tmpCount < 13; tmpCount++) {
-            String tmpFileName = "Test"+tmpCount;
-            //Get molecule path
-            //InputStream tmpInputStream = ScaffoldGenerator.class.getClassLoader().getSystemResourceAsStream(tmpFileName+".mol");
-            File tmpResourcesDirectory = new File("src/test/resources/" + tmpFileName + ".mol");
-            IAtomContainer tmpMolecule;
-            try (BufferedInputStream tmpInputStream = new BufferedInputStream(new FileInputStream(tmpResourcesDirectory))) {
-                //Get mol file version
-                FormatFactory tmpFactory = new FormatFactory();
-                IChemFormat tmpFormat = tmpFactory.guessFormat(tmpInputStream);
-                tmpMolecule = new AtomContainer();
-                //Load V2000 mol file
-                if (tmpFormat.getReaderClassName().contains("V2000")) {
-                    MDLV2000Reader tmpReader = new MDLV2000Reader(tmpInputStream);
-                    IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
-                    tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
-                //Load V3000 mol file
-                } else if (tmpFormat.getReaderClassName().contains("V3000")) {
-                    MDLV3000Reader tmpReader = new MDLV3000Reader(tmpInputStream);
-                    IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
-                    tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
-                }
-            }
+        for (int tmpCount = 2; tmpCount < 14; tmpCount++) {
+            String tmpFileName = "Test" + tmpCount;
+            //Load molecule from molfile
+            IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
             //Generate SchuffenhauerScaffold
             IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
             //Generate Rings
@@ -332,27 +271,8 @@ public class ScaffoldGeneratorTest {
     public void getIterativeRemovalTest() throws CDKException, CloneNotSupportedException, IOException {
         for (int tmpCount = 1; tmpCount < 14; tmpCount++) {
             String tmpFileName = "Test"+ tmpCount;
-            //Get molecule path
-            //InputStream tmpInputStream = ScaffoldGenerator.class.getClassLoader().getSystemResourceAsStream(tmpFileName+".mol");
-            File tmpResourcesDirectory = new File("src/test/resources/" + tmpFileName + ".mol");
-            IAtomContainer tmpMolecule;
-            try (BufferedInputStream tmpInputStream = new BufferedInputStream(new FileInputStream(tmpResourcesDirectory))) {
-                //Get mol file version
-                FormatFactory tmpFactory = new FormatFactory();
-                IChemFormat tmpFormat = tmpFactory.guessFormat(tmpInputStream);
-                tmpMolecule = new AtomContainer();
-                //Load V2000 mol file
-                if (tmpFormat.getReaderClassName().contains("V2000")) {
-                    MDLV2000Reader tmpReader = new MDLV2000Reader(tmpInputStream);
-                    IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
-                    tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
-                //Load V3000 mol file
-                } else if (tmpFormat.getReaderClassName().contains("V3000")) {
-                    MDLV3000Reader tmpReader = new MDLV3000Reader(tmpInputStream);
-                    IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
-                    tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
-                }
-            }
+            //Load molecule from molfile
+            IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
             //Generate a list of molecules with iteratively removed terminal rings
             List<IAtomContainer> tmpMolecules = scaffoldGenerator.getIterativeRemoval(tmpMolecule);
             int tmpCounter = 1;
@@ -382,28 +302,9 @@ public class ScaffoldGeneratorTest {
     @Test
     public void getRemovalTreeTest() throws CDKException, CloneNotSupportedException, IOException {
         for (int tmpCount = 1; tmpCount < 14; tmpCount++) {
-            String tmpFileName = "Test" + tmpCount;
-            //Get molecule path
-            //InputStream tmpInputStream = ScaffoldGenerator.class.getClassLoader().getSystemResourceAsStream(tmpFileName+".mol");
-            File tmpResourcesDirectory = new File("src/test/resources/" + tmpFileName + ".mol");
-            IAtomContainer tmpMolecule;
-            try (BufferedInputStream tmpInputStream = new BufferedInputStream(new FileInputStream(tmpResourcesDirectory))) {
-                //Get mol file version
-                FormatFactory tmpFactory = new FormatFactory();
-                IChemFormat tmpFormat = tmpFactory.guessFormat(tmpInputStream);
-                tmpMolecule = new AtomContainer();
-                //Load V2000 mol file
-                if (tmpFormat.getReaderClassName().contains("V2000")) {
-                    MDLV2000Reader tmpReader = new MDLV2000Reader(tmpInputStream);
-                    IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
-                    tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
-                    //Load V3000 mol file
-                } else if (tmpFormat.getReaderClassName().contains("V3000")) {
-                    MDLV3000Reader tmpReader = new MDLV3000Reader(tmpInputStream);
-                    IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
-                    tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
-                }
-            }
+            String tmpFileName = "Test" + tmpCount ;
+            //Load molecule from molfile
+            IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
             //Generate a tree of molecules with iteratively removed terminal rings
             TreeNodeIter<IAtomContainer> tmpNodeIter = new TreeNodeIter<>(scaffoldGenerator.getRemovalTree(tmpMolecule));
             int tmpCounter = 0;
@@ -413,33 +314,10 @@ public class ScaffoldGeneratorTest {
                 //Save the picture
                 DepictionGenerator tmpGenerator = new DepictionGenerator();
                 BufferedImage tmpSecImgRemove = tmpGenerator.depict(tmpMoleculeNode.data).toImg();
-                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/TreeTest" + tmpCounter  + "Level" + tmpMoleculeNode.getLevel() + ".png").mkdirs();
-                File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/TreeTest" + tmpCounter +  "Level" + tmpMoleculeNode.getLevel() + ".png");
+                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/TreeTest" + tmpCounter  + "Level" + tmpMoleculeNode.getLevel() + ".png").mkdirs();
+                File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/TreeTest" + tmpCounter +  "Level" + tmpMoleculeNode.getLevel() + ".png");
                 ImageIO.write(tmpSecImgRemove, "png", tmpSecOutputRemove);
             }
-            /**
-            //Code to check the tree structure
-            TreeNode<IAtomContainer> tmpMoleculeTree = scaffoldGenerator.getRemovalTree(tmpMolecule);
-            //First Level
-            for(int tmpCounter = 0;tmpCounter < tmpMoleculeTree.children.size(); tmpCounter++) {
-                IAtomContainer tmpFirstMolecule = tmpMoleculeTree.children.get(tmpCounter).data;
-                DepictionGenerator tmpGenerator = new DepictionGenerator();
-                tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
-                BufferedImage tmpImgRemove = tmpGenerator.depict(tmpFirstMolecule).toImg();
-                //Save the picture
-                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/TreeTest" + tmpCounter + ".png").mkdirs();
-                File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/TreeTest" + tmpCounter + ".png");
-                ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
-                //Second Level
-                for(int tmpSecondCounter = 0;tmpSecondCounter < tmpMoleculeTree.children.get(tmpCounter).children.size(); tmpSecondCounter++ ){
-                    IAtomContainer tmpSecondMolecule = tmpMoleculeTree.children.get(tmpCounter).children.get(tmpSecondCounter).data;
-                    BufferedImage tmpSecImgRemove = tmpGenerator.depict(tmpSecondMolecule).toImg();
-                    //Save the picture
-                    new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/TreeTest" + tmpCounter + tmpSecondCounter + ".png").mkdirs();
-                    File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/TreeTest" + tmpCounter + tmpSecondCounter +  ".png");
-                    ImageIO.write(tmpSecImgRemove, "png", tmpSecOutputRemove);
-                }
-            }*/
         }
     }
 
@@ -457,27 +335,8 @@ public class ScaffoldGeneratorTest {
     public void getRemovalTreeStructureTest() throws CDKException, CloneNotSupportedException, IOException {
         String tmpFileName = "Test13"; //File to be tested
         int tmpTestNumber = 2; //Node whose children and parent are to be displayed
-        //Get molecule path
-        //InputStream tmpInputStream = ScaffoldGenerator.class.getClassLoader().getSystemResourceAsStream(tmpFileName+".mol");
-        File tmpResourcesDirectory = new File("src/test/resources/" + tmpFileName + ".mol");
-        IAtomContainer tmpMolecule;
-        try (BufferedInputStream tmpInputStream = new BufferedInputStream(new FileInputStream(tmpResourcesDirectory))) {
-            //Get mol file version
-            FormatFactory tmpFactory = new FormatFactory();
-            IChemFormat tmpFormat = tmpFactory.guessFormat(tmpInputStream);
-            tmpMolecule = new AtomContainer();
-            //Load V2000 mol file
-            if (tmpFormat.getReaderClassName().contains("V2000")) {
-                MDLV2000Reader tmpReader = new MDLV2000Reader(tmpInputStream);
-                IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
-                tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
-                //Load V3000 mol file
-            } else if (tmpFormat.getReaderClassName().contains("V3000")) {
-                MDLV3000Reader tmpReader = new MDLV3000Reader(tmpInputStream);
-                IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
-                tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
-            }
-        }
+        //Load molecule from molfile
+        IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
         //Generate a tree of molecules with iteratively removed terminal rings
         TreeNodeIter<IAtomContainer> tmpNodeIter = new TreeNodeIter<>(scaffoldGenerator.getRemovalTree(tmpMolecule));
         int tmpCounter = 0;
@@ -487,21 +346,21 @@ public class ScaffoldGeneratorTest {
                 //Save the picture of the test Node
                 DepictionGenerator tmpGenerator = new DepictionGenerator();
                 BufferedImage tmpNodeImg = tmpGenerator.depict(tmpMoleculeNode.data).toImg();
-                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/TestNode.png").mkdirs();
-                File tmpNodeFile = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/TestNode.png");
+                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/TestNode.png").mkdirs();
+                File tmpNodeFile = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/TestNode.png");
                 ImageIO.write(tmpNodeImg, "png", tmpNodeFile);
                 //Save the picture of the parent
                 BufferedImage tmpParentImg = tmpGenerator.depict(tmpMoleculeNode.parent.data).toImg();
-                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/ParentNode.png").mkdirs();
-                File tmpParentFile = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/ParentNode.png");
+                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/ParentNode.png").mkdirs();
+                File tmpParentFile = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/ParentNode.png");
                 ImageIO.write(tmpParentImg, "png", tmpParentFile);
                 //Save pictures of the children
                 int tmpChildCounter = 0;
                 for(TreeNode<IAtomContainer> tmpNode : tmpMoleculeNode.children) {
                     tmpChildCounter++;
                     BufferedImage tmpChildImg = tmpGenerator.depict(tmpNode.data).toImg();
-                    new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/ChildNode" + tmpChildCounter + ".png").mkdirs();
-                    File tmpChildFile = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/ChildNode" + tmpChildCounter + ".png");
+                    new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/ChildNode" + tmpChildCounter + ".png").mkdirs();
+                    File tmpChildFile = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/ChildNode" + tmpChildCounter + ".png");
                     ImageIO.write(tmpChildImg, "png", tmpChildFile);
                 }
                 break;
@@ -509,21 +368,46 @@ public class ScaffoldGeneratorTest {
             tmpCounter++;
         }
     }
+
+    /**
+     * Speed test for the getSchuffenhauerScaffold() Method with over 400000 molecules from the COCONUT DB.
+     * @throws FileNotFoundException if COCONUT DB not found
+     */
+    @Test
+    public void calculateSchuffenhauerSpeedTest() throws FileNotFoundException {
+        this.ScaffoldGeneratorSpeedTest(true, false, false, false, true, 4242);
+    }
+    /**
+     * Speed test for the getRings() Method with over 400000 molecules from the COCONUT DB.
+     * getSchuffenhauerScaffold() must also be executed for all molecules.
+     * @throws FileNotFoundException if COCONUT DB not found
+     */
+    @Test
+    public void calculateRingsSpeedTest() throws FileNotFoundException {
+        this.ScaffoldGeneratorSpeedTest(false, true, false, false, true, 4242);
+    }
+    /**
+     * Speed test for the removeRing() Method with over 400000 molecules from the COCONUT DB.
+     * getSchuffenhauerScaffold() and getRings() must also be executed for all molecules.
+     * @throws FileNotFoundException if COCONUT DB not found
+     */
+    @Test
+    public void calculateRemoveRingsSpeedTest() throws FileNotFoundException {
+        this.ScaffoldGeneratorSpeedTest(false, false, true, false, true, 4242);
+    }
     /**
      * Speed test for the getSchuffenhauerScaffold(), getRing() and removeRing() Method with over 400000 molecules from the COCONUT DB.
      * Which methods are tested can be set via the booleans.
      * To perform the test download the COCONUT DB(https://coconut.naturalproducts.net/download) and add the COCONUT_DB.sdf file to src\test\resources
+     * @param tmpCalculateSchuffenhauerScaffold Generate SchuffenhauerScaffolds
+     * @param tmpCalculateRings Calculate Rings and Schuffenhauer scaffolds.
+     * @param tmpCalculateRemoveRings The molecules for which the rings have been removed from the Schuffenhauer scaffolds are calculated. The Schuffenhauer scaffolds and the Rings are also calculated for this.
+     * @param tmpIterativeRemoval Creates all molecules that are generated by iterative terminal removal of rings.
+     * @param tmpGetPicture Show control pictures from one molecule.
+     * @param tmpPictureNumber Number of the molecule from which control images are to be taken(from 0 to 406000)
      * @throws FileNotFoundException if file not found
      */
-    @Test
-    public void ScaffoldGeneratorSpeedTest() throws FileNotFoundException {
-        //Options
-        boolean tmpCalculateSchuffenhauerScaffold = true; //Generate SchuffenhauerScaffolds
-        boolean tmpCalculateRings = false; //Calculate Rings. The Schuffenhauer scaffolds are also calculated for this.
-        boolean tmpCalculateRemoveRings = true; //The molecules for which the rings have been removed from the Schuffenhauer scaffolds are calculated. The Schuffenhauer scaffolds and the Rings are also calculated for this.
-        boolean tmpIterativeRemoval = false; //Creates all molecules that are generated by iterative terminal removal of rings.
-        boolean tmpGetPicture = true; //Show control pictures from one molecule.
-        int tmpPictureNumber = 51437; //Number of the molecule from which control images are to be taken(from 0 to 406000)
+    private void ScaffoldGeneratorSpeedTest(boolean tmpCalculateSchuffenhauerScaffold, boolean tmpCalculateRings, boolean tmpCalculateRemoveRings, boolean tmpIterativeRemoval, boolean tmpGetPicture, int tmpPictureNumber) throws FileNotFoundException {
         //Counter
         int tmpExceptionCounter = 0;
         int tmpNumberCounter = 0;
@@ -552,8 +436,10 @@ public class ScaffoldGeneratorTest {
         }
         // Going through the library
         while (tmpReader.hasNext()) {
+            String tmpCoconutID = null;
             try {
                 IAtomContainer tmpMolecule = (IAtomContainer) tmpReader.next();
+                tmpCoconutID = tmpMolecule.getProperty("coconut_id");
                 //Calculate SchuffenhauerScaffolds
                 if(tmpCalculateSchuffenhauerScaffold == true && tmpCalculateRings == false) {
                     tmpMolecule = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
@@ -668,6 +554,7 @@ public class ScaffoldGeneratorTest {
             //Count exceptions
             catch(Exception e) {
                 System.out.println("Exception at number: " + tmpNumberCounter);
+                System.out.println("COCONUT ID: " + tmpCoconutID);
                 //Print out the exception stack trace
                 StringWriter sw = new StringWriter();
                 PrintWriter pw = new PrintWriter(sw);
@@ -683,5 +570,35 @@ public class ScaffoldGeneratorTest {
         System.out.println("All molecules completed");
         System.out.println("Total number of exceptions: " + tmpExceptionCounter);
         System.out.println("total Runtime: " + TimeUnit.NANOSECONDS.toSeconds((System.nanoTime() - tmpStartTime)) + " seconds");
+    }
+
+    /**
+     * Loads a mol file of a specific path and returns it as IAtomContainer.
+     * Supports V2000 and V3000 mol files.
+     * @param tmpFilePath Path of the molecule to be loaded
+     * @return IAtomContainer of the charged molecule
+     * @throws IOException if file format cant be detected
+     * @throws CDKException if file cant be read
+     */
+    private IAtomContainer loadMolFile(String tmpFilePath) throws IOException, CDKException {
+        //Get molecule path
+        File tmpResourcesDirectory = new File(tmpFilePath);
+        BufferedInputStream tmpInputStream = new BufferedInputStream(new FileInputStream(tmpResourcesDirectory));
+        //Get mol file version
+        FormatFactory tmpFactory = new FormatFactory();
+        IChemFormat tmpFormat = tmpFactory.guessFormat(tmpInputStream);
+        IAtomContainer tmpMolecule = new AtomContainer();
+        //Load V2000 mol file
+        if(tmpFormat.getReaderClassName().contains("V2000")) {
+            MDLV2000Reader tmpReader = new MDLV2000Reader(tmpInputStream);
+            IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
+            tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
+            //Load V3000 mol file
+        } else if(tmpFormat.getReaderClassName().contains("V3000")) {
+            MDLV3000Reader tmpReader = new MDLV3000Reader(tmpInputStream);
+            IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
+            tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
+        }
+        return tmpMolecule;
     }
 }
