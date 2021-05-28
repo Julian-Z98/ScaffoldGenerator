@@ -26,6 +26,7 @@
 
 package de.unijena.cheminf.scaffoldTest;
 
+import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.fragment.MurckoFragmenter;
 import org.openscience.cdk.graph.ConnectivityChecker;
@@ -217,7 +218,7 @@ public class ScaffoldGenerator {
                 }
             }
             //Set the hybridisation to sp3 for all C that have only single bonds
-            for(IAtom tmpMolAtom : tmpMoleculeClone.atoms()) {
+            /**for(IAtom tmpMolAtom : tmpMoleculeClone.atoms()) {
                 if(tmpMolAtom.getSymbol() == "C" && tmpMolAtom.getHybridization() != IAtomType.Hybridization.SP3) { //All C that are not sp3 hybridised
                     boolean tmpIsSp3 = true;
                     for(IBond tmpBond : tmpMolAtom.bonds()) { //All bonds of the C
@@ -226,10 +227,14 @@ public class ScaffoldGenerator {
                         }
                     }
                     if(tmpIsSp3) { //If the C contains only single bonds, it must be sp3
-                        tmpMolAtom.setHybridization(IAtomType.Hybridization.SP3); //Set sp3
+                        //tmpMolAtom.setHybridization(IAtomType.Hybridization.SP3); //Set sp3
                     }
                 }
-            }
+            }*/
+        }
+        //Clear hybridisation
+        for(IAtom tmpAtom : tmpMoleculeClone.atoms()) {
+            tmpAtom.setHybridization((IAtomType.Hybridization) CDKConstants.UNSET);
         }
         //Add back hydrogens removed by the MurckoFragmenter
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpMoleculeClone);
