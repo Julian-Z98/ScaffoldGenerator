@@ -24,12 +24,13 @@
  *
  */
 
-//Source: https://github.com/gt4dev/yet-another-tree-structure
-
 package de.unijena.cheminf.scaffoldTest;
 
 import java.util.Iterator;
 
+/**
+ * Source: https://github.com/gt4dev/yet-another-tree-structure
+ */
 public class TreeNodeIter<T> implements Iterator<TreeNode<T>> {
 
     enum ProcessStages {
@@ -41,17 +42,18 @@ public class TreeNodeIter<T> implements Iterator<TreeNode<T>> {
     public TreeNodeIter(TreeNode<T> treeNode) {
         this.treeNode = treeNode;
         this.doNext = ProcessStages.ProcessParent;
-        this.childrenCurNodeIter = treeNode.children.iterator();
+        this.childrenCurNodeIter = treeNode.getChildren().iterator();
     }
 
     private ProcessStages doNext;
     private TreeNode<T> next;
+    private boolean nextNodeHasBinCalculated; //nextNode() must have been executed before next() can be executed.
     private Iterator<TreeNode<T>> childrenCurNodeIter;
     private Iterator<TreeNode<T>> childrenSubNodeIter;
 
     @Override
     public boolean hasNext() {
-
+        this.nextNodeHasBinCalculated = true;
         if (this.doNext == ProcessStages.ProcessParent) {
             this.next = this.treeNode;
             this.doNext = ProcessStages.ProcessChildCurNode;
@@ -83,12 +85,15 @@ public class TreeNodeIter<T> implements Iterator<TreeNode<T>> {
                 return hasNext();
             }
         }
-
         return false;
     }
 
     @Override
     public TreeNode<T> next() {
+        if(this.nextNodeHasBinCalculated == false) { //execute hasnext() if it has not been executed yet
+            this.hasNext();
+        }
+        this.nextNodeHasBinCalculated = false;
         return this.next;
     }
 

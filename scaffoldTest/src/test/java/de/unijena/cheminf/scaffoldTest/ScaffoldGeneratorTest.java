@@ -29,11 +29,13 @@ package de.unijena.cheminf.scaffoldTest;
 import org.junit.Before;
 import org.junit.Test;
 import org.openscience.cdk.AtomContainer;
+import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.depict.DepictionGenerator;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IAtomType;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.io.FormatFactory;
 import org.openscience.cdk.io.MDLV2000Reader;
@@ -207,7 +209,10 @@ public class ScaffoldGeneratorTest {
         //tmpMolecule = tmpParser.parseSmiles("[B-](C1=CC=CC=C1)(C2=CC=CC=C2)(C3=CC=CC=C3)C4=CC=CC=C4"); //PubChem CID: 8934
         //tmpMolecule = tmpParser.parseSmiles("[B-]123OC4C(=O)OC(CCC=CC=CCCC(CC(=O)C(C5CCC(C(O1)(O5)C(O2)C(=O)OC(CCC=CC=CCCC(CC(=O)C(C6CCC(C4(O3)O6)(C)O)C)O)C)(C)O)C)O)C"); //PubChem CID: 637168
         //tmpMolecule = tmpParser.parseSmiles("[B-]123OC4C(=O)OC5CC(C=CCC(C(C6CCC(C(O1)(O6)C(O2)C(=O)OC7CC(C=CCC(C(C8CCC(C4(O3)O8)C)(C)C)O)OC7C)C)(C)C)O)OC5C"); //PubChem CID: 43587
-        AtomContainerManipulator.clearAtomConfigurations(tmpMolecule);
+        //AtomContainerManipulator.clearAtomConfigurations(tmpMolecule);
+        for(IAtom tmpAtom : tmpMolecule.atoms()) {
+            tmpAtom.setHybridization((IAtomType.Hybridization) CDKConstants.UNSET);
+        }
         if(tmpBypassError) {
             //Avoid the error by setting the FormalCharge to 0
             for(IAtom tmpAtom : tmpMolecule.atoms()) {
@@ -308,12 +313,15 @@ public class ScaffoldGeneratorTest {
             //Generate a tree of molecules with iteratively removed terminal rings
             TreeNodeIter<IAtomContainer> tmpNodeIter = new TreeNodeIter<>(scaffoldGenerator.getRemovalTree(tmpMolecule));
             int tmpCounter = 0;
+            for (int tmpTestCounter = 2; tmpTestCounter < 14; tmpTestCounter++) {
+
+            }
             while(tmpNodeIter.hasNext()) { // As long as there are still other molecules in the tree
                 tmpCounter++;
                 TreeNode<IAtomContainer> tmpMoleculeNode = tmpNodeIter.next(); // Next molecule in tree
                 //Save the picture
                 DepictionGenerator tmpGenerator = new DepictionGenerator();
-                BufferedImage tmpSecImgRemove = tmpGenerator.depict(tmpMoleculeNode.data).toImg();
+                BufferedImage tmpSecImgRemove = tmpGenerator.depict(tmpMoleculeNode.getData()).toImg();
                 new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/TreeTest" + tmpCounter  + "Level" + tmpMoleculeNode.getLevel() + ".png").mkdirs();
                 File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/TreeTest" + tmpCounter +  "Level" + tmpMoleculeNode.getLevel() + ".png");
                 ImageIO.write(tmpSecImgRemove, "png", tmpSecOutputRemove);
@@ -345,20 +353,20 @@ public class ScaffoldGeneratorTest {
             if(tmpCounter == tmpTestNumber -1){
                 //Save the picture of the test Node
                 DepictionGenerator tmpGenerator = new DepictionGenerator();
-                BufferedImage tmpNodeImg = tmpGenerator.depict(tmpMoleculeNode.data).toImg();
+                BufferedImage tmpNodeImg = tmpGenerator.depict(tmpMoleculeNode.getData()).toImg();
                 new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/TestNode.png").mkdirs();
                 File tmpNodeFile = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/TestNode.png");
                 ImageIO.write(tmpNodeImg, "png", tmpNodeFile);
                 //Save the picture of the parent
-                BufferedImage tmpParentImg = tmpGenerator.depict(tmpMoleculeNode.parent.data).toImg();
+                BufferedImage tmpParentImg = tmpGenerator.depict(tmpMoleculeNode.getParent().getData()).toImg();
                 new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/ParentNode.png").mkdirs();
                 File tmpParentFile = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/ParentNode.png");
                 ImageIO.write(tmpParentImg, "png", tmpParentFile);
                 //Save pictures of the children
                 int tmpChildCounter = 0;
-                for(TreeNode<IAtomContainer> tmpNode : tmpMoleculeNode.children) {
+                for(TreeNode<IAtomContainer> tmpNode : tmpMoleculeNode.getChildren()) {
                     tmpChildCounter++;
-                    BufferedImage tmpChildImg = tmpGenerator.depict(tmpNode.data).toImg();
+                    BufferedImage tmpChildImg = tmpGenerator.depict(tmpNode.getData()).toImg();
                     new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/ChildNode" + tmpChildCounter + ".png").mkdirs();
                     File tmpChildFile = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/ChildNode" + tmpChildCounter + ".png");
                     ImageIO.write(tmpChildImg, "png", tmpChildFile);
@@ -368,6 +376,9 @@ public class ScaffoldGeneratorTest {
             tmpCounter++;
         }
     }
+
+
+
 
     /**
      * Speed test for the getSchuffenhauerScaffold() Method with over 400000 molecules from the COCONUT DB.

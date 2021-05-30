@@ -24,7 +24,6 @@
  *
  */
 
-//Source: https://github.com/gt4dev/yet-another-tree-structure
 
 package de.unijena.cheminf.scaffoldTest;
 
@@ -32,11 +31,14 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * Source: https://github.com/gt4dev/yet-another-tree-structure
+ */
 public class TreeNode<T> implements Iterable<TreeNode<T>> {
 
-    public T data;
-    public TreeNode<T> parent;
-    public List<TreeNode<T>> children;
+    private T data;
+    private TreeNode<T> parent;
+    private List<TreeNode<T>> children;
 
     public boolean isRoot() {
         return parent == null;
@@ -96,5 +98,58 @@ public class TreeNode<T> implements Iterable<TreeNode<T>> {
         TreeNodeIter<T> iter = new TreeNodeIter<T>(this);
         return iter;
     }
+
+    //<editor-fold desc="get/set">
+    /**
+     * Get the node data.
+     * @return node data
+     */
+    public T getData() {
+        return this.data;
+    }
+
+    /**
+     * Set the node data.
+     * @param tmpData data that are set
+     */
+    public void setData(T tmpData) {
+        this.data = tmpData;
+    }
+
+    /**
+     * Get the parent node.
+     * @return parent node
+     */
+    public TreeNode<T> getParent() {
+        return this.parent;
+    }
+
+    /**
+     * Set the parent node.
+     * @param tmpParent parent that are set
+     */
+    public void setParent(TreeNode<T> tmpParent) {
+        this.parent = tmpParent;
+    }
+
+    /**
+     * Get the children nodes.
+     * @return children nodes
+     */
+    public List<TreeNode<T>> getChildren() {
+        return this.children;
+    }
+
+    /**
+     * Set the children node.
+     * @param tmpChildren children that are set
+     */
+    public void setChildren(List<TreeNode<T>> tmpChildren) {
+        this.children = tmpChildren;
+    }
+    //</editor-fold>
+
+
+
 
 }
