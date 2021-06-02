@@ -26,6 +26,9 @@
 
 package de.unijena.cheminf.scaffoldTest;
 
+import org.graphstream.graph.Graph;
+import org.graphstream.graph.Node;
+import org.graphstream.graph.implementations.SingleGraph;
 import org.junit.Before;
 import org.junit.Test;
 import org.openscience.cdk.AtomContainer;
@@ -42,10 +45,13 @@ import org.openscience.cdk.io.MDLV2000Reader;
 import org.openscience.cdk.io.MDLV3000Reader;
 import org.openscience.cdk.io.formats.IChemFormat;
 import org.openscience.cdk.io.iterator.IteratingSDFReader;
+import org.openscience.cdk.smiles.SmiFlavor;
+import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
 import javax.imageio.ImageIO;
+import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
@@ -313,11 +319,7 @@ public class ScaffoldGeneratorTest {
             //Generate a tree of molecules with iteratively removed terminal rings
             TreeNodeIter<IAtomContainer> tmpNodeIter = new TreeNodeIter<>(scaffoldGenerator.getRemovalTree(tmpMolecule));
             int tmpCounter = 0;
-            for (int tmpTestCounter = 2; tmpTestCounter < 14; tmpTestCounter++) {
-
-            }
             while(tmpNodeIter.hasNext()) { // As long as there are still other molecules in the tree
-                tmpCounter++;
                 TreeNode<IAtomContainer> tmpMoleculeNode = tmpNodeIter.next(); // Next molecule in tree
                 //Save the picture
                 DepictionGenerator tmpGenerator = new DepictionGenerator();
@@ -325,6 +327,7 @@ public class ScaffoldGeneratorTest {
                 new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/TreeTest" + tmpCounter  + "Level" + tmpMoleculeNode.getLevel() + ".png").mkdirs();
                 File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/TreeTest" + tmpCounter +  "Level" + tmpMoleculeNode.getLevel() + ".png");
                 ImageIO.write(tmpSecImgRemove, "png", tmpSecOutputRemove);
+                tmpCounter++;
             }
         }
     }
@@ -377,8 +380,160 @@ public class ScaffoldGeneratorTest {
         }
     }
 
+    /**
+     * Tests the methods of the ScaffoldTree class with a V2000 or V3000 mol file as test molecule.
+     * @throws IOException if file format cant be detected
+     * @throws CDKException if file cant be read
+     * @throws CloneNotSupportedException if cloning is not possible
+     */
+    @Test
+    public void scaffoldTreeTest() throws CDKException, CloneNotSupportedException, IOException {
+        String tmpFileName = "Test11";
+        //Load molecule from molfile
+        IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
+        //Generate a tree of molecules with iteratively removed terminal rings
+        TreeNodeIter<IAtomContainer> tmpNodeIter = new TreeNodeIter<>(scaffoldGenerator.getRemovalTree(tmpMolecule));
+        //Build ScaffoldTree
+        int tmpCounter = 0;
+        ScaffoldTree tmpScaffoldTree = new ScaffoldTree();
+        while(tmpNodeIter.hasNext()) { // As long as there are still other molecules in the tree
+            tmpCounter++;
+            //Add nodes to tree
+            TreeNode<IAtomContainer> tmpMoleculeNode = tmpNodeIter.next(); // Next molecule in tree
+            tmpScaffoldTree.addNode(tmpMoleculeNode);
+        }
+        //isMoleculeInTree and getMatrixNode checker
+        System.out.println("---isMoleculeInTree and getMatrixNode check---");
+        System.out.println("Is the original molecule in the tree: " + tmpScaffoldTree.isMoleculeInTree(tmpMolecule)); //Should be false
+        System.out.println("Is the molecule of node 1 in the tree: " + tmpScaffoldTree.isMoleculeInTree((IAtomContainer) tmpScaffoldTree.getMatrixNode(1).getData())); //Should be true
+        //getTreeNode checker
+        System.out.println("---getTreeNode check---");
+        IAtomContainer tmpTestMolecule = (IAtomContainer) tmpScaffoldTree.getMatrixNode(11).getData();
+        System.out.println("Size of the test molecule: " + tmpTestMolecule.getAtomCount());
+        IAtomContainer tmpResultMolecule = (IAtomContainer) tmpScaffoldTree.getTreeNode(tmpTestMolecule).getData();
+        System.out.println("Size of the result molecule: " + tmpResultMolecule.getAtomCount());; //Should be the same size
 
+        //getUniqueTreeNodes checker
+        System.out.println("---getUniqueTreeNodes check---");
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
+        for(TreeNode tmpNode : tmpScaffoldTree.getUniqueTreeNodes()) {
+            IAtomContainer tmpNodeMolecule = (IAtomContainer) tmpNode.getData();
+            System.out.println(tmpSmilesGenerator.create(tmpNodeMolecule));
+        }
+        //getAllNodes and getLevel checker
+        System.out.println("---getAllNodes and getLevel check---");
+        System.out.println("Total number of nodes: " + tmpScaffoldTree.getAllNodes().size());
+        System.out.println("getLevel:");
+        for(TreeNode tmpNode : tmpScaffoldTree.getLevel(1)) {
+            IAtomContainer tmpNodeMolecule = (IAtomContainer) tmpNode.getData();
+            System.out.println(tmpSmilesGenerator.create(tmpNodeMolecule));
+        }
+        System.out.println("Verification of the getLevel check:");
+        for(TreeNode tmpNode : tmpScaffoldTree.getAllNodes()) {
+            if(tmpNode.getLevel() == 1 ){
+                IAtomContainer tmpNodeMolecule = (IAtomContainer) tmpNode.getData();
+                System.out.println(tmpSmilesGenerator.create(tmpNodeMolecule));
+            }
+        }
+        //Matrix check
+        System.out.println("---getTreeAsMatrix check---");
+        int tmpTreeCounter = 0;
+        Integer[][] tmpMatrix = tmpScaffoldTree.getTreeAsMatrix();
+        for(int tmpRow = 0; tmpRow < tmpMatrix.length; tmpRow++) {
+            for(int tmpCol = 0; tmpCol < tmpMatrix[tmpRow].length; tmpCol++) {
+                System.out.print(tmpMatrix[tmpRow][tmpCol] + " ");
+            }
+            System.out.println(" " + tmpRow);
+        }
+        for(int tmpRow = 0; tmpRow < tmpMatrix.length; tmpRow++) {
+            if(tmpRow < 10) {
+                System.out.print(tmpRow + " ");
+            } else {
+                System.out.print(tmpRow);
+            }
+        }
+        //Stores all molecules in the order in which they appear in the matrix as images
+        for(TreeNode tmpNode : tmpScaffoldTree.getMatrixNodes()) {
+            IAtomContainer tmpNodeMolecule = (IAtomContainer) tmpNode.getData();
+            //Save the picture
+            DepictionGenerator tmpGenerator = new DepictionGenerator();
+            BufferedImage tmpSecImgRemove = tmpGenerator.depict(tmpNodeMolecule).toImg();
+            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/MatrixTest" + "/MatrixTest" + tmpTreeCounter  + ".png").mkdirs();
+            File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/MatrixTest" + "/MatrixTest" + tmpTreeCounter  + ".png");
+            ImageIO.write(tmpSecImgRemove, "png", tmpSecOutputRemove);
+            tmpTreeCounter++;
+        }
+    }
 
+    /**
+     * Creates a ScaffoldTree from a V2000 or V3000 mol file and displays it as a tree with GraphStream.
+     * @throws InterruptedException if a problem with sleep occurs
+     * @throws IOException if file format cant be detected
+     * @throws CDKException if file cant be read
+     * @throws CloneNotSupportedException if cloning is not possible
+     */
+    @Test
+    public void graphStreamTest() throws InterruptedException, CDKException, IOException, CloneNotSupportedException {
+        //Test ob Url funktioniert:
+        String tmpUrl = System.getProperty("user.dir") + "/scaffoldTestOutput/Test11/MatrixTest/MatrixTest0.png"; //Pfad überprüft
+        BufferedImage img=ImageIO.read(new File( tmpUrl));
+        ImageIcon icon=new ImageIcon(img);
+        JFrame frame=new JFrame();
+        frame.setLayout(new FlowLayout());
+        frame.setSize(200,300);
+        JLabel lbl=new JLabel();
+        lbl.setIcon(icon);
+        frame.add(lbl);
+        frame.setVisible(true);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        //Url Test zuende
+
+        String tmpFileName = "Test13" ;
+        //Load molecule from molfile
+        IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
+        //Generate a tree of molecules with iteratively removed terminal rings
+        TreeNodeIter<IAtomContainer> tmpNodeIter = new TreeNodeIter<>(scaffoldGenerator.getRemovalTree(tmpMolecule));
+        int tmpCounter = 0;
+        //Create ScaffoldTree
+        ScaffoldTree tmpScaffoldTree = new ScaffoldTree();
+        while(tmpNodeIter.hasNext()) { //As long as there are still other molecules in the tree
+            tmpCounter++;
+            TreeNode<IAtomContainer> tmpMoleculeNode = tmpNodeIter.next(); // Next molecule in tree
+            tmpScaffoldTree.addNode(tmpMoleculeNode);
+        }
+        //Create a graph from the ScaffoldTree
+        Graph tmpGraph = new SingleGraph("TestGraph");
+        System.setProperty("org.graphstream.ui", "swing");
+        int tmpEdgeCount = 0;
+        int tmpNodeCount = 0;
+        Integer[][] tmpMatrix = tmpScaffoldTree.getTreeAsMatrix();
+        for(int tmpRow = 0; tmpRow < tmpMatrix.length; tmpRow++) { //Create a node for each row
+            tmpGraph.addNode(String.valueOf(tmpNodeCount));
+            Node tmpNode = tmpGraph.getNode(String.valueOf(tmpNodeCount));
+            tmpNode.addAttribute("Node", tmpScaffoldTree.getMatrixNode(tmpNodeCount));
+            tmpNode.setAttribute("ui.label", tmpNodeCount); //Add a label to each node that corresponds to the position in the matrix
+
+            //Funktioniert leider nicht:
+            tmpNode.addAttribute("ui.style", "fill-image: url('" + tmpUrl + "');");
+
+            //Farbwechsel funktioniert:
+            //tmpNode.addAttribute("ui.style", "fill-color: rgb(0,100,255);");
+
+            tmpNodeCount++;
+            for(int tmpCol = 0; tmpCol < tmpMatrix[tmpRow].length; tmpCol++) { // Go through each column of the row
+                if(tmpMatrix[tmpRow][tmpCol] == 1) { //Insert an edge if there is a 1 in it
+                    tmpGraph.addEdge("Edge" + tmpEdgeCount, tmpRow, tmpCol);
+                    tmpEdgeCount++;
+                }
+            }
+        }
+        //Funktioniert leider nicht:
+        tmpGraph.addAttribute("ui.stylesheet", "fill-image: url('" + tmpUrl + "');");
+        //Display graph
+        System.setProperty("org.graphstream.ui", "swing");
+        tmpGraph.display();
+        TimeUnit.SECONDS.sleep(60);
+    }
 
     /**
      * Speed test for the getSchuffenhauerScaffold() Method with over 400000 molecules from the COCONUT DB.
@@ -388,6 +543,7 @@ public class ScaffoldGeneratorTest {
     public void calculateSchuffenhauerSpeedTest() throws FileNotFoundException {
         this.ScaffoldGeneratorSpeedTest(true, false, false, false, true, 4242);
     }
+
     /**
      * Speed test for the getRings() Method with over 400000 molecules from the COCONUT DB.
      * getSchuffenhauerScaffold() must also be executed for all molecules.
@@ -397,6 +553,7 @@ public class ScaffoldGeneratorTest {
     public void calculateRingsSpeedTest() throws FileNotFoundException {
         this.ScaffoldGeneratorSpeedTest(false, true, false, false, true, 4242);
     }
+
     /**
      * Speed test for the removeRing() Method with over 400000 molecules from the COCONUT DB.
      * getSchuffenhauerScaffold() and getRings() must also be executed for all molecules.
@@ -406,6 +563,7 @@ public class ScaffoldGeneratorTest {
     public void calculateRemoveRingsSpeedTest() throws FileNotFoundException {
         this.ScaffoldGeneratorSpeedTest(false, false, true, false, true, 4242);
     }
+
     /**
      * Speed test for the getSchuffenhauerScaffold(), getRing() and removeRing() Method with over 400000 molecules from the COCONUT DB.
      * Which methods are tested can be set via the booleans.
