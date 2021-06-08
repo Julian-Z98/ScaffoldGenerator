@@ -55,16 +55,17 @@ public class ScaffoldGenerator {
      * @throws CloneNotSupportedException if cloning is not possible.
      */
     public IAtomContainer getSchuffenhauerScaffold(IAtomContainer aMolecule) throws CDKException, CloneNotSupportedException {
+        IAtomContainer tmpClonedMolecule = aMolecule.clone();
         //Mark each atom with ascending number
         Integer tmpCounter = 0;
-        for(IAtom tmpAtom : aMolecule.atoms()) {
+        for(IAtom tmpAtom : tmpClonedMolecule.atoms()) {
             tmpAtom.setProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY, tmpCounter);
             tmpCounter++;
         }
         /*Store the number of each C that is double-bonded to O and the respective bond*/
         //HashMap cannot be larger than the total number of atoms. Key = C and Val = Bond
-        HashMap<Integer, IBond> tmpAddAtomMap = new HashMap((aMolecule.getAtomCount()/2), 1);
-        for(IBond tmpBond: aMolecule.bonds()) {
+        HashMap<Integer, IBond> tmpAddAtomMap = new HashMap((tmpClonedMolecule.getAtomCount()/2), 1);
+        for(IBond tmpBond: tmpClonedMolecule.bonds()) {
             if(tmpBond.getOrder() == IBond.Order.DOUBLE) {
                 //C in first position in the bond and O in second position
                 if(tmpBond.getAtom(0).getSymbol().equals("C") && tmpBond.getAtom(1).getSymbol().equals("O")) {
@@ -79,7 +80,7 @@ public class ScaffoldGenerator {
         /*Generate the murckoFragment*/
         MurckoFragmenter tmpMurckoFragmenter = new MurckoFragmenter(true,1);
         tmpMurckoFragmenter.setComputeRingFragments(false);
-        IAtomContainer tmpMurckoFragment = tmpMurckoFragmenter.scaffold(aMolecule);
+        IAtomContainer tmpMurckoFragment = tmpMurckoFragmenter.scaffold(tmpClonedMolecule);
         /*Add the missing O and the respective bond*/
         for(IAtom tmpAtom : tmpMurckoFragment.atoms()) {
             //Every C that occurs in the tmpAddAtomMap and in the SchuffenhauerScaffold
@@ -119,10 +120,11 @@ public class ScaffoldGenerator {
      * @return rings of the inserted molecule.
      */
     public List<IAtomContainer> getRings(IAtomContainer aMolecule, boolean aHasDoubleO) throws CloneNotSupportedException {
+        IAtomContainer tmpClonedMolecule = aMolecule.clone();
         /*Store the number of each C that is double-bonded to O and the respective bond*/
         //HashMap cannot be larger than the total number of atoms. Key = C and Val = Bond
-        HashMap<Integer, IBond> tmpAddAtomMap = new HashMap((aMolecule.getAtomCount()/2), 1);
-        for(IBond tmpBond: aMolecule.bonds()) {
+        HashMap<Integer, IBond> tmpAddAtomMap = new HashMap((tmpClonedMolecule.getAtomCount()/2), 1);
+        for(IBond tmpBond: tmpClonedMolecule.bonds()) {
             if(tmpBond.getOrder() == IBond.Order.DOUBLE) {
                 //C in first position in the bond and O in second position
                 if(tmpBond.getAtom(0).getSymbol().equals("C") && tmpBond.getAtom(1).getSymbol().equals("O")) {
@@ -135,7 +137,7 @@ public class ScaffoldGenerator {
             }
         }
         /*Generate cycles*/
-        Cycles tmpNewCycles = Cycles.mcb(aMolecule);
+        Cycles tmpNewCycles = Cycles.mcb(tmpClonedMolecule);
         IRingSet tmpRingSet = tmpNewCycles.toRingSet();
         List<IAtomContainer> tmpCycles = new ArrayList<>(tmpNewCycles.numberOfCycles());
         int tmpCycleNumber = tmpNewCycles.numberOfCycles();
@@ -276,10 +278,10 @@ public class ScaffoldGenerator {
      * @throws CloneNotSupportedException if cloning is not possible.
      */
     public boolean isRingTerminal(IAtomContainer aMolecule, IAtomContainer aRing) throws CloneNotSupportedException {
-        /*Clone moleclule and ring*/
+        /*Clone molecule and ring*/
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
         IAtomContainer tmpClonedRing = aRing.clone();
-        /*Remove ring atoms from orininal molecule*/
+        /*Remove ring atoms from original molecule*/
         HashMap<Integer, IAtom> tmpMoleculeCounterMap = new HashMap((aMolecule.getAtomCount()), 1);
         for(IAtom tmpMolAtom : tmpClonedMolecule.atoms()) { //Save all atoms of the molecule
             tmpMoleculeCounterMap.put(tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY), tmpMolAtom);
@@ -291,8 +293,8 @@ public class ScaffoldGenerator {
         }
         /*Check if there is more than one molecule in the IAtomContainer*/
         ConnectivityChecker tmpChecker = new ConnectivityChecker();
-        boolean tmpRingisTerminal = tmpChecker.isConnected(tmpClonedMolecule);
-        return tmpRingisTerminal;
+        boolean tmpRingIsTerminal = tmpChecker.isConnected(tmpClonedMolecule);
+        return tmpRingIsTerminal;
     }
 
     /**
