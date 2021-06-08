@@ -27,6 +27,7 @@
 package de.unijena.cheminf.scaffoldTest;
 
 import java.util.Iterator;
+import java.util.Objects;
 
 /**
  * Source: https://github.com/gt4dev/yet-another-tree-structure
@@ -39,21 +40,22 @@ public class TreeNodeIter<T> implements Iterator<TreeNode<T>> {
 
     private TreeNode<T> treeNode;
 
-    public TreeNodeIter(TreeNode<T> treeNode) {
-        this.treeNode = treeNode;
+    public TreeNodeIter(TreeNode<T> aTreeNode) {
+        Objects.requireNonNull(aTreeNode, "Given TreeNode is 'null'");
+        this.treeNode = aTreeNode;
         this.doNext = ProcessStages.ProcessParent;
         this.childrenCurNodeIter = treeNode.getChildren().iterator();
     }
 
     private ProcessStages doNext;
     private TreeNode<T> next;
-    private boolean nextNodeHasBinCalculated; //nextNode() must have been executed before next() can be executed.
+    private boolean nextNodeHasBeenCalculated; //nextNode() must have been executed before next() can be executed.
     private Iterator<TreeNode<T>> childrenCurNodeIter;
     private Iterator<TreeNode<T>> childrenSubNodeIter;
 
     @Override
     public boolean hasNext() {
-        this.nextNodeHasBinCalculated = true;
+        this.nextNodeHasBeenCalculated = true;
         if (this.doNext == ProcessStages.ProcessParent) {
             this.next = this.treeNode;
             this.doNext = ProcessStages.ProcessChildCurNode;
@@ -90,10 +92,10 @@ public class TreeNodeIter<T> implements Iterator<TreeNode<T>> {
 
     @Override
     public TreeNode<T> next() {
-        if(this.nextNodeHasBinCalculated == false) { //execute hasnext() if it has not been executed yet
+        if(this.nextNodeHasBeenCalculated == false) { //execute hasnext() if it has not been executed yet
             this.hasNext();
         }
-        this.nextNodeHasBinCalculated = false;
+        this.nextNodeHasBeenCalculated = false;
         return this.next;
     }
 
@@ -101,6 +103,4 @@ public class TreeNodeIter<T> implements Iterator<TreeNode<T>> {
     public void remove() {
         throw new UnsupportedOperationException();
     }
-
-
 }

@@ -30,6 +30,7 @@ package de.unijena.cheminf.scaffoldTest;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Source: https://github.com/gt4dev/yet-another-tree-structure
@@ -50,15 +51,17 @@ public class TreeNode<T> implements Iterable<TreeNode<T>> {
 
     private List<TreeNode<T>> elementsIndex;
 
-    public TreeNode(T data) {
-        this.data = data;
+    public TreeNode(T aData) {
+        Objects.requireNonNull(aData, "Given data is 'null'");
+        this.data = aData;
         this.children = new LinkedList<TreeNode<T>>();
         this.elementsIndex = new LinkedList<TreeNode<T>>();
         this.elementsIndex.add(this);
     }
 
-    public TreeNode<T> addChild(T child) {
-        TreeNode<T> childNode = new TreeNode<T>(child);
+    public TreeNode<T> addChild(T aChild) {
+        Objects.requireNonNull(aChild, "Given child is 'null'");
+        TreeNode<T> childNode = new TreeNode<T>(aChild);
         childNode.parent = this;
         this.children.add(childNode);
         this.registerChildForSearch(childNode);
@@ -72,16 +75,18 @@ public class TreeNode<T> implements Iterable<TreeNode<T>> {
             return parent.getLevel() + 1;
     }
 
-    private void registerChildForSearch(TreeNode<T> node) {
-        elementsIndex.add(node);
+    private void registerChildForSearch(TreeNode<T> aNode) {
+        Objects.requireNonNull(aNode, "Given Tree Node is 'null'");
+        elementsIndex.add(aNode);
         if (parent != null)
-            parent.registerChildForSearch(node);
+            parent.registerChildForSearch(aNode);
     }
 
-    public TreeNode<T> findTreeNode(Comparable<T> cmp) {
+    public TreeNode<T> findTreeNode(Comparable<T> aCompData) {
+        Objects.requireNonNull(aCompData, "Given comparable data is 'null'");
         for (TreeNode<T> element : this.elementsIndex) {
             T elData = element.data;
-            if (cmp.compareTo(elData) == 0)
+            if (aCompData.compareTo(elData) == 0)
                 return element;
         }
 
@@ -110,10 +115,11 @@ public class TreeNode<T> implements Iterable<TreeNode<T>> {
 
     /**
      * Set the node data.
-     * @param tmpData data that are set
+     * @param aData data that are set
      */
-    public void setData(T tmpData) {
-        this.data = tmpData;
+    public void setData(T aData) {
+        Objects.requireNonNull(aData, "Given Data is 'null'");
+        this.data = aData;
     }
 
     /**
@@ -126,10 +132,11 @@ public class TreeNode<T> implements Iterable<TreeNode<T>> {
 
     /**
      * Set the parent node.
-     * @param tmpParent parent that are set
+     * @param aParent parent that are set
      */
-    public void setParent(TreeNode<T> tmpParent) {
-        this.parent = tmpParent;
+    public void setParent(TreeNode<T> aParent) {
+        Objects.requireNonNull(aParent, "Given TreeNode is 'null'");
+        this.parent = aParent;
     }
 
     /**
@@ -142,10 +149,11 @@ public class TreeNode<T> implements Iterable<TreeNode<T>> {
 
     /**
      * Set the children node.
-     * @param tmpChildren children that are set
+     * @param aChildren children that are set
      */
-    public void setChildren(List<TreeNode<T>> tmpChildren) {
-        this.children = tmpChildren;
+    public void setChildren(List<TreeNode<T>> aChildren) {
+        Objects.requireNonNull(aChildren, "Given TreeNode List is 'null'");
+        this.children = aChildren;
     }
     //</editor-fold>
 
