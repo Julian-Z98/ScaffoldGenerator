@@ -50,8 +50,9 @@ public class ScaffoldGenerator {
      * Property of the atoms according to which they are counted and identified
      */
     public static final String SCAFFOLD_ATOM_COUNTER_PROPERTY = "SCAFFOLD_ATOM_COUNTER_PROPERTY";
+
     /**
-     * Generates the Schuffenhauer scaffold for the entered molecule and returns it.
+     * Generates the Schuffenhauer scaffold for the entered molecule and returns it. All stereochemistry information is deleted.
      * @param aMolecule molecule whose Schuffenhauer scaffold is produced.
      * @return Schuffenhauer scaffold of the inserted molecule. It can be an empty molecule if the original molecule does not contain a Schuffenhauer scaffold.
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
@@ -59,7 +60,10 @@ public class ScaffoldGenerator {
      */
     public IAtomContainer getSchuffenhauerScaffold(IAtomContainer aMolecule) throws CDKException, CloneNotSupportedException {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
-        //Mark each atom with ascending number
+        /*Clear the stereo chemistry of the molecule*/
+        List<IStereoElement> tmpStereo = new ArrayList<>();
+        tmpClonedMolecule.setStereoElements(tmpStereo);
+        /*Mark each atom with ascending number*/
         Integer tmpCounter = 0;
         for(IAtom tmpAtom : tmpClonedMolecule.atoms()) {
             tmpAtom.setProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY, tmpCounter);
