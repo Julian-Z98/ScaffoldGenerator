@@ -82,12 +82,10 @@ public class ScaffoldGeneratorTest {
      */
     @Test
     public void getSchuffenhauerScaffoldTest() throws CloneNotSupportedException, CDKException, IOException {
-        for (int tmpCount = 1; tmpCount < 14; tmpCount++) {
-            String tmpFileName = "Test"+ tmpCount;
+        for (int tmpCount = 1; tmpCount < 18; tmpCount++) {
+            String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
-            //Generate SchuffenhauerScaffold
-            IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
             /*Generate picture of the original*/
             AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpMolecule);
             CDKHydrogenAdder.getInstance(tmpMolecule.getBuilder()).addImplicitHydrogens(tmpMolecule);
@@ -97,6 +95,8 @@ public class ScaffoldGeneratorTest {
             new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Original.png").mkdirs();
             File tmpOutputOriginal = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Original.png");
             ImageIO.write(tmpImgOriginal, "png" ,tmpOutputOriginal);
+            //Generate SchuffenhauerScaffold
+            IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
             //Generate picture of the SchuffenhauerScaffold
             BufferedImage tmpImgSchuff = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
             /*Save the picture*/
@@ -141,7 +141,7 @@ public class ScaffoldGeneratorTest {
      */
     @Test
     public void getRingsTest() throws IOException, CDKException, CloneNotSupportedException {
-        for (int tmpCount = 1; tmpCount < 13; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 18; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -174,7 +174,7 @@ public class ScaffoldGeneratorTest {
      */
     @Test
     public void removeRingTest() throws CDKException, CloneNotSupportedException, IOException {
-        for (int tmpCount = 2; tmpCount < 14; tmpCount++) {
+        for (int tmpCount = 2; tmpCount < 18; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -245,7 +245,7 @@ public class ScaffoldGeneratorTest {
      */
     @Test
     public void isRingTerminalTest() throws CDKException, CloneNotSupportedException, IOException {
-        for (int tmpCount = 2; tmpCount < 14; tmpCount++) {
+        for (int tmpCount = 2; tmpCount < 18; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -284,7 +284,7 @@ public class ScaffoldGeneratorTest {
      */
     @Test
     public void getIterativeRemovalTest() throws CDKException, CloneNotSupportedException, IOException {
-        for (int tmpCount = 1; tmpCount < 14; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 18; tmpCount++) {
             String tmpFileName = "Test"+ tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -316,7 +316,7 @@ public class ScaffoldGeneratorTest {
      */
     @Test
     public void getRemovalTreeTest() throws CDKException, CloneNotSupportedException, IOException {
-        for (int tmpCount = 1; tmpCount < 14; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 18; tmpCount++) {
             String tmpFileName = "Test" + tmpCount ;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -495,7 +495,8 @@ public class ScaffoldGeneratorTest {
     @Test
     public void graphStreamTest() throws InterruptedException, CDKException, IOException, CloneNotSupportedException {
         /*Test ob Url funktioniert:*/
-        String tmpUrl = System.getProperty("user.dir") + "/scaffoldTestOutput/Test11/MatrixTest/MatrixTest0.png"; //Pfad überprüft
+        String tmpUrl = "D:/Studium/Scaffold/scaffoldTest/scaffoldTestOutput/Test11/Tree/TreeTest0Level0.png";
+        //String tmpUrl = System.getProperty("user.dir") + "/scaffoldTestOutput/Test11/MatrixTest/MatrixTest0.png"; //Pfad überprüft
         BufferedImage img=ImageIO.read(new File( tmpUrl));
         ImageIcon icon=new ImageIcon(img);
         JFrame frame=new JFrame();
