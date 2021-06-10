@@ -175,17 +175,19 @@ public class ScaffoldGeneratorTest {
     @Test
     public void removeRingTest() throws CDKException, CloneNotSupportedException, IOException {
         for (int tmpCount = 2; tmpCount < 18; tmpCount++) {
-            String tmpFileName = "Test" + tmpCount;
+            String tmpFileName = "Test" + tmpCount ;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
             //Generate SchuffenhauerScaffold
             IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
             //Generate Rings
-            List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(tmpMolecule, true);
+            List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(tmpSchuffenhauerScaffold, true);
             int tmpCounter = 1;
             for (IAtomContainer tmpRing : tmpRings) {
                 //Generate SchuffenhauerScaffold with removed ring
                 IAtomContainer tmpRemovedSchuff = scaffoldGenerator.removeRing(tmpSchuffenhauerScaffold, tmpRing);
+                tmpSchuffenhauerScaffold = scaffoldGenerator.removeRing(tmpSchuffenhauerScaffold, tmpRing);
+                tmpRemovedSchuff = scaffoldGenerator.getSchuffenhauerScaffold(tmpSchuffenhauerScaffold);
                 /*Generate picture of the SchuffenhauerScaffold with removed ring*/
                 DepictionGenerator tmpGenerator = new DepictionGenerator();
                 tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
