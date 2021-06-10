@@ -185,8 +185,8 @@ public class ScaffoldGeneratorTest {
             int tmpCounter = 1;
             for (IAtomContainer tmpRing : tmpRings) {
                 /*Generate SchuffenhauerScaffold with removed ring*/
-                tmpSchuffenhauerScaffold = scaffoldGenerator.removeRing(tmpSchuffenhauerScaffold, tmpRing);
-                IAtomContainer tmpRemovedSchuff = scaffoldGenerator.getSchuffenhauerScaffold(tmpSchuffenhauerScaffold);
+                //tmpSchuffenhauerScaffold = scaffoldGenerator.removeRing(tmpSchuffenhauerScaffold, tmpRing);
+                IAtomContainer tmpRemovedSchuff = scaffoldGenerator.removeRing(tmpSchuffenhauerScaffold, tmpRing);
                 /*Generate picture of the SchuffenhauerScaffold with removed ring*/
                 DepictionGenerator tmpGenerator = new DepictionGenerator();
                 tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
