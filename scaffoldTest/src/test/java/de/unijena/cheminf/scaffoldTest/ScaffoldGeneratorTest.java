@@ -215,7 +215,7 @@ public class ScaffoldGeneratorTest {
         tmpMolecule = tmpParser.parseSmiles("C1C2CC3CC1CC(C2)C3(CC(=O)C(=P(C4=CC=CC=C4)(C5=CC=CC=C5)C6=CC=CC=C6)C#N)C7=CC=C(C=C7)F"); //PubChem CID: 89041793
         //tmpMolecule = tmpParser.parseSmiles("C1=CC=C(C=C1)C(=O)OCCCC[P+](C2=CC=CC=C2)(C3=CC=CC=C3)C4=CC=CC=C4"); //PubChem CID: 2755300
         //tmpMolecule = tmpParser.parseSmiles("C1CCC(=C(C(=P(C2=CC=CC=C2)(C3=CC=CC=C3)C4=CC=CC=C4)C(=O)C(C(F)(F)F)(F)F)C(C(F)(F)F)(F)F)C1"); //PubChem CID: 2752540
-        //B Ecamples:
+        //B Examples:
         //tmpMolecule = tmpParser.parseSmiles("[B-](C1=CC=CC=C1)(C2=CC=CC=C2)(C3=CC=CC=C3)C4=CC=CC=C4"); //PubChem CID: 8934
         //tmpMolecule = tmpParser.parseSmiles("[B-]123OC4C(=O)OC(CCC=CC=CCCC(CC(=O)C(C5CCC(C(O1)(O5)C(O2)C(=O)OC(CCC=CC=CCCC(CC(=O)C(C6CCC(C4(O3)O6)(C)O)C)O)C)(C)O)C)O)C"); //PubChem CID: 637168
         //tmpMolecule = tmpParser.parseSmiles("[B-]123OC4C(=O)OC5CC(C=CCC(C(C6CCC(C(O1)(O6)C(O2)C(=O)OC7CC(C=CCC(C(C8CCC(C4(O3)O8)C)(C)C)O)OC7C)C)(C)C)O)OC5C"); //PubChem CID: 43587
@@ -494,21 +494,6 @@ public class ScaffoldGeneratorTest {
      */
     @Test
     public void graphStreamTest() throws InterruptedException, CDKException, IOException, CloneNotSupportedException {
-        /*Test ob Url funktioniert:*/
-        String tmpUrl = "D:/Studium/Scaffold/scaffoldTest/scaffoldTestOutput/Test11/Tree/TreeTest0Level0.png";
-        //String tmpUrl = System.getProperty("user.dir") + "/scaffoldTestOutput/Test11/MatrixTest/MatrixTest0.png"; //Pfad überprüft
-        BufferedImage img=ImageIO.read(new File( tmpUrl));
-        ImageIcon icon=new ImageIcon(img);
-        JFrame frame=new JFrame();
-        frame.setLayout(new FlowLayout());
-        frame.setSize(200,300);
-        JLabel lbl=new JLabel();
-        lbl.setIcon(icon);
-        frame.add(lbl);
-        frame.setVisible(true);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        //Url Test zuende
-
         String tmpFileName = "Test13" ;
         //Load molecule from molfile
         IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -523,28 +508,35 @@ public class ScaffoldGeneratorTest {
             tmpScaffoldTree.addNode(tmpMoleculeNode);
         }
         /*Remove some nodes*/
-        tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(3));
-        tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(2));
-        tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(4));
+        tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(24));
+        tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(22));
+        tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(23));
         /*Create a graph from the ScaffoldTree*/
         Graph tmpGraph = new SingleGraph("TestGraph");
+        tmpGraph.setAttribute("ui.stylesheet", "node { size: 100px, 100px; }");
         System.setProperty("org.graphstream.ui", "swing");
+        /*Add edges and nodes*/
         int tmpEdgeCount = 0;
-        int tmpNodeCount = 0;
-        Integer[][] tmpMatrix = tmpScaffoldTree.getTreeAsMatrix();
+        DepictionGenerator tmpGenerator = new DepictionGenerator();
+        Integer[][] tmpMatrix = tmpScaffoldTree.getTreeAsMatrix(); //Create the adjacency matrix
         for(int tmpRow = 0; tmpRow < tmpMatrix.length; tmpRow++) { //Create a node for each row
+            /*Add the ScaffoldTree nodes to the graph*/
             tmpGraph.addNode(String.valueOf(tmpRow));
             Node tmpNode = tmpGraph.getNode(String.valueOf(tmpRow));
-            tmpNode.addAttribute("Node", tmpScaffoldTree.getMatrixNode(tmpRow));
-            //Add a label to each node that corresponds to the position in the matrix
+            tmpNode.setAttribute("Node", tmpScaffoldTree.getMatrixNode(tmpRow));
+            /*Add a label to each node that corresponds to the position in the matrix*/
             tmpNode.setAttribute("ui.label", tmpScaffoldTree.getMatrixNodesNumbers().get(tmpRow));
-
-            //Funktioniert leider nicht:
-            tmpNode.addAttribute("ui.style", "fill-image: url('" + tmpUrl + "');");
-
-            //Farbwechsel funktioniert:
-            //tmpNode.addAttribute("ui.style", "fill-color: rgb(0,100,255);");
-            tmpNodeCount++;
+            /*Add the images*/
+            TreeNode tmpTreeNode =  tmpScaffoldTree.getMatrixNode(tmpScaffoldTree.getMatrixNodesNumbers().get(tmpRow));
+            IAtomContainer tmpTreeNodeMolecule = (IAtomContainer) tmpTreeNode.getData();
+            BufferedImage tmpNodeImg = tmpGenerator.withSize(100,100).depict(tmpTreeNodeMolecule).toImg();
+            //The images are stored temporarily, as I have not found a way to use them directly
+            new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png").mkdirs();
+            File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png");
+            ImageIO.write(tmpNodeImg, "png", tmpSecOutputRemove);
+            //set the images
+            tmpNode.setAttribute("ui.style", "fill-mode: image-scaled-ratio-max;" + "fill-image: url('GraphStream" + tmpRow + ".png');");
+            /*Add edges*/
             for(int tmpCol = 0; tmpCol < tmpMatrix[tmpRow].length; tmpCol++) { //Go through each column of the row
                 if(tmpRow < tmpCol) { //Skip a diagonal half to get edges in one direction only.
                     continue;
@@ -555,8 +547,6 @@ public class ScaffoldGeneratorTest {
                 }
             }
         }
-        //Funktioniert leider nicht:
-        tmpGraph.addAttribute("ui.stylesheet", "fill-image: url('" + tmpUrl + "');");
         /*Display graph*/
         System.setProperty("org.graphstream.ui", "swing");
         tmpGraph.display();
