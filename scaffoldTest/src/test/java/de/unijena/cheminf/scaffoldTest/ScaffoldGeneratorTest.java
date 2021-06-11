@@ -495,7 +495,7 @@ public class ScaffoldGeneratorTest {
      */
     @Test
     public void graphStreamTest() throws InterruptedException, CDKException, IOException, CloneNotSupportedException {
-        String tmpFileName = "Test13" ;
+        String tmpFileName = "Test11" ;
         //Load molecule from molfile
         IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
         //Generate a tree of molecules with iteratively removed terminal rings
