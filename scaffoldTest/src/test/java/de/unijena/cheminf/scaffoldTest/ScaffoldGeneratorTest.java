@@ -82,7 +82,7 @@ public class ScaffoldGeneratorTest {
      */
     @Test
     public void getSchuffenhauerScaffoldTest() throws CloneNotSupportedException, CDKException, IOException {
-        for (int tmpCount = 1; tmpCount < 18; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 21; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -141,7 +141,7 @@ public class ScaffoldGeneratorTest {
      */
     @Test
     public void getRingsTest() throws IOException, CDKException, CloneNotSupportedException {
-        for (int tmpCount = 1; tmpCount < 18; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 21; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -174,7 +174,7 @@ public class ScaffoldGeneratorTest {
      */
     @Test
     public void removeRingTest() throws CDKException, CloneNotSupportedException, IOException {
-        for (int tmpCount = 2; tmpCount < 18; tmpCount++) {
+        for (int tmpCount = 2; tmpCount < 21; tmpCount++) {
             String tmpFileName = "Test" + tmpCount ;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -246,7 +246,7 @@ public class ScaffoldGeneratorTest {
      */
     @Test
     public void isRingTerminalTest() throws CDKException, CloneNotSupportedException, IOException {
-        for (int tmpCount = 2; tmpCount < 18; tmpCount++) {
+        for (int tmpCount = 2; tmpCount < 21; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -285,8 +285,8 @@ public class ScaffoldGeneratorTest {
      */
     @Test
     public void getIterativeRemovalTest() throws CDKException, CloneNotSupportedException, IOException {
-        for (int tmpCount = 1; tmpCount < 18; tmpCount++) {
-            String tmpFileName = "Test"+ tmpCount;
+        for (int tmpCount = 1; tmpCount < 21; tmpCount++) {
+            String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
             //Generate a list of molecules with iteratively removed terminal rings
@@ -317,7 +317,7 @@ public class ScaffoldGeneratorTest {
      */
     @Test
     public void getRemovalTreeTest() throws CDKException, CloneNotSupportedException, IOException {
-        for (int tmpCount = 1; tmpCount < 18; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 21; tmpCount++) {
             String tmpFileName = "Test" + tmpCount ;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -509,9 +509,9 @@ public class ScaffoldGeneratorTest {
             tmpScaffoldTree.addNode(tmpMoleculeNode);
         }
         /*Remove some nodes*/
-        tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(24));
-        tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(22));
-        tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(23));
+        //tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(24));
+        //tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(22));
+        //tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(23));
         /*Create a graph from the ScaffoldTree*/
         Graph tmpGraph = new SingleGraph("TestGraph");
         tmpGraph.setAttribute("ui.stylesheet", "node { size: 100px, 100px; }");
@@ -551,7 +551,7 @@ public class ScaffoldGeneratorTest {
         /*Display graph*/
         System.setProperty("org.graphstream.ui", "swing");
         tmpGraph.display();
-        TimeUnit.SECONDS.sleep(60);
+        TimeUnit.SECONDS.sleep(300);
     }
 
     /**
