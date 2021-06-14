@@ -36,6 +36,7 @@ import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.depict.DepictionGenerator;
 import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.exception.InvalidSmilesException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomType;
@@ -89,7 +90,7 @@ public class ScaffoldGeneratorTest {
             /*Generate picture of the original*/
             AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpMolecule);
             CDKHydrogenAdder.getInstance(tmpMolecule.getBuilder()).addImplicitHydrogens(tmpMolecule);
-            DepictionGenerator tmpGenerator = new DepictionGenerator();
+            DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
             BufferedImage tmpImgOriginal = tmpGenerator.depict(tmpMolecule).toImg();
             /*Save the original picture*/
             new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Original.png").mkdirs();
@@ -107,28 +108,112 @@ public class ScaffoldGeneratorTest {
     }
     /**
      * Test of ScaffoldGenerator.getSchuffenhauerScaffold() with SMILES.
-     * Loads Flucloxacillin(Test11) as SMILES and generates SchuffenhauerScaffold.
+     * Loads Scheme1 from the Ertl 2007 Paper as SMILES and generates SchuffenhauerScaffold.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
      * @throws IOException if file format can not be detected
      * @throws CDKException if file can not be read
      * @throws CloneNotSupportedException if cloning is not possible
      */
     @Test
-    public void getSchuffenhauerSMILESTest() throws IOException, CDKException, CloneNotSupportedException {
+    public void getScheme1Test() throws IOException, CDKException, CloneNotSupportedException {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1=C(C(=NO1)C2=C(C=CC=C2Cl)F)C(=O)NC3C4N(C3=O)C(C(S4)(C)C)C(=O)O");
+        /*Generate picture of the Original molecule*/
+        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+        BufferedImage tmpImgOriginal = tmpGenerator.depict(tmpMolecule).toImg();
+        /*Save the picture of the original*/
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme1/Original.png").mkdirs();
+        File tmpOutputOriginal = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme1/Original.png");
+        ImageIO.write(tmpImgOriginal, "png" ,tmpOutputOriginal);
         //Generate SchuffenhauerScaffold
         IAtomContainer tmpSchuffenhauerSMILES = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
         /*Generate picture of the SchuffenhauerScaffold*/
-        DepictionGenerator tmpGenerator = new DepictionGenerator();
-        tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerSMILES).toImg();
-        /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Test11/SchuffenhauerSMILES.png").mkdirs();
-        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Test11/SchuffenhauerSMILES.png");
+        /*Save the picture of the schuffenhauer scaffold*/
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme1/Schuffenhauer.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme1/Schuffenhauer.png");
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
 
+    }
+
+    /**
+     * Test of ScaffoldGenerator.removeRing() with SMILES.
+     * Loads Scheme3a from the Ertl 2007 Paper as SMILES and generates SchuffenhauerScaffold with removed rings.
+     * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
+     * @throws IOException if file format can not be detected
+     * @throws CDKException if file can not be read
+     * @throws CloneNotSupportedException if cloning is not possible
+     */
+    @Test
+    public void getScheme3aTest() throws CDKException, CloneNotSupportedException, IOException {
+        //SMILES to IAtomContainer
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        IAtomContainer tmpMolecule = tmpParser.parseSmiles("c2ccc1CNCCc1c2");
+        /*Generate picture of the SchuffenhauerScaffold*/
+        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+        BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpMolecule).toImg();
+        /*Save the picture*/
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme3a/Schuffenhauer.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme3a/Schuffenhauer.png");
+        ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
+        /*Generate picture of the SchuffenhauerScaffold with removed ring*/
+        //Generate SchuffenhauerScaffold
+        IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
+        //Get rings
+        List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(tmpSchuffenhauerScaffold, true);
+        int tmpCounter = 0;
+        for(IAtomContainer tmpRing : tmpRings) {
+            /*Remove rings*/
+            IAtomContainer tmpRemovedSchuff = scaffoldGenerator.removeRing(tmpSchuffenhauerScaffold, tmpRing);
+            /*Generate picture*/
+            BufferedImage tmpImgRemove = tmpGenerator.depict(tmpRemovedSchuff).toImg();
+            /*Save the picture*/
+            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme3a/RemovedRing" + tmpCounter + ".png").mkdirs();
+            File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme3a/RemovedRing" + tmpCounter + ".png");
+            ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
+            tmpCounter++;
+        }
+    }
+
+    /**
+     * Test of ScaffoldGenerator.isRingRemovable with SMILES.
+     * Loads Scheme3b from the Ertl 2007 Paper as SMILES and generates SchuffenhauerScaffold with removed rings.
+     * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
+     * @throws IOException if file format can not be detected
+     * @throws CDKException if file can not be read
+     * @throws CloneNotSupportedException if cloning is not possible
+     */
+    @Test
+    public void getScheme3bTest() throws CDKException, CloneNotSupportedException, IOException {
+        //SMILES to IAtomContainer
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        IAtomContainer tmpMolecule = tmpParser.parseSmiles("c1cc2CCCc3c[nH]c(c1)c23");
+        /*Generate picture of the SchuffenhauerScaffold*/
+        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+        BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpMolecule).toImg();
+        /*Save the picture*/
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme3b/Schuffenhauer.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme3b/Schuffenhauer.png");
+        ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
+        /*Generate picture of the SchuffenhauerScaffold with removed ring*/
+        //Generate SchuffenhauerScaffold
+        IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
+        //Get rings
+        List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(tmpSchuffenhauerScaffold, true);
+        int tmpCounter = 0;
+        for(IAtomContainer tmpRing : tmpRings) {
+            boolean tmpIsRemovable = scaffoldGenerator.isRingRemovable(tmpRing, tmpRings, tmpSchuffenhauerScaffold);
+            /*Remove rings*/
+            IAtomContainer tmpRemovedSchuff = scaffoldGenerator.removeRing(tmpSchuffenhauerScaffold, tmpRing);
+            /*Generate picture*/
+            BufferedImage tmpImgRemove = tmpGenerator.depict(tmpRemovedSchuff).toImg();
+            /*Save the picture*/
+            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme3b/IsRingRemovable_" + tmpIsRemovable + tmpCounter + ".png").mkdirs();
+            File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme3b/IsRingRemovable_" + tmpIsRemovable + tmpCounter + ".png");
+            ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
+            tmpCounter++;
+        }
     }
     /**
      * Test of Cycles.mcb() with V2000 and V3000 mol files.
@@ -150,8 +235,7 @@ public class ScaffoldGeneratorTest {
             //Generate rings
             List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(tmpMolecule,true);
             /*Generate pictures of the rings*/
-            DepictionGenerator tmpGenerator = new DepictionGenerator();
-            tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
+            DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
             int tmpCounter = 1;
             for (IAtomContainer tmpRing : tmpRings) {
                 BufferedImage tmpImgRing = tmpGenerator.depict(tmpRing).toImg();
@@ -188,8 +272,7 @@ public class ScaffoldGeneratorTest {
                 //tmpSchuffenhauerScaffold = scaffoldGenerator.removeRing(tmpSchuffenhauerScaffold, tmpRing);
                 IAtomContainer tmpRemovedSchuff = scaffoldGenerator.removeRing(tmpSchuffenhauerScaffold, tmpRing);
                 /*Generate picture of the SchuffenhauerScaffold with removed ring*/
-                DepictionGenerator tmpGenerator = new DepictionGenerator();
-                tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
+                DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
                 BufferedImage tmpImgRemove = tmpGenerator.depict(tmpRemovedSchuff).toImg();
                 /*Save the picture*/
                 new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/RingRemove" + tmpCounter + ".png").mkdirs();
@@ -261,8 +344,7 @@ public class ScaffoldGeneratorTest {
                     //Generate SchuffenhauerScaffold with removed ring
                     IAtomContainer tmpRemovedSchuff = scaffoldGenerator.removeRing(tmpSchuffenhauerScaffold, tmpRing);
                     /*Generate picture of the SchuffenhauerScaffold with removed ring*/
-                    DepictionGenerator tmpGenerator = new DepictionGenerator();
-                    tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
+                    DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
                     BufferedImage tmpImgRemove = tmpGenerator.depict(tmpRemovedSchuff).toImg();
                     /*Save the picture*/
                     new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/TerminalRingRemove" + tmpCounter + ".png").mkdirs();
@@ -294,8 +376,7 @@ public class ScaffoldGeneratorTest {
             int tmpCounter = 1;
             for (IAtomContainer tmpIterative : tmpMolecules) {
                 /*Generate picture of the molecule*/
-                DepictionGenerator tmpGenerator = new DepictionGenerator();
-                tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
+                DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
                 BufferedImage tmpImgRemove = tmpGenerator.depict(tmpIterative).toImg();
                 /*Save the picture*/
                 new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Iterative" + tmpCounter + ".png").mkdirs();
@@ -327,7 +408,7 @@ public class ScaffoldGeneratorTest {
             while(tmpNodeIter.hasNext()) { // As long as there are still other molecules in the tree
                 TreeNode<IAtomContainer> tmpMoleculeNode = tmpNodeIter.next(); // Next molecule in tree
                 /*Save the picture*/
-                DepictionGenerator tmpGenerator = new DepictionGenerator();
+                DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
                 BufferedImage tmpSecImgRemove = tmpGenerator.depict(tmpMoleculeNode.getData()).toImg();
                 new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/TreeTest" + tmpCounter  + "Level" + tmpMoleculeNode.getLevel() + ".png").mkdirs();
                 File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/TreeTest" + tmpCounter +  "Level" + tmpMoleculeNode.getLevel() + ".png");
@@ -360,7 +441,7 @@ public class ScaffoldGeneratorTest {
             TreeNode<IAtomContainer> tmpMoleculeNode = tmpNodeIter.next(); // Next molecule in tree
             if(tmpCounter == tmpTestNumber -1){
                 /*Save the picture of the test Node*/
-                DepictionGenerator tmpGenerator = new DepictionGenerator();
+                DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
                 BufferedImage tmpNodeImg = tmpGenerator.depict(tmpMoleculeNode.getData()).toImg();
                 new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/TestNode.png").mkdirs();
                 File tmpNodeFile = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/TestNode.png");
@@ -461,7 +542,7 @@ public class ScaffoldGeneratorTest {
         for(TreeNode tmpNode : tmpScaffoldTree.getMatrixNodes().values()) {
             IAtomContainer tmpNodeMolecule = (IAtomContainer) tmpNode.getData();
             /*Save the picture*/
-            DepictionGenerator tmpGenerator = new DepictionGenerator();
+            DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
             BufferedImage tmpSecImgRemove = tmpGenerator.depict(tmpNodeMolecule).toImg();
             new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/MatrixTest" + "/MatrixTest" + tmpTreeCounter  + ".png").mkdirs();
             File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/MatrixTest" + "/MatrixTest" + tmpTreeCounter  + ".png");
@@ -495,7 +576,7 @@ public class ScaffoldGeneratorTest {
      */
     @Test
     public void graphStreamTest() throws InterruptedException, CDKException, IOException, CloneNotSupportedException {
-        String tmpFileName = "Test11" ;
+        String tmpFileName = "Test13" ;
         //Load molecule from molfile
         IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
         //Generate a tree of molecules with iteratively removed terminal rings
@@ -518,7 +599,7 @@ public class ScaffoldGeneratorTest {
         System.setProperty("org.graphstream.ui", "swing");
         /*Add edges and nodes*/
         int tmpEdgeCount = 0;
-        DepictionGenerator tmpGenerator = new DepictionGenerator();
+        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
         Integer[][] tmpMatrix = tmpScaffoldTree.getTreeAsMatrix(); //Create the adjacency matrix
         for(int tmpRow = 0; tmpRow < tmpMatrix.length; tmpRow++) { //Create a node for each row
             /*Add the ScaffoldTree nodes to the graph*/
@@ -634,8 +715,7 @@ public class ScaffoldGeneratorTest {
                     tmpMolecule = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
                     /*Generate control picture*/
                     if(aIsPictureCreated && (aPictureNumber) == tmpNumberCounter) {
-                        DepictionGenerator tmpGenerator = new DepictionGenerator();
-                        tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
+                        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
                         /*Generate and save molecule picture*/
                         BufferedImage tmpImgMol = tmpGenerator.depict(tmpMolecule).toImg();
                         new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest/SpeedTestMol.png").mkdirs();
@@ -650,8 +730,7 @@ public class ScaffoldGeneratorTest {
                     /*Generate control pictures*/
                     if(aIsPictureCreated && (aPictureNumber) == tmpNumberCounter) {
                         IAtomContainer tmpRing = tmpRings.get(tmpRings.size()-1);
-                        DepictionGenerator tmpGenerator = new DepictionGenerator();
-                        tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
+                        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
                         /*Generate and save molecule picture*/
                         BufferedImage tmpImgMol = tmpGenerator.depict(tmpMolecule).toImg();
                         new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest/SpeedTestMol.png").mkdirs();
@@ -672,8 +751,7 @@ public class ScaffoldGeneratorTest {
                         IAtomContainer tmpRemoveMol = scaffoldGenerator.removeRing(tmpMolecule, tmpRing);
                         /*Generate control pictures*/
                         if(aIsPictureCreated && (aPictureNumber) == tmpNumberCounter) {
-                            DepictionGenerator tmpGenerator = new DepictionGenerator();
-                            tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
+                            DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
                             /*Generate and save molecule picture*/
                             BufferedImage tmpImgMol = tmpGenerator.depict(tmpMolecule).toImg();
                             new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest/SpeedTestMol.png").mkdirs();
@@ -702,8 +780,7 @@ public class ScaffoldGeneratorTest {
                     if(aIsPictureCreated && (aPictureNumber) == tmpNumberCounter) {
                         for(IAtomContainer tmpIteration : tmpIterations) {
                         /*Generate control pictures*/
-                            DepictionGenerator tmpGenerator = new DepictionGenerator();
-                            tmpGenerator.withSize(600, 600).withTitleColor(Color.BLACK);
+                            DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
                             /*Generate and save molecule picture*/
                             BufferedImage tmpImgMol = tmpGenerator.depict(tmpMolecule).toImg();
                             new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest/SpeedTestMol.png").mkdirs();
