@@ -78,50 +78,50 @@ public class ScaffoldGenerator {
         for(IAtom tmpMurckoAtom : tmpMurckoFragment.atoms()) {
             tmpMurckoAtomNumbers.add(tmpMurckoAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
         }
-        /*Store the number of each Atom that is double-bonded and the respective bond*/
-        //HashMap cannot be larger than the total number of atoms. Key = C and Val = Bond
+        /*Store the number of each Atom that is not single bonded and the respective bond*/
+        //HashMap cannot be larger than the total number of atoms. Key = Atom and Val = Bond
         HashMap<Integer, IBond> tmpAddAtomMap = new HashMap((tmpClonedMolecule.getAtomCount()/2), 1);
         for(IBond tmpBond: tmpClonedMolecule.bonds()) {
-            if(tmpBond.getOrder() == IBond.Order.DOUBLE) {//Consider all double bonds
-                //If both atoms of the double bond are in the Murcko fragment, they are taken over anyway
+            if(tmpBond.getOrder() != IBond.Order.SINGLE) {//Consider non single bonds
+                //If both atoms of the bond are in the Murcko fragment, they are taken over anyway
                 if(tmpMurckoAtomNumbers.contains(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))
                         && tmpMurckoAtomNumbers.contains(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
                     continue;
                 }
-                //C in the first position in the bond and the binding has not yet been added to the list
-                if(tmpBond.getAtom(0).getSymbol().equals("C") && !tmpAddAtomMap.containsValue(tmpBond)) {
+                //The binding has not yet been added to the list
+                if(!tmpAddAtomMap.containsValue(tmpBond)) {
+                    /*Add the bond with both atoms*/
                     tmpAddAtomMap.put(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY),tmpBond);
-                }
-                //C in the second position in the bond and the binding has not yet been added to the list
-                if(tmpBond.getAtom(1).getSymbol().equals("C") && !tmpAddAtomMap.containsValue(tmpBond)) {
                     tmpAddAtomMap.put(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY),tmpBond);
                 }
             }
         }
         /*Add the missing atom and the respective bond*/
+        HashSet<IBond> tmpBondSaved = new HashSet(aMolecule.getBondCount(), 1);
         for(IAtom tmpAtom : tmpMurckoFragment.atoms()) {
+            int tmpAtomProperty = tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY);
             //Every atom that occurs in the tmpAddAtomMap and in the SchuffenhauerScaffold
-            if(tmpAddAtomMap.containsKey(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
-                IBond tmpNewBond = null;
-                //C in first position of the bond
-                if(tmpAddAtomMap.get(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)).getAtom(0).getSymbol() == "C") {
-                    IAtom tmpClonedAtom = tmpAddAtomMap.get(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)).getAtom(1).clone();
-                    tmpMurckoFragment.addAtom(tmpClonedAtom); //Add cloned Atom to the molecule
-                    //Clone the bond from the original molecule
-                    tmpNewBond = tmpAddAtomMap.get(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)).clone();
-                    tmpNewBond.setAtom(tmpAtom,0); //Add tmpMurckoFragment C to the bond
-                    tmpNewBond.setAtom(tmpClonedAtom,1); //Add cloned Atom to the bond
+            if(tmpAddAtomMap.containsKey(tmpAtomProperty)) {
+                //Skip the bond if it has been added before
+                if(tmpBondSaved.contains(tmpAddAtomMap.get(tmpAtomProperty))) {
+                    continue;
                 }
-                //C in second position of the bond and C is not in first position of the bond to prevent C=C bindings from being recorded twice
-                if(tmpAddAtomMap.get(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)).getAtom(1).getSymbol() == "C" &&
-                        tmpAddAtomMap.get(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)).getAtom(0).getSymbol() != "C" ) {
-                    IAtom tmpClonedAtom = tmpAddAtomMap.get(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)).getAtom(0).clone();
-                    tmpMurckoFragment.addAtom(tmpClonedAtom); //Add cloned Atom to the molecule
-                    //Clone the bond from the original molecule
-                    tmpNewBond = tmpAddAtomMap.get(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)).clone();
-                    tmpNewBond.setAtom(tmpAtom,1); //Add tmpMurckoFragment C to the bond
-                    tmpNewBond.setAtom(tmpClonedAtom,0); //Add cloned Atom to the bond
+                /*Select the atom that is no longer in the MurckoFragment*/
+                IAtom tmpClonedAtom = null;
+                int tmpAtom1Property = tmpAddAtomMap.get(tmpAtomProperty).getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY);
+                if(tmpAtom1Property == tmpAtomProperty) {
+                    tmpClonedAtom = tmpAddAtomMap.get(tmpAtomProperty).getAtom(0).clone();
+                } else {
+                    tmpClonedAtom = tmpAddAtomMap.get(tmpAtomProperty).getAtom(1).clone();
                 }
+                /*Add all components to the Murcko fragment*/
+                tmpMurckoFragment.addAtom(tmpClonedAtom); //Add cloned Atom to the molecule
+                //Save the bonds that have been added
+                tmpBondSaved.add(tmpAddAtomMap.get(tmpAtomProperty));
+                //Clone the bond from the original molecule
+                IBond tmpNewBond = tmpAddAtomMap.get(tmpAtomProperty).clone();
+                tmpNewBond.setAtom(tmpAtom,0); //Add tmpMurckoFragment C to the bond
+                tmpNewBond.setAtom(tmpClonedAtom,1); //Add cloned Atom to the bond
                 tmpMurckoFragment.addBond(tmpNewBond); //Add the new bond
             }
         }
@@ -134,10 +134,10 @@ public class ScaffoldGenerator {
     /**
      * Generates the smallest set of smallest rings(SSSR) with Cycles.mcb() for the entered molecule, adds double bounded oxygens and returns it.
      * @param aMolecule molecule whose rings are produced.
-     * @param aHasDoubleBondedAtoms if true, double bonded atoms are retained on the ring.
+     * @param aIsKeepingNonSingleBonds if true, double bonded atoms are retained on the ring.
      * @return rings of the inserted molecule.
      */
-    public List<IAtomContainer> getRings(IAtomContainer aMolecule, boolean aHasDoubleBondedAtoms) throws CloneNotSupportedException {
+    public List<IAtomContainer> getRings(IAtomContainer aMolecule, boolean aIsKeepingNonSingleBonds) throws CloneNotSupportedException {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
         /*Generate cycles*/
         Cycles tmpNewCycles = Cycles.mcb(tmpClonedMolecule);
@@ -147,32 +147,28 @@ public class ScaffoldGenerator {
         //HashMap cannot be larger than the total number of atoms. Key = C and Val = Bond
         HashMap<Integer, IBond> tmpAddAtomMap = new HashMap((tmpClonedMolecule.getAtomCount() / 2), 1);
         /*Store double bonded atoms*/
-        if(aHasDoubleBondedAtoms == true) { //Only needed if double bonded atoms are retained
-            /*Store the number of each Atom of the molecule*/
-            HashSet<Integer> tmpAtomNumbers = new HashSet(tmpClonedMolecule.getAtomCount(), 1);
+        if(aIsKeepingNonSingleBonds == true) { //Only needed if double bonded atoms are retained
             /*Generate the murckoFragment*/
-            MurckoFragmenter tmpMurckoFragmenter = new MurckoFragmenter(true,1);
+            MurckoFragmenter tmpMurckoFragmenter = new MurckoFragmenter(true, 1);
             tmpMurckoFragmenter.setComputeRingFragments(false);
             IAtomContainer tmpMurckoFragment = tmpMurckoFragmenter.scaffold(tmpClonedMolecule);
-            /*Save the numbers of the MurckoFragment atoms, because double bonds between them do not need to be restored*/
-            for (IAtom tmpAtom : tmpMurckoFragment.atoms()) {
-                tmpAtomNumbers.add(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
+            /*Store the number of each Atom of the murckoFragment*/
+            HashSet<Integer> tmpMurckoAtomNumbers = new HashSet(tmpClonedMolecule.getAtomCount(), 1);
+            for (IAtom tmpMurckoAtom : tmpMurckoFragment.atoms()) {
+                tmpMurckoAtomNumbers.add(tmpMurckoAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
             }
-
-            /*Store the number of each C that is double-bonded to an Atom and the respective bond*/
+            /*Store the number of each Atom that is not single bonded and the respective bond*/
             for (IBond tmpBond : tmpClonedMolecule.bonds()) {
-                if (tmpBond.getOrder() == IBond.Order.DOUBLE) {//Consider all double bonds
-                    //If both atoms of the double bond are in the Murcko fragment, they are taken over anyway
-                    if (tmpAtomNumbers.contains(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))
-                            && tmpAtomNumbers.contains(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                if (tmpBond.getOrder() != IBond.Order.SINGLE) {//Consider non single bonds
+                    //If both atoms of the bond are in the Murcko fragment, they are taken over anyway
+                    if (tmpMurckoAtomNumbers.contains(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))
+                            && tmpMurckoAtomNumbers.contains(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
                         continue;
                     }
-                    //C in the first position in the bond and the binding has not yet been added to the list
-                    if (tmpBond.getAtom(0).getSymbol().equals("C") && !tmpAddAtomMap.containsValue(tmpBond)) {
+                    //The binding has not yet been added to the list
+                    if (!tmpAddAtomMap.containsValue(tmpBond)) {
+                        /*Add the bond with both atoms*/
                         tmpAddAtomMap.put(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY), tmpBond);
-                    }
-                    //C in the second position in the bond and the binding has not yet been added to the list
-                    if (tmpBond.getAtom(1).getSymbol().equals("C") && !tmpAddAtomMap.containsValue(tmpBond)) {
                         tmpAddAtomMap.put(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY), tmpBond);
                     }
                 }
@@ -181,31 +177,33 @@ public class ScaffoldGenerator {
         /*Add Cycles*/
         for(int tmpCount = 0; tmpCount < tmpCycleNumber; tmpCount++) { //Go through all generated rings
             IAtomContainer tmpCycle = tmpRingSet.getAtomContainer(tmpCount); //Store rings as AtomContainer
-            if(aHasDoubleBondedAtoms == true) {
+            if(aIsKeepingNonSingleBonds == true) {
                 /*Add the missing atom and the respective bond*/
-                for (IAtom tmpAtom : tmpCycle.atoms()) {
+                HashSet<IBond> tmpBondSaved = new HashSet(aMolecule.getBondCount(), 1);
+                for(IAtom tmpAtom : tmpCycle.atoms()) {
+                    int tmpAtomProperty = tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY);
                     //Every atom that occurs in the tmpAddAtomMap and in the SchuffenhauerScaffold
-                    if (tmpAddAtomMap.containsKey(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
-                        IBond tmpNewBond = null;
-                        //C in first position of the bond
-                        if (tmpAddAtomMap.get(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)).getAtom(0).getSymbol() == "C") {
-                            IAtom tmpClonedAtom = tmpAddAtomMap.get(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)).getAtom(1).clone();
-                            tmpCycle.addAtom(tmpClonedAtom); //Add cloned Atom to the molecule
-                            //Clone the bond from the original molecule
-                            tmpNewBond = tmpAddAtomMap.get(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)).clone();
-                            tmpNewBond.setAtom(tmpAtom, 0); //Add tmpMurckoFragment C to the bond
-                            tmpNewBond.setAtom(tmpClonedAtom, 1); //Add cloned Atom to the bond
+                    if(tmpAddAtomMap.containsKey(tmpAtomProperty)) {
+                        //Skip the bond if it has been added before
+                        if(tmpBondSaved.contains(tmpAddAtomMap.get(tmpAtomProperty))) {
+                            continue;
                         }
-                        //C in second position of the bond and C is not in first position of the bond to prevent C=C bindings from being recorded twice
-                        if (tmpAddAtomMap.get(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)).getAtom(1).getSymbol() == "C" &&
-                                tmpAddAtomMap.get(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)).getAtom(0).getSymbol() != "C") {
-                            IAtom tmpClonedAtom = tmpAddAtomMap.get(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)).getAtom(0).clone();
-                            tmpCycle.addAtom(tmpClonedAtom); //Add cloned Atom to the molecule
-                            //Clone the bond from the original molecule
-                            tmpNewBond = tmpAddAtomMap.get(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)).clone();
-                            tmpNewBond.setAtom(tmpAtom, 1); //Add tmpMurckoFragment C to the bond
-                            tmpNewBond.setAtom(tmpClonedAtom, 0); //Add cloned Atom to the bond
+                        /*Select the atom that is no longer in the MurckoFragment*/
+                        IAtom tmpClonedAtom = null;
+                        int tmpAtom1Property = tmpAddAtomMap.get(tmpAtomProperty).getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY);
+                        if(tmpAtom1Property == tmpAtomProperty) {
+                            tmpClonedAtom = tmpAddAtomMap.get(tmpAtomProperty).getAtom(0).clone();
+                        } else {
+                            tmpClonedAtom = tmpAddAtomMap.get(tmpAtomProperty).getAtom(1).clone();
                         }
+                        /*Add all components to the Cycle*/
+                        tmpCycle.addAtom(tmpClonedAtom); //Add cloned Atom to the molecule
+                        //Save the bonds that have been added
+                        tmpBondSaved.add(tmpAddAtomMap.get(tmpAtomProperty));
+                        //Clone the bond from the original molecule
+                        IBond tmpNewBond = tmpAddAtomMap.get(tmpAtomProperty).clone();
+                        tmpNewBond.setAtom(tmpAtom,0); //Add tmpMurckoFragment C to the bond
+                        tmpNewBond.setAtom(tmpClonedAtom,1); //Add cloned Atom to the bond
                         tmpCycle.addBond(tmpNewBond); //Add the new bond
                     }
                 }
@@ -380,7 +378,7 @@ public class ScaffoldGenerator {
         }
         //return false;
 
-        /*Aromaten Problem*/
+        /*Aromaten Erkennung*/
 
         Aromaticity tmpAromaticity = new Aromaticity(ElectronDonation.cdk(), Cycles.cdkAromaticSet());
         if(tmpAromaticity.apply(tmpClonedRing)) { //Must only be done if the ring is Aromatic

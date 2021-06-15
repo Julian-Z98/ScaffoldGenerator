@@ -215,6 +215,50 @@ public class ScaffoldGeneratorTest {
             tmpCounter++;
         }
     }
+
+    /**
+     * Test of ScaffoldGenerator.isRingRemovable with SMILES.
+     * Loads Scheme3b from the Ertl 2007 Paper as SMILES and generates SchuffenhauerScaffold with removed rings.
+     * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
+     * @throws IOException if file format can not be detected
+     * @throws CDKException if file can not be read
+     * @throws CloneNotSupportedException if cloning is not possible
+     */
+    @Test
+    public void getSchuffenhauerNonCTest() throws CDKException, CloneNotSupportedException, IOException {
+        //SMILES to IAtomContainer
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        IAtomContainer tmpMolecule = tmpParser.parseSmiles("[S+]#S1CCCCC1"); //Triple bond
+        //IAtomContainer tmpMolecule = tmpParser.parseSmiles("P=[P+]1CCCCC1"); // P=P Test
+        //IAtomContainer tmpMolecule = tmpParser.parseSmiles("S=S1CCCCC1"); //S=S Test
+        /*Generate picture of the Original*/
+        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+        BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpMolecule).toImg();
+        /*Save the picture*/
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCDoubleBond/Original.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCDoubleBond/Original.png");
+        ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
+        /*Generate picture of the SchuffenhauerScaffold*/
+        IAtomContainer tmpSchuff = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
+        BufferedImage tmpImgSchuff = tmpGenerator.depict(tmpSchuff).toImg();
+        /*Save the picture*/
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCDoubleBond/Schuffenhauer.png").mkdirs();
+        File tmpOutputSchuff = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCDoubleBond/Schuffenhauer.png");
+        ImageIO.write(tmpImgSchuff, "png" ,tmpOutputSchuff);
+        //Generate rings
+        List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule),true);
+        /*Generate pictures of the rings*/
+        int tmpCounter = 1;
+        for (IAtomContainer tmpRing : tmpRings) {
+            BufferedImage tmpImgRing = tmpGenerator.depict(tmpRing).toImg();
+            /*Save the picture*/
+            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCDoubleBond/Ring" + tmpCounter + ".png").mkdirs();
+            File tmpOutputRing = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCDoubleBond/Ring" + tmpCounter + ".png");
+            ImageIO.write(tmpImgRing, "png", tmpOutputRing);
+            tmpCounter++;
+        }
+    }
+
     /**
      * Test of Cycles.mcb() with V2000 and V3000 mol files.
      * Loads the 12 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and creates the rings of the SchuffenhauerScaffold with getRings().
@@ -576,7 +620,7 @@ public class ScaffoldGeneratorTest {
      */
     @Test
     public void graphStreamTest() throws InterruptedException, CDKException, IOException, CloneNotSupportedException {
-        String tmpFileName = "Test13" ;
+        String tmpFileName = "Test11" ;
         //Load molecule from molfile
         IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
         //Generate a tree of molecules with iteratively removed terminal rings
