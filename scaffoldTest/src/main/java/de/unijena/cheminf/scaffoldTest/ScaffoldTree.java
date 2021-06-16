@@ -103,6 +103,11 @@ public class ScaffoldTree {
         this.nodeCounter++;
     }
 
+    /**
+     * Removes a Node. This does not change the order. The numbering does not move up.
+     * @param aNode Node to remove
+     * @throws CDKException In case of a problem with the SmilesGenerator
+     */
     public void removeNode(TreeNode aNode) throws CDKException {
         Objects.requireNonNull(aNode, "Given TreeNode is 'null'");
         if(!this.reverseNodeMap.containsKey(aNode)) { //Check if the node exists in the tree
@@ -240,24 +245,25 @@ public class ScaffoldTree {
     public Integer[][] getTreeAsMatrix() {
         int tmpSize = this.nodeMap.size();
         Integer[][] tmpMatrix = new Integer[tmpSize][tmpSize];
-        if(this.isTreeConnected()) { //Only a connected matrix is calculated
-            /*Set all values of the matrix to 0*/
-            for (int tmpRow = 0; tmpRow < tmpMatrix.length; tmpRow++) {
-                for (int tmpCol = 0; tmpCol < tmpMatrix[tmpRow].length; tmpCol++) {
-                    tmpMatrix[tmpRow][tmpCol] = 0;
-                }
+        if(!this.isTreeConnected()) { //Only a connected matrix is calculated
+            throw new IllegalStateException("Tree is not connected");
+        }
+        /*Set all values of the matrix to 0*/
+        for (int tmpRow = 0; tmpRow < tmpMatrix.length; tmpRow++) {
+            for (int tmpCol = 0; tmpCol < tmpMatrix[tmpRow].length; tmpCol++) {
+                tmpMatrix[tmpRow][tmpCol] = 0;
             }
-            /*Insert a 1 for each parent node*/
-            int tmpCounter = 0;
-            for (TreeNode tmpNode : this.nodeMap.values()) {
-                if (tmpNode.getParent() != null) {
-                    //Set a 1 at the level of the parent and at the level of the node
-                    tmpMatrix[tmpCounter][this.getMatrixNodesNumbers().indexOf(this.reverseNodeMap.get(tmpNode.getParent()))] = 1;
-                    //Set a 1 at the level of the node and at the level of the parent
-                    tmpMatrix[this.getMatrixNodesNumbers().indexOf(this.reverseNodeMap.get(tmpNode.getParent()))][tmpCounter] = 1;
-                }
-                tmpCounter++;
+        }
+        /*Insert a 1 for each parent node*/
+        int tmpCounter = 0;
+        for (TreeNode tmpNode : this.nodeMap.values()) {
+            if (tmpNode.getParent() != null) {
+                //Set a 1 at the level of the parent and at the level of the node
+                tmpMatrix[tmpCounter][this.getMatrixNodesNumbers().indexOf(this.reverseNodeMap.get(tmpNode.getParent()))] = 1;
+                //Set a 1 at the level of the node and at the level of the parent
+                tmpMatrix[this.getMatrixNodesNumbers().indexOf(this.reverseNodeMap.get(tmpNode.getParent()))][tmpCounter] = 1;
             }
+            tmpCounter++;
         }
         return tmpMatrix;
     }
