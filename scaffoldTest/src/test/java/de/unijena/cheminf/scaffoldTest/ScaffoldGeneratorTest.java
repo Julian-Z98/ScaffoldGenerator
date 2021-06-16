@@ -34,9 +34,9 @@ import org.junit.Test;
 import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.DefaultChemObjectBuilder;
+import org.openscience.cdk.aromaticity.ElectronDonation;
 import org.openscience.cdk.depict.DepictionGenerator;
 import org.openscience.cdk.exception.CDKException;
-import org.openscience.cdk.exception.InvalidSmilesException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomType;
@@ -53,8 +53,6 @@ import org.openscience.cdk.tools.CDKHydrogenAdder;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.List;
@@ -97,7 +95,7 @@ public class ScaffoldGeneratorTest {
             File tmpOutputOriginal = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Original.png");
             ImageIO.write(tmpImgOriginal, "png" ,tmpOutputOriginal);
             //Generate SchuffenhauerScaffold
-            IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
+            IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule, true, ElectronDonation.cdk());
             //Generate picture of the SchuffenhauerScaffold
             BufferedImage tmpImgSchuff = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
             /*Save the picture*/
@@ -127,7 +125,7 @@ public class ScaffoldGeneratorTest {
         File tmpOutputOriginal = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme1/Original.png");
         ImageIO.write(tmpImgOriginal, "png" ,tmpOutputOriginal);
         //Generate SchuffenhauerScaffold
-        IAtomContainer tmpSchuffenhauerSMILES = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
+        IAtomContainer tmpSchuffenhauerSMILES = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule, true, ElectronDonation.cdk());
         /*Generate picture of the SchuffenhauerScaffold*/
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerSMILES).toImg();
         /*Save the picture of the schuffenhauer scaffold*/
@@ -159,7 +157,7 @@ public class ScaffoldGeneratorTest {
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         /*Generate picture of the SchuffenhauerScaffold with removed ring*/
         //Generate SchuffenhauerScaffold
-        IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
+        IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule, true, ElectronDonation.cdk());
         //Get rings
         List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(tmpSchuffenhauerScaffold, true);
         int tmpCounter = 0;
@@ -198,7 +196,7 @@ public class ScaffoldGeneratorTest {
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         /*Generate picture of the SchuffenhauerScaffold with removed ring*/
         //Generate SchuffenhauerScaffold
-        IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
+        IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule, true, ElectronDonation.cdk());
         //Get rings
         List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(tmpSchuffenhauerScaffold, true);
         int tmpCounter = 0;
@@ -217,7 +215,7 @@ public class ScaffoldGeneratorTest {
     }
 
     /**
-     * Test of ScaffoldGenerator.isRingRemovable with SMILES.
+     * Test of ScaffoldGenerator.getSchuffenhauerScaffold with SMILES.
      * Loads Scheme3b from the Ertl 2007 Paper as SMILES and generates SchuffenhauerScaffold with removed rings.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
      * @throws IOException if file format can not be detected
@@ -239,14 +237,14 @@ public class ScaffoldGeneratorTest {
         File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCDoubleBond/Original.png");
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         /*Generate picture of the SchuffenhauerScaffold*/
-        IAtomContainer tmpSchuff = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
+        IAtomContainer tmpSchuff = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule, true, ElectronDonation.cdk());
         BufferedImage tmpImgSchuff = tmpGenerator.depict(tmpSchuff).toImg();
         /*Save the picture*/
         new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCDoubleBond/Schuffenhauer.png").mkdirs();
         File tmpOutputSchuff = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCDoubleBond/Schuffenhauer.png");
         ImageIO.write(tmpImgSchuff, "png" ,tmpOutputSchuff);
         //Generate rings
-        List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule),true);
+        List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule, true, ElectronDonation.cdk()),true);
         /*Generate pictures of the rings*/
         int tmpCounter = 1;
         for (IAtomContainer tmpRing : tmpRings) {
@@ -270,12 +268,12 @@ public class ScaffoldGeneratorTest {
      */
     @Test
     public void getRingsTest() throws IOException, CDKException, CloneNotSupportedException {
-        for (int tmpCount = 1; tmpCount < 21; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 23; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
             //Generate the SchuffenhauerScaffold
-            tmpMolecule = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
+            tmpMolecule = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule, true, ElectronDonation.cdk());
             //Generate rings
             List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(tmpMolecule,true);
             /*Generate pictures of the rings*/
@@ -302,12 +300,12 @@ public class ScaffoldGeneratorTest {
      */
     @Test
     public void removeRingTest() throws CDKException, CloneNotSupportedException, IOException {
-        for (int tmpCount = 2; tmpCount < 21; tmpCount++) {
+        for (int tmpCount = 2; tmpCount < 23; tmpCount++) {
             String tmpFileName = "Test" + tmpCount ;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
             //Generate SchuffenhauerScaffold
-            IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
+            IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule, true, ElectronDonation.cdk());
             //Generate Rings
             List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(tmpSchuffenhauerScaffold, true);
             int tmpCounter = 1;
@@ -378,7 +376,7 @@ public class ScaffoldGeneratorTest {
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
             //Generate SchuffenhauerScaffold
-            IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
+            IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule, true, ElectronDonation.cdk());
             //Generate Rings
             List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(tmpMolecule, true);
             int tmpCounter = 1;
@@ -411,7 +409,7 @@ public class ScaffoldGeneratorTest {
      */
     @Test
     public void getIterativeRemovalTest() throws CDKException, CloneNotSupportedException, IOException {
-        for (int tmpCount = 1; tmpCount < 21; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 23; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -442,8 +440,8 @@ public class ScaffoldGeneratorTest {
      */
     @Test
     public void getRemovalTreeTest() throws CDKException, CloneNotSupportedException, IOException {
-        for (int tmpCount = 1; tmpCount < 21; tmpCount++) {
-            String tmpFileName = "Test" + tmpCount ;
+        for (int tmpCount = 1; tmpCount < 23; tmpCount++) {
+            String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
             //Generate a tree of molecules with iteratively removed terminal rings
@@ -545,7 +543,7 @@ public class ScaffoldGeneratorTest {
         IAtomContainer tmpTestMolecule = (IAtomContainer) tmpScaffoldTree.getMatrixNode(10).getData();
         System.out.println("Size of the test molecule: " + tmpTestMolecule.getAtomCount());
         IAtomContainer tmpResultMolecule = (IAtomContainer) tmpScaffoldTree.getTreeNode(tmpTestMolecule).getData();
-        System.out.println("Size of the result molecule: " + tmpResultMolecule.getAtomCount());; //Should be the same size
+        System.out.println("Size of the result molecule: " + tmpResultMolecule.getAtomCount()); //Should be the same size
         assertEquals(tmpTestMolecule.getAtomCount(), tmpResultMolecule.getAtomCount());
         /*getUniqueTreeNodes checker*/
         System.out.println("---getUniqueTreeNodes check---");
@@ -620,7 +618,7 @@ public class ScaffoldGeneratorTest {
      */
     @Test
     public void graphStreamTest() throws InterruptedException, CDKException, IOException, CloneNotSupportedException {
-        String tmpFileName = "Test11" ;
+        String tmpFileName = "Test13" ;
         //Load molecule from molfile
         IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
         //Generate a tree of molecules with iteratively removed terminal rings
@@ -756,7 +754,7 @@ public class ScaffoldGeneratorTest {
                 tmpCoconutID = tmpMolecule.getProperty("coconut_id");
                 /*Calculate SchuffenhauerScaffolds*/
                 if(aIsSchuffenhauerScaffoldCalculated == true && aIsRingCalculated == false) {
-                    tmpMolecule = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
+                    tmpMolecule = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule, true, ElectronDonation.cdk());
                     /*Generate control picture*/
                     if(aIsPictureCreated && (aPictureNumber) == tmpNumberCounter) {
                         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
@@ -769,7 +767,7 @@ public class ScaffoldGeneratorTest {
                 }
                 /*Calculate SchuffenhauerScaffolds and Rings*/
                 if(aIsRingCalculated == true && aIsRemoveRingCalculated == false) {
-                    tmpMolecule = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
+                    tmpMolecule = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule, true, ElectronDonation.cdk());
                     List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(tmpMolecule,true);
                     /*Generate control pictures*/
                     if(aIsPictureCreated && (aPictureNumber) == tmpNumberCounter) {
@@ -789,7 +787,7 @@ public class ScaffoldGeneratorTest {
                 }
                 /*Calculate SchuffenhauerScaffolds, Rings and the molecules for which the rings have been removed from the Schuffenhauer scaffolds*/
                 if(aIsRemoveRingCalculated == true && aIsIterativeRemovalCalculated == false) {
-                    tmpMolecule = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule);
+                    tmpMolecule = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule, true, ElectronDonation.cdk());
                     List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(tmpMolecule,true);
                     for(IAtomContainer tmpRing : tmpRings) {
                         IAtomContainer tmpRemoveMol = scaffoldGenerator.removeRing(tmpMolecule, tmpRing);
