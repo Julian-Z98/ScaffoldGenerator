@@ -32,7 +32,6 @@ import org.openscience.cdk.aromaticity.ElectronDonation;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.fragment.MurckoFragmenter;
 import org.openscience.cdk.graph.ConnectivityChecker;
-import org.openscience.cdk.graph.CycleFinder;
 import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.*;
 import org.openscience.cdk.smiles.SmiFlavor;
@@ -40,10 +39,7 @@ import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.tools.CDKHydrogenAdder;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 public class ScaffoldGenerator {
     /**
@@ -53,13 +49,25 @@ public class ScaffoldGenerator {
 
     /**
      * Generates the Schuffenhauer scaffold for the entered molecule and returns it. All stereochemistry information is deleted.
+     * The aromaticity can be set with a selected electron-donation model. Setting the aromaticity is essential for many of the following methods.
      * @param aMolecule molecule whose Schuffenhauer scaffold is produced.
+     * @param aIsAromaticitySet Indicates whether the aromaticity is to be set.
+     * @param aElectronDonation ElectronDonation Model to be used to determine aromaticity. Can be null if aISAromaticitySet == false.
      * @return Schuffenhauer scaffold of the inserted molecule. It can be an empty molecule if the original molecule does not contain a Schuffenhauer scaffold.
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
      * @throws CloneNotSupportedException if cloning is not possible.
      */
-    public IAtomContainer getSchuffenhauerScaffold(IAtomContainer aMolecule) throws CDKException, CloneNotSupportedException {
+    public IAtomContainer getSchuffenhauerScaffold(IAtomContainer aMolecule, boolean aIsAromaticitySet, ElectronDonation aElectronDonation) throws CDKException, CloneNotSupportedException {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
+        /*Determine aromaticity*/
+        if(aIsAromaticitySet) {
+            /*Generate picture of the original*/
+            AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpClonedMolecule);
+            CDKHydrogenAdder.getInstance(tmpClonedMolecule.getBuilder()).addImplicitHydrogens(tmpClonedMolecule);
+            Objects.requireNonNull(aElectronDonation, "If aIsAromaticitySet == true, aElectronDonation must be non null");
+            Aromaticity tmpAromaticity = new Aromaticity(aElectronDonation, Cycles.relevant());
+            tmpAromaticity.apply(tmpClonedMolecule);
+        }
         /*Clear the stereo chemistry of the molecule*/
         List<IStereoElement> tmpStereo = new ArrayList<>();
         tmpClonedMolecule.setStereoElements(tmpStereo);
@@ -132,7 +140,7 @@ public class ScaffoldGenerator {
     }
 
     /**
-     * Generates the smallest set of smallest rings(SSSR) with Cycles.mcb() for the entered molecule, adds double bounded oxygens and returns it.
+     * Generates the smallest set of smallest rings(SSSR) with Cycles.relevant() for the entered molecule, adds double bounded oxygens and returns it.
      * @param aMolecule molecule whose rings are produced.
      * @param aIsKeepingNonSingleBonds if true, double bonded atoms are retained on the ring.
      * @return rings of the inserted molecule.
@@ -140,7 +148,7 @@ public class ScaffoldGenerator {
     public List<IAtomContainer> getRings(IAtomContainer aMolecule, boolean aIsKeepingNonSingleBonds) throws CloneNotSupportedException {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
         /*Generate cycles*/
-        Cycles tmpNewCycles = Cycles.mcb(tmpClonedMolecule);
+        Cycles tmpNewCycles = Cycles.relevant(tmpClonedMolecule);
         IRingSet tmpRingSet = tmpNewCycles.toRingSet();
         List<IAtomContainer> tmpCycles = new ArrayList<>(tmpNewCycles.numberOfCycles());
         int tmpCycleNumber = tmpNewCycles.numberOfCycles();
@@ -228,17 +236,12 @@ public class ScaffoldGenerator {
         /*Clone original molecules*/
         IAtomContainer tmpMoleculeClone = aMolecule.clone();
         IAtomContainer tmpRingClone = aRing.clone();
+        boolean tmpIsRingAromatic = true;
         HashSet<Integer> tmpIsNotRing = new HashSet(aMolecule.getAtomCount(), 1);
         HashSet<Integer> tmpDoNotRemove = new HashSet(aMolecule.getAtomCount(), 1);
         int tmpBoundNumber = 0;
         /*Preparation for insertion of double bonds with removal of aromatic rings*/
         HashSet<Integer> tmpEdgeAtomNumbers = new HashSet(tmpMoleculeClone.getAtomCount(), 1);
-        //Mimics the CDKHuckelAromaticityDetector
-        Aromaticity tmpAromaticity = new Aromaticity(ElectronDonation.cdk(), Cycles.cdkAromaticSet());
-        boolean tmpIsRingAromatic = tmpAromaticity.apply(tmpRingClone);
-        if(tmpIsRingAromatic) { //Perform calculation only if the ring to be removed is aromatic
-            tmpAromaticity.apply(tmpMoleculeClone);
-        }
         /*Store the number of each atom in the molecule*/
         for(IAtom tmpMolAtom : tmpMoleculeClone.atoms()) {
             tmpIsNotRing.add(tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
@@ -281,6 +284,9 @@ public class ScaffoldGenerator {
         }
         else { //Remove only the ring atoms that are not bound to the rest of the molecule
             for(IAtom tmpRingAtom : tmpRingClone.atoms()) {
+                if(!tmpRingAtom.isAromatic()) {
+                    tmpIsRingAromatic = false; //If one atom is non aromatic the whole ring is not aromatic
+                }
                 for (IAtom tmpMolAtom : tmpMoleculeClone.atoms()) {
                     /*All atoms of the ring in the original molecule that are not bound to the rest of the molecule*/
                     if ((tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)
@@ -307,7 +313,6 @@ public class ScaffoldGenerator {
                 }
             }
         }
-
         if(tmpIsRingAromatic) { //Perform calculation only if the ring to be removed is aromatic
             for(IBond tmpBond : tmpMoleculeClone.bonds()) {
                 /*If both atoms of a bond were previously part of an aromatic ring, insert a double bond*/
@@ -356,69 +361,84 @@ public class ScaffoldGenerator {
         return tmpRingIsTerminal;
     }
 
+    /**
+     * Checks whether rings may be removed. These are rings in no atom belongs to another ring.
+     * Furthermore, removal is impossible when it is an aromatic ring, that borders two consecutive rings.
+     * @param aRing Ring being tested for its removability
+     * @param aRings All Rings of the molecule
+     * @param aMolecule Whole molecule
+     * @return Whether the ring is removable
+     * @throws CloneNotSupportedException
+     * @throws CDKException
+     */
     public boolean isRingRemovable(IAtomContainer aRing, List<IAtomContainer> aRings, IAtomContainer aMolecule) throws CloneNotSupportedException, CDKException {
-        /*Adamantane Problem*/
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
         IAtomContainer tmpClonedRing = aRing.clone();
+
+        /*---Recognition of rings in which no atom belongs to another ring---*/
         List<IAtomContainer> tmpClonedRings = new ArrayList<>(aRings.size());
         HashSet<Integer> tmpRingsNumbers = new HashSet(aRings.size() * tmpClonedRing.getAtomCount(), 1);
+        boolean isAnIndependentRing = false;
+        /*Store all ring atoms of the whole molecule without the tested ring*/
         for(IAtomContainer tmpRing : aRings) {
-            if(tmpRing == aRing){
+            if(tmpRing == aRing) { //Skip the tested ring
                 continue;
             }
-            tmpClonedRings.add(tmpRing.clone());
-            for(IAtom tmpAtom : tmpRing.atoms()) {
+            tmpClonedRings.add(tmpRing.clone()); //Store the rings
+            for(IAtom tmpAtom : tmpRing.atoms()) { //Store the atoms of the rings
                 tmpRingsNumbers.add(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
             }
         }
+        /*Investigate whether the ring contains atoms that do not occur in any other ring*/
         for (IAtom tmpSingleRingAtom : aRing.atoms()) {
             if(!tmpRingsNumbers.contains(tmpSingleRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))){
-                //return true;
+                isAnIndependentRing = true;
             }
         }
-        //return false;
+        /*If the ring does not contain atoms that are not present in any other rings, it is not removable*/
+        if(isAnIndependentRing == false) {
+            return false;
+        }
 
-        /*Aromaten Erkennung*/
-
-        Aromaticity tmpAromaticity = new Aromaticity(ElectronDonation.cdk(), Cycles.cdkAromaticSet());
-        if(tmpAromaticity.apply(tmpClonedRing)) { //Must only be done if the ring is Aromatic
-            /*Store the number of all aromatic atoms*/
-            HashSet<Integer> tmpMoleculeNumbers = new HashSet(tmpClonedMolecule.getAtomCount(), 1);
-            for(IAtomContainer tmpRing : tmpClonedRings) {
-                for(IAtom tmpRingAtom : tmpRing.atoms()) {
-                    int tmpAtomNumber = tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY);
-                    if(!tmpMoleculeNumbers.contains(tmpAtomNumber)) {
-                        tmpMoleculeNumbers.add(tmpAtomNumber);
-                    }
-                }
-            }
-
-            for(IAtom tmpMoleculeAtom : tmpClonedMolecule.atoms()) {
-                //tmpMoleculeNumbers.add(tmpMoleculeAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
-            }
-            /*Store all the atoms of the other rings bordering the aromatic ring*/
-            HashSet<Integer> tmpEdgeAtomNumbers = new HashSet(tmpClonedMolecule.getAtomCount(), 1);
-            for(IAtom tmpRingAtom : tmpClonedRing.atoms()) {
-                //Skip the atom if it is already in the HashSet
-                if(tmpMoleculeNumbers.contains(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
-                    tmpEdgeAtomNumbers.add(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
-                }
-            }
-            /*At least 3 edge atoms are needed to cause a problem*/
-            if(tmpEdgeAtomNumbers.size() < 3) {
+        /*---If it is an aromatic ring that borders two consecutive rings, its removal is not possible.---*/
+        /*Is it an aromatic ring at all*/
+        for(IAtom tmpAtom : tmpClonedRing.atoms()) {
+            if(!tmpAtom.isAromatic()) {
                 return true;
             }
-            /*If one of the edge atoms occurs in more than one other ring, it is not possible to remove the ring*/
-            for(Integer tmpEdgeAtomNumber : tmpEdgeAtomNumbers) {
-                int tmpRingCounter = 0;
-                for(IAtomContainer tmpRing : aRings) {
-                    for(IAtom tmpRingAtom : tmpRing.atoms()) {
-                        //If one of the atoms of the ring to be tested matches one of the edge atoms
-                        if(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpEdgeAtomNumber) {
-                            tmpRingCounter++;
-                            if(tmpRingCounter > 1) {
-                                return false;
-                            }
+        }
+        /*Store the number of all ring atoms*/
+        HashSet<Integer> tmpMoleculeNumbers = new HashSet(tmpClonedMolecule.getAtomCount(), 1);
+        for(IAtomContainer tmpRing : tmpClonedRings) {
+            for(IAtom tmpRingAtom : tmpRing.atoms()) {
+                int tmpAtomNumber = tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY);
+                if(!tmpMoleculeNumbers.contains(tmpAtomNumber)) {
+                    tmpMoleculeNumbers.add(tmpAtomNumber);
+                }
+            }
+        }
+        /*Store all the atoms of the other rings bordering the aromatic ring*/
+        HashSet<Integer> tmpEdgeAtomNumbers = new HashSet(tmpClonedMolecule.getAtomCount(), 1);
+        for(IAtom tmpRingAtom : tmpClonedRing.atoms()) {
+            //Skip the atom if it is already in the HashSet
+            if(tmpMoleculeNumbers.contains(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                tmpEdgeAtomNumbers.add(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
+            }
+        }
+        /*At least 3 edge atoms are needed to cause a problem*/
+        if(tmpEdgeAtomNumbers.size() < 3) {
+            return true;
+        }
+        /*If one of the edge atoms occurs in more than one other ring, it is not possible to remove the ring*/
+        for(Integer tmpEdgeAtomNumber : tmpEdgeAtomNumbers) {
+            int tmpRingCounter = 0;
+            for(IAtomContainer tmpRing : aRings) {
+                for(IAtom tmpRingAtom : tmpRing.atoms()) {
+                    //If one of the atoms of the ring to be tested matches one of the edge atoms
+                    if(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpEdgeAtomNumber) {
+                        tmpRingCounter++;
+                        if(tmpRingCounter > 1) { //More than one bordering ring
+                            return false;
                         }
                     }
                 }
@@ -426,7 +446,6 @@ public class ScaffoldGenerator {
         }
         return true;
     }
-
     /**
      * Iteratively removes the terminal rings. All resulting Schuffenhauer scaffolds are returned. Duplicates are not permitted.
      * The Schuffenhauer scaffold of the entire entered molecule is stored first in the list.
@@ -437,7 +456,7 @@ public class ScaffoldGenerator {
      */
     public List<IAtomContainer> getIterativeRemoval(IAtomContainer aMolecule) throws CDKException, CloneNotSupportedException {
         SmilesGenerator tmpGenerator = new SmilesGenerator(SmiFlavor.Unique);
-        IAtomContainer tmpSchuffenhauerOriginal = this.getSchuffenhauerScaffold(aMolecule);
+        IAtomContainer tmpSchuffenhauerOriginal = this.getSchuffenhauerScaffold(aMolecule, true, ElectronDonation.cdk());
         int tmpRingCount = this.getRings(tmpSchuffenhauerOriginal, true).size();
         List<String> tmpAddedSMILESList = new ArrayList<>(tmpRingCount * 45);
         //List of all fragments already created and size estimated on the basis of an empirical value
@@ -448,13 +467,13 @@ public class ScaffoldGenerator {
             List<IAtomContainer> tmpAllRingsList = this.getRings(tmpIterMol,true);
             int tmpRingSize = tmpAllRingsList.size();
             for(IAtomContainer tmpRing : tmpAllRingsList) { //Go through all rings
-                if(tmpRingSize < 2) { //Skip molecule if it has less than 2 rings
+                //Skip molecule if it has less than 2 rings or the ring is not removable
+                if(tmpRingSize < 2) {
                     continue;
                 }
-                //Testweise is RingRemovable eingebaut
                 if(this.isRingTerminal(tmpIterMol, tmpRing) && this.isRingRemovable(tmpRing, tmpAllRingsList, tmpIterMol)) { //Consider all terminal rings
                     boolean tmpIsInList = false;
-                    IAtomContainer tmpRingRemoved = this.getSchuffenhauerScaffold(this.removeRing(tmpIterMol, tmpRing)); //Remove next ring
+                    IAtomContainer tmpRingRemoved = this.getSchuffenhauerScaffold(this.removeRing(tmpIterMol, tmpRing), false, null); //Remove next ring
                     String tmpRingRemovedSMILES = tmpGenerator.create(tmpRingRemoved); //Generate unique SMILES
                     if(tmpAddedSMILESList.contains(tmpRingRemovedSMILES)) { //Check if the molecule has already been added to the list
                         tmpIsInList = true;
@@ -479,7 +498,7 @@ public class ScaffoldGenerator {
      * @throws CloneNotSupportedException if cloning is not possible.
      */
     public TreeNode<IAtomContainer> getRemovalTree(IAtomContainer aMolecule) throws CDKException, CloneNotSupportedException {
-        IAtomContainer tmpSchuffenhauerOriginal = this.getSchuffenhauerScaffold(aMolecule);
+        IAtomContainer tmpSchuffenhauerOriginal = this.getSchuffenhauerScaffold(aMolecule, true, ElectronDonation.cdk());
         int tmpRingCount = this.getRings(tmpSchuffenhauerOriginal, true).size();
         //List of all fragments already created and size estimated on the basis of an empirical value
         List<IAtomContainer> tmpIterativeRemovalList = new ArrayList<>(tmpRingCount * 45);
@@ -496,9 +515,8 @@ public class ScaffoldGenerator {
                 if(tmpRingSize < 2) { //Skip molecule if it has less than 2 rings
                     continue;
                 }
-                //Testweise is RingRemovable eingebaut
                 if(this.isRingTerminal(tmpIterMol, tmpRing) && this.isRingRemovable(tmpRing, tmpRings, tmpIterMol)) { //Consider all terminal rings
-                    IAtomContainer tmpRingRemoved = this.getSchuffenhauerScaffold(this.removeRing(tmpIterMol, tmpRing)); //Remove next ring
+                    IAtomContainer tmpRingRemoved = this.getSchuffenhauerScaffold(this.removeRing(tmpIterMol, tmpRing), false, null); //Remove next ring
                     tmpAllNodesList.add(tmpAllNodesList.get(tmpLevelCounter).addChild(tmpRingRemoved)); //Add next node to current Level
                     tmpIterativeRemovalList.add(tmpRingRemoved); // The molecule added to the tree is added to the list
                 }
