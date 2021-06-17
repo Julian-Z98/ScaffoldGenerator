@@ -295,18 +295,18 @@ public class ScaffoldGenerator {
                     }
                 }
             }
-            /*Store the number of all C atoms from which an aromatic ring has been removed.
-            * In these C atoms, a double bond was removed without changing the hybridisation from sp2 to sp3.*/
+            /*Store the number of all atoms from which an aromatic ring has been removed.
+            * In these atoms, a double bond was removed without changing the hybridisation from sp2 to sp3.*/
             if(tmpIsRingAromatic) { //Perform calculation only if the ring to be removed is aromatic
                 for (IAtom tmpMolAtom : tmpMoleculeClone.atoms()) {
-                    if (tmpMolAtom.getSymbol() == "C" && tmpMolAtom.getHybridization() != IAtomType.Hybridization.SP3) { //All C that are not sp3 hybridised
+                    if (tmpMolAtom.getHybridization() == IAtomType.Hybridization.SP2) { //All Atoms that are sp2 hybridised
                         boolean tmpIsSp3 = true;
-                        for (IBond tmpBond : tmpMolAtom.bonds()) { //All bonds of the C
+                        for (IBond tmpBond : tmpMolAtom.bonds()) { //All bonds of the Atom
                             if (tmpBond.getOrder() != IBond.Order.SINGLE) { //If it contains a non single bond it cannot be sp3
                                 tmpIsSp3 = false;
                             }
                         }
-                        if (tmpIsSp3) { //If the C contains only single bonds, it must be a wanted C atom
+                        if (tmpIsSp3) { //If the Atom contains only single bonds, it must be a wanted Atom atom
                             tmpEdgeAtomNumbers.add(tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
                         }
                     }
@@ -364,6 +364,7 @@ public class ScaffoldGenerator {
     /**
      * Checks whether rings may be removed. These are rings in no atom belongs to another ring.
      * Furthermore, removal is impossible when it is an aromatic ring, that borders two consecutive rings.
+     * getSchuffenhauerScaffold() must have been previously applied to the molecule so that an aromaticity status has been assigned to the atoms.
      * @param aRing Ring being tested for its removability
      * @param aRings All Rings of the molecule
      * @param aMolecule Whole molecule
@@ -450,13 +451,14 @@ public class ScaffoldGenerator {
      * Iteratively removes the terminal rings. All resulting Schuffenhauer scaffolds are returned. Duplicates are not permitted.
      * The Schuffenhauer scaffold of the entire entered molecule is stored first in the list.
      * @param aMolecule Molecule to be disassembled.
+     * @param aElectronDonation used electron donation model
      * @return List with all resulting Schuffenhauer scaffolds.
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
      * @throws CloneNotSupportedException if cloning is not possible.
      */
-    public List<IAtomContainer> getIterativeRemoval(IAtomContainer aMolecule) throws CDKException, CloneNotSupportedException {
+    public List<IAtomContainer> getIterativeRemoval(IAtomContainer aMolecule, ElectronDonation aElectronDonation) throws CDKException, CloneNotSupportedException {
         SmilesGenerator tmpGenerator = new SmilesGenerator(SmiFlavor.Unique);
-        IAtomContainer tmpSchuffenhauerOriginal = this.getSchuffenhauerScaffold(aMolecule, true, ElectronDonation.cdk());
+        IAtomContainer tmpSchuffenhauerOriginal = this.getSchuffenhauerScaffold(aMolecule, true, aElectronDonation);
         int tmpRingCount = this.getRings(tmpSchuffenhauerOriginal, true).size();
         List<String> tmpAddedSMILESList = new ArrayList<>(tmpRingCount * 45);
         //List of all fragments already created and size estimated on the basis of an empirical value
@@ -493,12 +495,13 @@ public class ScaffoldGenerator {
      * A new level is created with each removal step. Duplicates are permitted.
      * The Schuffenhauer scaffold of the entire entered molecule is the root of the tree.
      * @param aMolecule Molecule to be disassembled.
+     * @param aElectronDonation used electron donation model
      * @return List with all resulting Schuffenhauer scaffolds.
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
      * @throws CloneNotSupportedException if cloning is not possible.
      */
-    public TreeNode<IAtomContainer> getRemovalTree(IAtomContainer aMolecule) throws CDKException, CloneNotSupportedException {
-        IAtomContainer tmpSchuffenhauerOriginal = this.getSchuffenhauerScaffold(aMolecule, true, ElectronDonation.cdk());
+    public TreeNode<IAtomContainer> getRemovalTree(IAtomContainer aMolecule, ElectronDonation aElectronDonation) throws CDKException, CloneNotSupportedException {
+        IAtomContainer tmpSchuffenhauerOriginal = this.getSchuffenhauerScaffold(aMolecule, true, aElectronDonation);
         int tmpRingCount = this.getRings(tmpSchuffenhauerOriginal, true).size();
         //List of all fragments already created and size estimated on the basis of an empirical value
         List<IAtomContainer> tmpIterativeRemovalList = new ArrayList<>(tmpRingCount * 45);
