@@ -216,7 +216,6 @@ public class ScaffoldGeneratorTest {
 
     /**
      * Test of ScaffoldGenerator.getSchuffenhauerScaffold with SMILES.
-     * Loads Scheme3b from the Ertl 2007 Paper as SMILES and generates SchuffenhauerScaffold with removed rings.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
      * @throws IOException if file format can not be detected
      * @throws CDKException if file can not be read
@@ -257,6 +256,46 @@ public class ScaffoldGeneratorTest {
         }
     }
 
+    /**
+     * Test of ScaffoldGenerator.getSchuffenhauerScaffold with SMILES.
+     * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
+     * @throws IOException if file format can not be detected
+     * @throws CDKException if file can not be read
+     * @throws CloneNotSupportedException if cloning is not possible
+     */
+    @Test
+    public void removeRingNonCTest() throws CDKException, CloneNotSupportedException, IOException {
+        //SMILES to IAtomContainer
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        IAtomContainer tmpMolecule = tmpParser.parseSmiles("c2cc[p+]1CCCCc1c2"); //Triple bond
+        /*Generate picture of the Original*/
+        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+        BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpMolecule).toImg();
+        /*Save the picture*/
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCRemove/Original.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCRemove/Original.png");
+        ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
+        /*Generate picture of the SchuffenhauerScaffold*/
+        IAtomContainer tmpSchuff = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule, true, ElectronDonation.cdk());
+        BufferedImage tmpImgSchuff = tmpGenerator.depict(tmpSchuff).toImg();
+        /*Save the picture*/
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCRemove/Schuffenhauer.png").mkdirs();
+        File tmpOutputSchuff = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCRemove/Schuffenhauer.png");
+        ImageIO.write(tmpImgSchuff, "png" ,tmpOutputSchuff);
+        //Generate rings
+        List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule, true, ElectronDonation.cdk()),true);
+        /*Generate pictures of the rings*/
+        int tmpCounter = 1;
+        for (IAtomContainer tmpRing : tmpRings) {
+            IAtomContainer tmpRingRemoved = scaffoldGenerator.removeRing(tmpSchuff, tmpRing);
+            BufferedImage tmpImgRing = tmpGenerator.depict(tmpRingRemoved).toImg();
+            /*Save the picture*/
+            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCRemove/Ring" + tmpCounter + ".png").mkdirs();
+            File tmpOutputRing = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCRemove/Ring" + tmpCounter + ".png");
+            ImageIO.write(tmpImgRing, "png", tmpOutputRing);
+            tmpCounter++;
+        }
+    }
     /**
      * Test of Cycles.mcb() with V2000 and V3000 mol files.
      * Loads the 12 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and creates the rings of the SchuffenhauerScaffold with getRings().
@@ -414,7 +453,7 @@ public class ScaffoldGeneratorTest {
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
             //Generate a list of molecules with iteratively removed terminal rings
-            List<IAtomContainer> tmpMolecules = scaffoldGenerator.getIterativeRemoval(tmpMolecule);
+            List<IAtomContainer> tmpMolecules = scaffoldGenerator.getIterativeRemoval(tmpMolecule, ElectronDonation.cdk());
             int tmpCounter = 1;
             for (IAtomContainer tmpIterative : tmpMolecules) {
                 /*Generate picture of the molecule*/
@@ -445,7 +484,7 @@ public class ScaffoldGeneratorTest {
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
             //Generate a tree of molecules with iteratively removed terminal rings
-            TreeNodeIter<IAtomContainer> tmpNodeIter = new TreeNodeIter<>(scaffoldGenerator.getRemovalTree(tmpMolecule));
+            TreeNodeIter<IAtomContainer> tmpNodeIter = new TreeNodeIter<>(scaffoldGenerator.getRemovalTree(tmpMolecule, ElectronDonation.cdk()));
             int tmpCounter = 0;
             while(tmpNodeIter.hasNext()) { // As long as there are still other molecules in the tree
                 TreeNode<IAtomContainer> tmpMoleculeNode = tmpNodeIter.next(); // Next molecule in tree
@@ -477,7 +516,7 @@ public class ScaffoldGeneratorTest {
         //Load molecule from molfile
         IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
         //Generate a tree of molecules with iteratively removed terminal rings
-        TreeNodeIter<IAtomContainer> tmpNodeIter = new TreeNodeIter<>(scaffoldGenerator.getRemovalTree(tmpMolecule));
+        TreeNodeIter<IAtomContainer> tmpNodeIter = new TreeNodeIter<>(scaffoldGenerator.getRemovalTree(tmpMolecule, ElectronDonation.cdk()));
         int tmpCounter = 0;
         while(tmpNodeIter.hasNext()) { // As long as there are still other molecules in the tree
             TreeNode<IAtomContainer> tmpMoleculeNode = tmpNodeIter.next(); // Next molecule in tree
@@ -520,7 +559,7 @@ public class ScaffoldGeneratorTest {
         //Load molecule from molfile
         IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
         //Generate a tree of molecules with iteratively removed terminal rings
-        TreeNodeIter<IAtomContainer> tmpNodeIter = new TreeNodeIter<>(scaffoldGenerator.getRemovalTree(tmpMolecule));
+        TreeNodeIter<IAtomContainer> tmpNodeIter = new TreeNodeIter<>(scaffoldGenerator.getRemovalTree(tmpMolecule, ElectronDonation.cdk()));
         /*Build ScaffoldTree*/
         int tmpCounter = 0;
         ScaffoldTree tmpScaffoldTree = new ScaffoldTree();
@@ -618,11 +657,11 @@ public class ScaffoldGeneratorTest {
      */
     @Test
     public void graphStreamTest() throws InterruptedException, CDKException, IOException, CloneNotSupportedException {
-        String tmpFileName = "Test13" ;
+        String tmpFileName = "Test11" ;
         //Load molecule from molfile
         IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
         //Generate a tree of molecules with iteratively removed terminal rings
-        TreeNodeIter<IAtomContainer> tmpNodeIter = new TreeNodeIter<>(scaffoldGenerator.getRemovalTree(tmpMolecule));
+        TreeNodeIter<IAtomContainer> tmpNodeIter = new TreeNodeIter<>(scaffoldGenerator.getRemovalTree(tmpMolecule, ElectronDonation.cdk()));
         int tmpCounter = 0;
         /*Create ScaffoldTree*/
         ScaffoldTree tmpScaffoldTree = new ScaffoldTree();
@@ -818,7 +857,7 @@ public class ScaffoldGeneratorTest {
                         tmpToManyRingsCounter++;
                         continue;
                     }
-                    List<IAtomContainer> tmpIterations = scaffoldGenerator.getIterativeRemoval(tmpMolecule);
+                    List<IAtomContainer> tmpIterations = scaffoldGenerator.getIterativeRemoval(tmpMolecule, ElectronDonation.cdk());
                     if(aIsPictureCreated && (aPictureNumber) == tmpNumberCounter) {
                         for(IAtomContainer tmpIteration : tmpIterations) {
                         /*Generate control pictures*/
