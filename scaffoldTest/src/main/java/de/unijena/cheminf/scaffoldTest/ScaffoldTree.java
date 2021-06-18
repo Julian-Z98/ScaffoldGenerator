@@ -88,13 +88,13 @@ public class ScaffoldTree {
      */
     public void addNode(TreeNode aNode) throws CDKException {
         Objects.requireNonNull(aNode, "Given TreeNode is 'null'");
-        Objects.requireNonNull(aNode.getData(), "Given Data is 'null'");
+        Objects.requireNonNull(aNode.getMolecule(), "Given Data is 'null'");
         //Add to nodeMap
         this.nodeMap.put(this.nodeCounter, aNode);
         //Add to reverseNodeMap
         this.reverseNodeMap.put(aNode, this.nodeCounter);
         /*Add to smilesMap*/
-        IAtomContainer tmpMolecule = (IAtomContainer) aNode.getData();
+        IAtomContainer tmpMolecule = (IAtomContainer) aNode.getMolecule();
         String tmpSmiles = this.smilesGenerator.create(tmpMolecule); //Convert molecule to SMILES
         this.smilesMap.put(tmpSmiles, aNode);
         //Add to levelMap
@@ -120,7 +120,7 @@ public class ScaffoldTree {
         /*Remove from smilesMap*/
         this.smilesMap.clear();
         for(TreeNode tmpTreeNode : this.nodeMap.values()) {
-            IAtomContainer tmpMolecule = (IAtomContainer) tmpTreeNode.getData();
+            IAtomContainer tmpMolecule = (IAtomContainer) tmpTreeNode.getMolecule();
             String tmpSmiles = this.smilesGenerator.create(tmpMolecule); //Convert molecule to SMILES
             this.smilesMap.put(tmpSmiles , tmpTreeNode);
         }

@@ -30,43 +30,79 @@ import java.util.Iterator;
 import java.util.Objects;
 
 /**
- * Source: https://github.com/gt4dev/yet-another-tree-structure
+ * Iterator class for the TreeNode class. Allows the tree to be walked through completely.
+ *
+ * Inspired by: https://github.com/gt4dev/yet-another-tree-structure
  */
-public class TreeNodeIter<T> implements Iterator<TreeNode<T>> {
+public class TreeNodeIter<IAtomContainer> implements Iterator<TreeNode<IAtomContainer>> {
 
-    enum ProcessStages {
+    /**
+     * Indicates which part of the tree is currently being processed.
+     */
+    enum PROCESS_STAGES {
         ProcessParent, ProcessChildCurNode, ProcessChildSubNode
     }
 
-    private TreeNode<T> treeNode;
+    /**
+     * Just handled node of the tree
+     */
+    private TreeNode<IAtomContainer> treeNode;
 
-    public TreeNodeIter(TreeNode<T> aTreeNode) {
+    /**
+     * Next PROCESS_STAGE
+     */
+    private PROCESS_STAGES doNext;
+
+    /**
+     * Next IAtomContainer being processed
+     */
+    private TreeNode<IAtomContainer> next;
+
+    /**
+     * Shows whether the nextNode() has already been calculated.
+     * nextNode() must have been executed before next() can be executed.
+     */
+    private boolean nextNodeHasBeenCalculated;
+
+    /**
+     * Currently treated TreeNode
+     */
+    private Iterator<TreeNode<IAtomContainer>> childrenCurNodeIter;
+    /**
+     * Next treated TreeNode
+     */
+    private Iterator<TreeNode<IAtomContainer>> childrenSubNodeIter;
+
+    /**
+     * Constructor
+     * Iteration through the tree of a specific node
+     * @param aTreeNode Node through whose tree it is to be iterated
+     */
+    public TreeNodeIter(TreeNode<IAtomContainer> aTreeNode) {
         Objects.requireNonNull(aTreeNode, "Given TreeNode is 'null'");
         this.treeNode = aTreeNode;
-        this.doNext = ProcessStages.ProcessParent;
+        this.doNext = PROCESS_STAGES.ProcessParent;
         this.childrenCurNodeIter = treeNode.getChildren().iterator();
     }
 
-    private ProcessStages doNext;
-    private TreeNode<T> next;
-    private boolean nextNodeHasBeenCalculated; //nextNode() must have been executed before next() can be executed.
-    private Iterator<TreeNode<T>> childrenCurNodeIter;
-    private Iterator<TreeNode<T>> childrenSubNodeIter;
-
+    /**
+     * Indicates whether there is a next TreeNode. Returns false if the tree has already been traversed completely.
+     * @return Is there a next TreeNode in the tree
+     */
     @Override
     public boolean hasNext() {
         this.nextNodeHasBeenCalculated = true;
-        if (this.doNext == ProcessStages.ProcessParent) {
+        if (this.doNext == PROCESS_STAGES.ProcessParent) {
             this.next = this.treeNode;
-            this.doNext = ProcessStages.ProcessChildCurNode;
+            this.doNext = PROCESS_STAGES.ProcessChildCurNode;
             return true;
         }
 
-        if (this.doNext == ProcessStages.ProcessChildCurNode) {
+        if (this.doNext == PROCESS_STAGES.ProcessChildCurNode) {
             if (childrenCurNodeIter.hasNext()) {
-                TreeNode<T> childDirect = childrenCurNodeIter.next();
+                TreeNode<IAtomContainer> childDirect = childrenCurNodeIter.next();
                 childrenSubNodeIter = childDirect.iterator();
-                this.doNext = ProcessStages.ProcessChildSubNode;
+                this.doNext = PROCESS_STAGES.ProcessChildSubNode;
                 return hasNext();
             }
 
@@ -76,31 +112,30 @@ public class TreeNodeIter<T> implements Iterator<TreeNode<T>> {
             }
         }
 
-        if (this.doNext == ProcessStages.ProcessChildSubNode) {
+        if (this.doNext == PROCESS_STAGES.ProcessChildSubNode) {
             if (childrenSubNodeIter.hasNext()) {
                 this.next = childrenSubNodeIter.next();
                 return true;
             }
             else {
                 this.next = null;
-                this.doNext = ProcessStages.ProcessChildCurNode;
+                this.doNext = PROCESS_STAGES.ProcessChildCurNode;
                 return hasNext();
             }
         }
         return false;
     }
 
+    /**
+     * Outputs the next TreeNode in the tree
+     * @return next TreeNode in the tree
+     */
     @Override
-    public TreeNode<T> next() {
+    public TreeNode<IAtomContainer> next() {
         if(this.nextNodeHasBeenCalculated == false) { //execute hasnext() if it has not been executed yet
             this.hasNext();
         }
         this.nextNodeHasBeenCalculated = false;
         return this.next;
-    }
-
-    @Override
-    public void remove() {
-        throw new UnsupportedOperationException();
     }
 }

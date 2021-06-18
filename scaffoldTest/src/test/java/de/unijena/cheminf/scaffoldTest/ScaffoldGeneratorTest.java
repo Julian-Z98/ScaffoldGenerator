@@ -530,7 +530,7 @@ public class ScaffoldGeneratorTest {
                 TreeNode<IAtomContainer> tmpMoleculeNode = tmpNodeIter.next(); // Next molecule in tree
                 /*Save the picture*/
                 DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
-                BufferedImage tmpSecImgRemove = tmpGenerator.depict(tmpMoleculeNode.getData()).toImg();
+                BufferedImage tmpSecImgRemove = tmpGenerator.depict(tmpMoleculeNode.getMolecule()).toImg();
                 new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/TreeTest" + tmpCounter  + "Level" + tmpMoleculeNode.getLevel() + ".png").mkdirs();
                 File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/TreeTest" + tmpCounter +  "Level" + tmpMoleculeNode.getLevel() + ".png");
                 ImageIO.write(tmpSecImgRemove, "png", tmpSecOutputRemove);
@@ -563,12 +563,12 @@ public class ScaffoldGeneratorTest {
             if(tmpCounter == tmpTestNumber -1){
                 /*Save the picture of the test Node*/
                 DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
-                BufferedImage tmpNodeImg = tmpGenerator.depict(tmpMoleculeNode.getData()).toImg();
+                BufferedImage tmpNodeImg = tmpGenerator.depict(tmpMoleculeNode.getMolecule()).toImg();
                 new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/TestNode.png").mkdirs();
                 File tmpNodeFile = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/TestNode.png");
                 ImageIO.write(tmpNodeImg, "png", tmpNodeFile);
                 /*Save the picture of the parent*/
-                BufferedImage tmpParentImg = tmpGenerator.depict(tmpMoleculeNode.getParent().getData()).toImg();
+                BufferedImage tmpParentImg = tmpGenerator.depict(tmpMoleculeNode.getParent().getMolecule()).toImg();
                 new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/ParentNode.png").mkdirs();
                 File tmpParentFile = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/ParentNode.png");
                 ImageIO.write(tmpParentImg, "png", tmpParentFile);
@@ -576,7 +576,7 @@ public class ScaffoldGeneratorTest {
                 int tmpChildCounter = 0;
                 for(TreeNode<IAtomContainer> tmpNode : tmpMoleculeNode.getChildren()) {
                     tmpChildCounter++;
-                    BufferedImage tmpChildImg = tmpGenerator.depict(tmpNode.getData()).toImg();
+                    BufferedImage tmpChildImg = tmpGenerator.depict(tmpNode.getMolecule()).toImg();
                     new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/ChildNode" + tmpChildCounter + ".png").mkdirs();
                     File tmpChildFile = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/ChildNode" + tmpChildCounter + ".png");
                     ImageIO.write(tmpChildImg, "png", tmpChildFile);
@@ -615,20 +615,20 @@ public class ScaffoldGeneratorTest {
         System.out.println("Is the original molecule in the tree: " + tmpScaffoldTree.isMoleculeInTree(tmpMolecule));
         assertEquals(false,tmpScaffoldTree.isMoleculeInTree(tmpMolecule));
         /*Should be true*/
-        System.out.println("Is the molecule of node 14 in the tree: " + tmpScaffoldTree.isMoleculeInTree((IAtomContainer) tmpScaffoldTree.getMatrixNode(14).getData()));
-        assertEquals(true, tmpScaffoldTree.isMoleculeInTree((IAtomContainer) tmpScaffoldTree.getMatrixNode(14).getData()));
+        System.out.println("Is the molecule of node 14 in the tree: " + tmpScaffoldTree.isMoleculeInTree((IAtomContainer) tmpScaffoldTree.getMatrixNode(14).getMolecule()));
+        assertEquals(true, tmpScaffoldTree.isMoleculeInTree((IAtomContainer) tmpScaffoldTree.getMatrixNode(14).getMolecule()));
         /*getTreeNode checker*/
         System.out.println("---getTreeNode check---");
-        IAtomContainer tmpTestMolecule = (IAtomContainer) tmpScaffoldTree.getMatrixNode(10).getData();
+        IAtomContainer tmpTestMolecule = (IAtomContainer) tmpScaffoldTree.getMatrixNode(10).getMolecule();
         System.out.println("Size of the test molecule: " + tmpTestMolecule.getAtomCount());
-        IAtomContainer tmpResultMolecule = (IAtomContainer) tmpScaffoldTree.getTreeNode(tmpTestMolecule).getData();
+        IAtomContainer tmpResultMolecule = (IAtomContainer) tmpScaffoldTree.getTreeNode(tmpTestMolecule).getMolecule();
         System.out.println("Size of the result molecule: " + tmpResultMolecule.getAtomCount()); //Should be the same size
         assertEquals(tmpTestMolecule.getAtomCount(), tmpResultMolecule.getAtomCount());
         /*getUniqueTreeNodes checker*/
         System.out.println("---getUniqueTreeNodes check---");
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
         for(TreeNode tmpNode : tmpScaffoldTree.getUniqueTreeNodes()) {
-            IAtomContainer tmpNodeMolecule = (IAtomContainer) tmpNode.getData();
+            IAtomContainer tmpNodeMolecule = (IAtomContainer) tmpNode.getMolecule();
             System.out.println(tmpSmilesGenerator.create(tmpNodeMolecule));
         }
         System.out.println("Number of unique tree nodes: " +  tmpScaffoldTree.getUniqueTreeNodes().size());
@@ -661,7 +661,7 @@ public class ScaffoldGeneratorTest {
         }
         /*Store all molecules in the order in which they appear in the matrix as images*/
         for(TreeNode tmpNode : tmpScaffoldTree.getMatrixNodes().values()) {
-            IAtomContainer tmpNodeMolecule = (IAtomContainer) tmpNode.getData();
+            IAtomContainer tmpNodeMolecule = (IAtomContainer) tmpNode.getMolecule();
             /*Save the picture*/
             DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
             BufferedImage tmpSecImgRemove = tmpGenerator.depict(tmpNodeMolecule).toImg();
@@ -675,8 +675,8 @@ public class ScaffoldGeneratorTest {
         tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(3));
         System.out.println("Size of the tree after on Node is removed: "+ tmpScaffoldTree.getAllNodes().size());
         assertEquals(14, tmpScaffoldTree.getAllNodes().size());
-        System.out.println("Root of the tree: " + tmpSmilesGenerator.create((IAtomContainer) tmpScaffoldTree.getRoot().getData()));
-        assertEquals(22,  ((IAtomContainer) tmpScaffoldTree.getRoot().getData()).getAtomCount());
+        System.out.println("Root of the tree: " + tmpSmilesGenerator.create((IAtomContainer) tmpScaffoldTree.getRoot().getMolecule()));
+        assertEquals(22,  ((IAtomContainer) tmpScaffoldTree.getRoot().getMolecule()).getAtomCount());
         System.out.println("Is tree connected: " + tmpScaffoldTree.isTreeConnected());
         assertEquals(true, tmpScaffoldTree.isTreeConnected());
         System.out.println("Has the tree one single root Node: " + tmpScaffoldTree.hasOneSingleRootNode());
@@ -731,7 +731,7 @@ public class ScaffoldGeneratorTest {
             tmpNode.setAttribute("ui.label", tmpScaffoldTree.getMatrixNodesNumbers().get(tmpRow));
             /*Add the images*/
             TreeNode tmpTreeNode =  tmpScaffoldTree.getMatrixNode(tmpScaffoldTree.getMatrixNodesNumbers().get(tmpRow));
-            IAtomContainer tmpTreeNodeMolecule = (IAtomContainer) tmpTreeNode.getData();
+            IAtomContainer tmpTreeNodeMolecule = (IAtomContainer) tmpTreeNode.getMolecule();
             BufferedImage tmpNodeImg = tmpGenerator.withSize(100,100).depict(tmpTreeNodeMolecule).toImg();
             //The images are stored temporarily, as I have not found a way to use them directly
             new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png").mkdirs();

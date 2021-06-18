@@ -33,100 +33,148 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Source: https://github.com/gt4dev/yet-another-tree-structure
+ * The TreeNodes are nodes from which a tree can be built.
+ * It is used to organise the IAtomContainers and enables a relationship between the different objects.
+ *
+ * Inspired by: https://github.com/gt4dev/yet-another-tree-structure
  */
-public class TreeNode<T> implements Iterable<TreeNode<T>> {
+public class TreeNode<IAtomContainer> implements Iterable<TreeNode<IAtomContainer>> {
 
-    private T data;
-    private TreeNode<T> parent;
-    private List<TreeNode<T>> children;
+    /**
+     * Molecule that can be stored in each node
+     */
+    private IAtomContainer molecule;
 
-    public boolean isRoot() {
+    /**
+     * Parent of the node
+     */
+    private TreeNode<IAtomContainer> parent;
+
+    /**
+     * Child of the Node
+     */
+    private List<TreeNode<IAtomContainer>> children;
+
+    /**
+     * Shows if the node has parents
+     * @return Whether the node has parents
+     */
+    public boolean isOrphan() {
         return parent == null;
     }
 
+    /**
+     * Indicates whether it is a leaf, i.e. whether there are deeper nodes
+     * True if there are no deeper nodes
+     * @return Whether it is a leaf
+     */
     public boolean isLeaf() {
         return children.size() == 0;
     }
 
-    private List<TreeNode<T>> elementsIndex;
+    /**
+     * List of indices of all elements
+     */
+    private List<TreeNode<IAtomContainer>> elementsIndex;
 
-    public TreeNode(T aData) {
-        Objects.requireNonNull(aData, "Given data is 'null'");
-        this.data = aData;
-        this.children = new LinkedList<TreeNode<T>>();
-        this.elementsIndex = new LinkedList<TreeNode<T>>();
+    /**
+     * Creates a TreeNode
+     * @param aMolecule molecule of the TreeNode
+     */
+    public TreeNode(IAtomContainer aMolecule) {
+        Objects.requireNonNull(aMolecule, "Given molecule is 'null'");
+        this.molecule = aMolecule;
+        this.children = new LinkedList<TreeNode<IAtomContainer>>();
+        this.elementsIndex = new LinkedList<TreeNode<IAtomContainer>>();
         this.elementsIndex.add(this);
     }
 
-    public TreeNode<T> addChild(T aChild) {
-        Objects.requireNonNull(aChild, "Given child is 'null'");
-        TreeNode<T> childNode = new TreeNode<T>(aChild);
-        childNode.parent = this;
-        this.children.add(childNode);
-        this.registerChildForSearch(childNode);
-        return childNode;
+    /**
+     * Adds a child to the TreeNode, i.e. links it to a TreeNode on the level below
+     * @param aMolecule Molecule of the child leave
+     * @return Node of the child leave
+     */
+    public TreeNode<IAtomContainer> addChild(IAtomContainer aMolecule) {
+        Objects.requireNonNull(aMolecule, "Given molecule is 'null'");
+        TreeNode<IAtomContainer> tmpChildNode = new TreeNode<IAtomContainer>(aMolecule);
+        tmpChildNode.parent = this;
+        this.children.add(tmpChildNode);
+        this.registerChildForSearch(tmpChildNode);
+        return tmpChildNode;
     }
 
+    /**
+     * Outputs the level on which the node is located in the entire tree
+     * @return level of the node in the entire tree
+     */
     public int getLevel() {
-        if (this.isRoot())
+        if (this.isOrphan())
             return 0;
         else
             return parent.getLevel() + 1;
     }
 
-    private void registerChildForSearch(TreeNode<T> aNode) {
+    /**
+     * Child is registered for the index search.
+     * The node can only be found with findTreeNode if it was previously registered in this way.
+     * @param aNode Node to be registered
+     */
+    private void registerChildForSearch(TreeNode<IAtomContainer> aNode) {
         Objects.requireNonNull(aNode, "Given Tree Node is 'null'");
         elementsIndex.add(aNode);
         if (parent != null)
             parent.registerChildForSearch(aNode);
     }
 
-    public TreeNode<T> findTreeNode(Comparable<T> aCompData) {
-        Objects.requireNonNull(aCompData, "Given comparable data is 'null'");
-        for (TreeNode<T> element : this.elementsIndex) {
-            T elData = element.data;
-            if (aCompData.compareTo(elData) == 0)
-                return element;
+    /**
+     * Find a specific TreeNode in the tree
+     * Node must have been previously registered via registerChildForSearch
+     * @param aCompMolecule Molecule on the basis of which the node is to be searched for
+     * @return Element of the searched TreeNode
+     */
+    public TreeNode<IAtomContainer> findTreeNode(Comparable<IAtomContainer> aCompMolecule) {
+        Objects.requireNonNull(aCompMolecule, "Given comparable Molecule is 'null'");
+        for (TreeNode<IAtomContainer> tmpElement : this.elementsIndex) {
+            IAtomContainer tmpMolecule = tmpElement.molecule;
+            if (aCompMolecule.compareTo(tmpMolecule) == 0)
+                return tmpElement;
         }
-
         return null;
     }
 
+    /**
+     * Iterator to iterate through the entire tree
+     * @return the iterator
+     */
     @Override
-    public String toString() {
-        return data != null ? data.toString() : "[data null]";
-    }
-
-    @Override
-    public Iterator<TreeNode<T>> iterator() {
-        TreeNodeIter<T> iter = new TreeNodeIter<T>(this);
-        return iter;
+    public Iterator<TreeNode<IAtomContainer>> iterator() {
+        TreeNodeIter<IAtomContainer> tmpIter = new TreeNodeIter<IAtomContainer>(this);
+        return tmpIter;
     }
 
     //<editor-fold desc="get/set">
     /**
-     * Get the node data.
-     * @return node data
+     * Get the node molecule.
+     * @return node molecule
      */
-    public T getData() {
-        return this.data;
+    public IAtomContainer getMolecule() {
+        return this.molecule;
     }
 
     /**
-     * Set the node data.
-     * @param aData data that are set
+     * Set the node molecule.
+     * @param aMolecule molecule that are set
      */
-    public void setData(T aData) {
-        Objects.requireNonNull(aData, "Given Data is 'null'");
-        this.data = aData;
+    public void setMolecule(IAtomContainer aMolecule) {
+        Objects.requireNonNull(aMolecule, "Given molecule is 'null'");
+        this.molecule = aMolecule;
     }
 
     /**
      * Get the parent node.
      * @return parent node
      */
-    public TreeNode<T> getParent() {
+    public TreeNode<IAtomContainer> getParent() {
         return this.parent;
     }
 
@@ -134,7 +182,7 @@ public class TreeNode<T> implements Iterable<TreeNode<T>> {
      * Set the parent node.
      * @param aParent parent that are set
      */
-    public void setParent(TreeNode<T> aParent) {
+    public void setParent(TreeNode<IAtomContainer> aParent) {
         Objects.requireNonNull(aParent, "Given TreeNode is 'null'");
         this.parent = aParent;
     }
@@ -143,7 +191,7 @@ public class TreeNode<T> implements Iterable<TreeNode<T>> {
      * Get the children nodes.
      * @return children nodes
      */
-    public List<TreeNode<T>> getChildren() {
+    public List<TreeNode<IAtomContainer>> getChildren() {
         return this.children;
     }
 
@@ -151,13 +199,9 @@ public class TreeNode<T> implements Iterable<TreeNode<T>> {
      * Set the children node.
      * @param aChildren children that are set
      */
-    public void setChildren(List<TreeNode<T>> aChildren) {
+    public void setChildren(List<TreeNode<IAtomContainer>> aChildren) {
         Objects.requireNonNull(aChildren, "Given TreeNode List is 'null'");
         this.children = aChildren;
     }
     //</editor-fold>
-
-
-
-
 }
