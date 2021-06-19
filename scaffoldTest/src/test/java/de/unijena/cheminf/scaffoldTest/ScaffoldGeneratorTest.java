@@ -255,6 +255,52 @@ public class ScaffoldGeneratorTest {
     }
 
     /**
+     * Test of ScaffoldGenerator.removeRing() with SMILES.
+     * Loads Scheme4 from the Ertl 2007 Paper as SMILES and generates SchuffenhauerScaffold with removed rings.
+     * In addition, some similar example molecules are also commented out.
+     * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
+     * @throws IOException if file format can not be detected
+     * @throws CDKException if file can not be read
+     * @throws CloneNotSupportedException if cloning is not possible
+     */
+    @Test
+    public void getScheme4Test() throws CDKException, CloneNotSupportedException, IOException {
+        //SMILES to IAtomContainer
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1CCCC2C(O2)CC(OC(=O)CC(C(C(=O)C(C1O)C)(C)C)O)C(=CC3=CSC(=N3)C)C");//Original
+        tmpMolecule = tmpParser.parseSmiles("C3CCC1[F+]C1C2CC2C3");
+        //tmpMolecule = tmpParser.parseSmiles("C2=C1[F+]C1CC2");
+        //tmpMolecule = tmpParser.parseSmiles("C2CCC1SC1C2");
+        //tmpMolecule = tmpParser.parseSmiles("C2CCC(C1C[Br+]1)C2");
+        //tmpMolecule = tmpParser.parseSmiles("C2=C1[I+]C1CCC2");
+        //tmpMolecule = tmpParser.parseSmiles("C2=C1[I+]C1=CCC2");
+        /*Generate picture of the SchuffenhauerScaffold*/
+        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+        BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpMolecule).toImg();
+        /*Save the picture*/
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme4/Schuffenhauer.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme4/Schuffenhauer.png");
+        ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
+        /*Generate picture of the SchuffenhauerScaffold with removed ring*/
+        //Generate SchuffenhauerScaffold
+        IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule, true, ElectronDonation.cdk());
+        //Get rings
+        List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(tmpSchuffenhauerScaffold, true);
+        int tmpCounter = 0;
+        for(IAtomContainer tmpRing : tmpRings) {
+            /*Remove rings*/
+            IAtomContainer tmpRemovedSchuff = scaffoldGenerator.removeRing(tmpSchuffenhauerScaffold, tmpRing);
+            /*Generate picture*/
+            BufferedImage tmpImgRemove = tmpGenerator.depict(tmpRemovedSchuff).toImg();
+            /*Save the picture*/
+            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme4/RemovedRing" + tmpCounter + ".png").mkdirs();
+            File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme4/RemovedRing" + tmpCounter + ".png");
+            ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
+            tmpCounter++;
+        }
+    }
+
+    /**
      * Test of ScaffoldGenerator.getSchuffenhauerScaffold with SMILES.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
      * @throws IOException if file format can not be detected

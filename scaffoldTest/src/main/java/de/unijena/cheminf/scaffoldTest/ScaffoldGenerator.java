@@ -38,6 +38,7 @@ import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.tools.CDKHydrogenAdder;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
+import org.xmlcml.euclid.Int;
 
 import java.util.*;
 
@@ -224,7 +225,8 @@ public class ScaffoldGenerator {
 
     /**
      * Removes the given ring from the total molecule and returns it.
-     * Preserves the sp2 hybridisation of a border atom when an aromatic ring is removed
+     * Preserves the sp2 hybridisation of a border atom when an aromatic ring is removed.
+     * With the removal of heterocycles of size 3 a double bond is inserted if it is directly adjacent to another ring.
      * Important: Property (ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY) must be set for tmpMolecule/tmpRing and match.
      * @param aMolecule Molecule whose ring is to be removed.
      * @param aRing Ring to be removed.
@@ -281,8 +283,47 @@ public class ScaffoldGenerator {
                     }
                 }
             }
-        }
-        else { //Remove only the ring atoms that are not bound to the rest of the molecule
+        } else { //Remove only the ring atoms that are not bound to the rest of the molecule
+            if(tmpRingClone.getAtomCount() == 3) {
+                /* Rings consisting of 3 atoms are specially treated*/
+                int tmpNonCCounter = 0;
+                IAtom tmpNonCAtom = null;
+                /*Count the heteroatoms*/
+                for(IAtom tmpRingAtom : tmpRingClone.atoms()) {
+                    if(tmpRingAtom.getSymbol() != "C") {
+                        tmpNonCCounter++;
+                        tmpNonCAtom = tmpRingAtom;
+                    }
+                }
+                /*If the ring contains one heteroatom, it is treated specially.*/
+                if (tmpNonCCounter == 1) {
+                    tmpRingClone.removeAtom(tmpNonCAtom); //remove the heteroatom from the ring
+                    IAtom tmpBondAtom1 = null;
+                    IAtom tmpRemoveAtom = null;
+                    for(IAtom tmpMolAtom : tmpMoleculeClone.atoms()) { //go though the whole molecule
+                        /* Find the second atom to which the heteroatom was bonded if it was sp3 hybridised*/
+                        if((tmpMolAtom.getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpRingClone.getAtom(0).getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY) ||
+                                tmpMolAtom.getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpRingClone.getAtom(1).getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY)) && tmpBondAtom1 != null
+                                && tmpMolAtom.getHybridization() == IAtomType.Hybridization.SP3) {
+                            //insert a double bond between the two atoms
+                            tmpMoleculeClone.getBond(tmpBondAtom1 , tmpMolAtom).setOrder(IBond.Order.DOUBLE);
+                        }
+                        /*Find the first atom to which the heteroatom was bonded if it was sp3 hybridised*/
+                        if((tmpMolAtom.getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpRingClone.getAtom(0).getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY) ||
+                                tmpMolAtom.getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpRingClone.getAtom(1).getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY)) && tmpBondAtom1 == null
+                                && tmpMolAtom.getHybridization() == IAtomType.Hybridization.SP3) {
+                            //Save this atom
+                            tmpBondAtom1 = tmpMolAtom;
+                        }
+                        /*The heteroatom is to be removed*/
+                        if(tmpNonCAtom.getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpMolAtom.getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY)) {
+                            tmpRemoveAtom = tmpMolAtom;
+                        }
+                    }
+                    //remove the heteroatom
+                    tmpMoleculeClone.removeAtom(tmpRemoveAtom);
+                }
+            }
             for(IAtom tmpRingAtom : tmpRingClone.atoms()) {
                 if(!tmpRingAtom.isAromatic()) {
                     tmpIsRingAromatic = false; //If one atom is non aromatic the whole ring is not aromatic
