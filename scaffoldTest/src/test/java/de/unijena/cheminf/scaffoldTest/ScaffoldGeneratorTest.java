@@ -813,6 +813,35 @@ public class ScaffoldGeneratorTest {
     }
 
     /**
+     * Test of ScaffoldGenerator.applySchuffenhauerRuleOne() with V2000 and V3000 mol files.
+     * Loads the 12 Test(Test1.mol-Test21.mol) molfiles from the Resources folder and creates the SchuffenhauerScaffolds with getSchuffenhauerScaffold().
+     * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
+     * The subfolder has the name of the input file.
+     * @throws IOException if file format can not be detected
+     * @throws CDKException if file can not be read
+     * @throws CloneNotSupportedException if cloning is not possible
+     */
+    @Test
+    public void applySchuffenhauerRuleOneTest() throws CloneNotSupportedException, CDKException, IOException {
+        for (int tmpCount = 1; tmpCount < 23; tmpCount++) {
+            String tmpFileName = "Test" + tmpCount;
+            //Load molecule from molfile
+            IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
+            /*Generate picture of molecule*/
+            AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpMolecule);
+            CDKHydrogenAdder.getInstance(tmpMolecule.getBuilder()).addImplicitHydrogens(tmpMolecule);
+            DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+            IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule, true, ElectronDonation.cdk());
+            IAtomContainer tmpRuleOne = scaffoldGenerator.applySchuffenhauerRuleOne(tmpSchuffenhauerScaffold);
+            BufferedImage tmpImgRuleOne = tmpGenerator.depict(tmpRuleOne).toImg();
+            /*Save the picture*/
+            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/RuleOne.png").mkdirs();
+            File tmpOutputRuleOne = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/RuleOne.png");
+            ImageIO.write(tmpImgRuleOne, "png" ,tmpOutputRuleOne);
+        }
+    }
+
+    /**
      * Speed test for the getSchuffenhauerScaffold() Method with over 400000 molecules from the COCONUT DB.
      * @throws FileNotFoundException if COCONUT DB not found
      */
