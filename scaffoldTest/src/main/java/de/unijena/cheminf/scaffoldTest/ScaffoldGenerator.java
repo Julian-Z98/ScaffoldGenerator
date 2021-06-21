@@ -410,8 +410,8 @@ public class ScaffoldGenerator {
      * @param aRings All Rings of the molecule
      * @param aMolecule Whole molecule
      * @return Whether the ring is removable
-     * @throws CloneNotSupportedException
-     * @throws CDKException
+     * @throws CloneNotSupportedException if cloning is not possible.
+     * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
      */
     public boolean isRingRemovable(IAtomContainer aRing, List<IAtomContainer> aRings, IAtomContainer aMolecule) throws CloneNotSupportedException, CDKException {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
@@ -568,5 +568,42 @@ public class ScaffoldGenerator {
             tmpLevelCounter++; //Increases when a level is completed
         }
         return tmpParentNode;
+    }
+
+    /**
+     * If there is only one heterocycle of size 3, it is removed.
+     * Any ring containing an atom that is not a C is considered a heterocycle.
+     * Based on the first rule from the "The Scaffold Tree" Paper by Schuffenhauer et al.
+     * @param aMolecule Molecule to which the first rule is to be applied
+     * @return Molecule to which the first rule was applied
+     * @throws CloneNotSupportedException if cloning is not possible.
+     * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
+     */
+    public IAtomContainer applySchuffenhauerRuleOne(IAtomContainer aMolecule) throws CloneNotSupportedException, CDKException {
+        IAtomContainer tmpClonedMolecule = aMolecule;
+        List<IAtomContainer> tmpRings = this.getRings(tmpClonedMolecule, true);
+        IAtomContainer tmpHeteroRing = null; //Saved size 3 heterocycle
+        int tmpHeteroCyclesCounter = 0; //Number of size 3 heterocycles
+        /*Investigate how many size 3 heterocycles there are*/
+        for(IAtomContainer tmpRing : tmpRings) {
+            //All removable and terminal rings of size 3
+            if(tmpRing.getAtomCount() == 3 && this.isRingTerminal(tmpClonedMolecule, tmpRing)
+                    && this.isRingRemovable(tmpRing, tmpRings, tmpClonedMolecule)) {
+                int tmpHeteroAtomCounter = 0;
+                for(IAtom tmpAtom : tmpRing.atoms()) { //Atoms of the ring
+                    if(tmpAtom.getSymbol() != "C"){
+                        tmpHeteroAtomCounter++; //Increase if the ring contains a heteroatom
+                    }
+                }
+                if(tmpHeteroAtomCounter > 0) { //If it is an heterocycle
+                    tmpHeteroCyclesCounter++;
+                    tmpHeteroRing = tmpRing; //Save this ring
+                }
+            }
+        }
+        if(tmpHeteroCyclesCounter == 1) { //If there is exactly one heterocycle of size 3
+            return this.removeRing(tmpClonedMolecule, tmpHeteroRing); //Molecule with one ring removed
+        }
+        return tmpClonedMolecule; //Unchanged molecule
     }
 }
