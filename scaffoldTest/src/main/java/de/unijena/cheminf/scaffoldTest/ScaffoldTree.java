@@ -107,8 +107,9 @@ public class ScaffoldTree {
      * Removes a Node. This does not change the order. The numbering does not move up.
      * @param aNode Node to remove
      * @throws CDKException In case of a problem with the SmilesGenerator
+     * @throws IllegalArgumentException if the node is not in the tree
      */
-    public void removeNode(TreeNode aNode) throws CDKException {
+    public void removeNode(TreeNode aNode) throws CDKException, IllegalArgumentException {
         Objects.requireNonNull(aNode, "Given TreeNode is 'null'");
         if(!this.reverseNodeMap.containsKey(aNode)) { //Check if the node exists in the tree
             throw new IllegalArgumentException("Node is not in tree");
@@ -160,8 +161,9 @@ public class ScaffoldTree {
      * @param aMolecule molecule that is being searched for
      * @return TreeNode of the searched molecule
      * @throws CDKException In case of a problem with the SmilesGenerator
+     * @throws IllegalArgumentException if the node is not in the tree
      */
-    public TreeNode getTreeNode(IAtomContainer aMolecule) throws CDKException {
+    public TreeNode getTreeNode(IAtomContainer aMolecule) throws CDKException, IllegalArgumentException {
         Objects.requireNonNull(aMolecule, "Given atom container is 'null'");
         if(!this.isMoleculeInTree(aMolecule)) { //Check if the molecule exists in the tree
             throw new IllegalArgumentException("Molecule is not in tree");
@@ -194,8 +196,9 @@ public class ScaffoldTree {
      * Return all TreeNodes that are at a certain level in the tree.
      * @param aLevel Level whose TreeNodes are to be returned
      * @return TreeNodes that are at a certain level
+     * @throws IllegalArgumentException if the level does not exist
      */
-    public List<TreeNode> getAllNodesOnLevel(int aLevel) {
+    public List<TreeNode> getAllNodesOnLevel(int aLevel) throws IllegalArgumentException {
         Objects.requireNonNull(aLevel, "Given number is 'null'");
         if(this.getMaxLevel() >= aLevel) { //Level must be less than or equal to the maximum level
             return this.levelMap.get(aLevel);
@@ -241,8 +244,9 @@ public class ScaffoldTree {
      * The assignment can be requested with getMatrixNodes/getMatrixNode.
      * only works with connected trees. Can be checked with isTreeConnected.
      * @return the adjacency matrix
+     * @throws IllegalStateException if the tree is not connected
      */
-    public Integer[][] getTreeAsMatrix() {
+    public Integer[][] getTreeAsMatrix() throws IllegalStateException {
         int tmpSize = this.nodeMap.size();
         Integer[][] tmpMatrix = new Integer[tmpSize][tmpSize];
         if(!this.isTreeConnected()) { //Only a connected matrix is calculated
@@ -332,10 +336,11 @@ public class ScaffoldTree {
     /**
      * Outputs root node of the tree.
      * @return root node of the tree
+     * @throws IllegalStateException if the tree has no clear root
      */
-    public TreeNode getRoot() {
+    public TreeNode getRoot()  throws IllegalStateException, IllegalArgumentException {
         if(!this.hasOneSingleRootNode()) { //Checks whether the tree has a single root
-            throw new IllegalArgumentException("Tree has no clear root");
+            throw new IllegalStateException("Tree has no clear root");
         }
         for(TreeNode tmpNode : this.nodeMap.values()) {
             /*Is the parent of the node in the tree*/
@@ -343,6 +348,6 @@ public class ScaffoldTree {
                 return tmpNode; //Return the first node without parent in tree
             }
         }
-        throw new IllegalArgumentException("Tree has no clear root");
+        throw new IllegalStateException("Tree has no clear root");
     }
 }
