@@ -53,7 +53,7 @@ public class ScaffoldTree {
     /**
      * Saves all TreeNodes according to their Unique SMILES. Key:SMILES, Value:TreeNode
      */
-    private HashMap<String, TreeNode> smilesMap;
+    private ListMultimap<String, TreeNode> smilesMap;
     /**
      * Saves all TreeNodes according to their level. Key:Level, Value:TreeNode
      */
@@ -75,7 +75,7 @@ public class ScaffoldTree {
     public ScaffoldTree() {
         this.nodeMap = new HashMap<Integer, TreeNode>();
         this.reverseNodeMap = new HashMap<TreeNode, Integer>();
-        this.smilesMap = new HashMap<String, TreeNode>();
+        this.smilesMap = ArrayListMultimap.create();
         this.levelMap = ArrayListMultimap.create();
         this.smilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
         this.nodeCounter = 0;
@@ -119,17 +119,10 @@ public class ScaffoldTree {
         this.nodeMap.remove(tmpNumberInNodeMap);
         this.reverseNodeMap.remove(aNode);
         /*Remove from smilesMap*/
-        this.smilesMap.clear();
-        for(TreeNode tmpTreeNode : this.nodeMap.values()) {
-            IAtomContainer tmpMolecule = (IAtomContainer) tmpTreeNode.getMolecule();
-            String tmpSmiles = this.smilesGenerator.create(tmpMolecule); //Convert molecule to SMILES
-            this.smilesMap.put(tmpSmiles , tmpTreeNode);
-        }
+        String tmpSmiles = this.smilesGenerator.create((IAtomContainer) aNode.getMolecule()); //Convert molecule to SMILES
+        this.smilesMap.remove(tmpSmiles, aNode);
         /*Remove from levelMap*/
-        this.levelMap.clear();
-        for(TreeNode tmpTreeNode : this.nodeMap.values()) {
-            this.levelMap.put(tmpTreeNode.getLevel(), tmpTreeNode);
-        }
+        levelMap.remove(aNode.getLevel(), aNode);
     }
 
     /**
@@ -156,6 +149,7 @@ public class ScaffoldTree {
     /**
      * Return the TreeNode that belongs to a specific molecule.
      * Check whether it is the same molecule using the Unique SMILES.
+     * If a molecule occurs more than once in the tree, only one corresponding TreeNode is returned.
      * Unique SMILES: canonical SMILES string, different atom ordering produces the same (apart from rare exceptions) SMILES.
      *                No isotope or stereochemistry encoded.
      * @param aMolecule molecule that is being searched for
@@ -168,18 +162,7 @@ public class ScaffoldTree {
         if(!this.isMoleculeInTree(aMolecule)) { //Check if the molecule exists in the tree
             throw new IllegalArgumentException("Molecule is not in tree");
         }
-        return this.smilesMap.get(this.smilesGenerator.create(aMolecule));
-    }
-
-    /**
-     * Returns all TreeNodes of unique molecules.
-     * If a molecule occurs more than once in the tree, only one corresponding TreeNode is returned.
-     * @return all TreeNodes of unique molecules
-     */
-    public List<TreeNode> getUniqueTreeNodes() {
-        List<TreeNode> tmpNodeList = new ArrayList<>();
-        tmpNodeList.addAll(this.smilesMap.values());
-        return tmpNodeList;
+        return this.smilesMap.get(this.smilesGenerator.create(aMolecule)).get(0);
     }
 
     /**
