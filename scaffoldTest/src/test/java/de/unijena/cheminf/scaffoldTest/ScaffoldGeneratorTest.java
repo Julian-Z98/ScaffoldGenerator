@@ -478,15 +478,6 @@ public class ScaffoldGeneratorTest {
         IAtomContainer tmpResultMolecule = (IAtomContainer) tmpScaffoldTree.getTreeNode(tmpTestMolecule).getMolecule();
         System.out.println("Size of the result molecule: " + tmpResultMolecule.getAtomCount()); //Should be the same size
         assertEquals(tmpTestMolecule.getAtomCount(), tmpResultMolecule.getAtomCount());
-        /*getUniqueTreeNodes checker*/
-        System.out.println("---getUniqueTreeNodes check---");
-        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
-        for(TreeNode tmpNode : tmpScaffoldTree.getUniqueTreeNodes()) {
-            IAtomContainer tmpNodeMolecule = (IAtomContainer) tmpNode.getMolecule();
-            System.out.println(tmpSmilesGenerator.create(tmpNodeMolecule));
-        }
-        System.out.println("Number of unique tree nodes: " +  tmpScaffoldTree.getUniqueTreeNodes().size());
-        assertEquals(10,  tmpScaffoldTree.getUniqueTreeNodes().size());
         /*getAllNodes, getLevel and getMaxLevel checker*/
         System.out.println("---getAllNodes, getLevel and getMaxLevel check---");
         System.out.println("Total number of nodes: " + tmpScaffoldTree.getAllNodes().size());
@@ -526,9 +517,13 @@ public class ScaffoldGeneratorTest {
         }
         /*RemoveNode, getRoot, hasOneSingleRootNode and isTreeConnected check*/
         System.out.println("---RemoveNode, getRoot, hasOneSingleRootNode and isTreeConnected check---");
-        tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(3));
+        IAtomContainer tmpRemovedMolecule = (IAtomContainer) tmpScaffoldTree.getMatrixNode(14).getMolecule();
+        tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(14));
+        //Because the molecule occurs twice in the tree, it must still be present after the removal of a single node
+        assertEquals(true, tmpScaffoldTree.isMoleculeInTree(tmpRemovedMolecule));
         System.out.println("Size of the tree after on Node is removed: "+ tmpScaffoldTree.getAllNodes().size());
         assertEquals(14, tmpScaffoldTree.getAllNodes().size());
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
         System.out.println("Root of the tree: " + tmpSmilesGenerator.create((IAtomContainer) tmpScaffoldTree.getRoot().getMolecule()));
         assertEquals(22,  ((IAtomContainer) tmpScaffoldTree.getRoot().getMolecule()).getAtomCount());
         System.out.println("Is tree connected: " + tmpScaffoldTree.isTreeConnected());
@@ -549,6 +544,7 @@ public class ScaffoldGeneratorTest {
      * @throws CDKException if file can not be read
      * @throws CloneNotSupportedException if cloning is not possible
      */
+    @Ignore
     @Test
     public void graphStreamTest() throws InterruptedException, CDKException, IOException, CloneNotSupportedException {
         String tmpFileName = "Test11" ;
@@ -655,6 +651,7 @@ public class ScaffoldGeneratorTest {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1=C(C(=NO1)C2=C(C=CC=C2Cl)F)C(=O)NC3C4N(C3=O)C(C(S4)(C)C)C(=O)O");
+        //tmpMolecule = tmpParser.parseSmiles("O=[P-]1(=O)CCCCC1");
         /*Generate picture of the Original molecule*/
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
         BufferedImage tmpImgOriginal = tmpGenerator.depict(tmpMolecule).toImg();
@@ -830,6 +827,8 @@ public class ScaffoldGeneratorTest {
         //tmpMolecule = tmpParser.parseSmiles("C2CC(C1C[Br+]1)CC2C3C[F+]3");
         //tmpMolecule = tmpParser.parseSmiles("[Cl+]2C3C1[I+]C1C4[Cl+]C234");
         //tmpMolecule = tmpParser.parseSmiles("O=C1C2CCCCC12");
+        //tmpMolecule = tmpParser.parseSmiles("C2CCC(C1NO1)C2");
+        //tmpMolecule = tmpParser.parseSmiles("C2CC(C1NO1)C3NC23");
         /*Generate picture of the SchuffenhauerScaffold*/
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpMolecule).toImg();
