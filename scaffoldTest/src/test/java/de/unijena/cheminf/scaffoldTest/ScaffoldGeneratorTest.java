@@ -1,26 +1,18 @@
 /*
- *
- * MIT License
- *
  * Copyright (c) 2021 Julian Zander, Jonas Schaub,  Achim Zielesny
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public License
+ * as published by the Free Software Foundation, version 2.1.
  *
- *  The above copyright notice and this permission notice shall be included in all
- *  copies or substantial portions of the Software.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
  *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- *  SOFTWARE.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  */
 
@@ -731,6 +723,8 @@ public class ScaffoldGeneratorTest {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("c2ccc1CNCCc1c2");
+        //tmpMolecule = tmpParser.parseSmiles("C2=C1CCNCC1=CCC2");
+
         /*Generate picture of the SchuffenhauerScaffold*/
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpMolecule).toImg();
@@ -831,14 +825,13 @@ public class ScaffoldGeneratorTest {
         //tmpMolecule = tmpParser.parseSmiles("C2CC(C1NO1)C3NC23");
         /*Generate picture of the SchuffenhauerScaffold*/
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
-        BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpMolecule).toImg();
+        //Generate SchuffenhauerScaffold
+        IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule, true, ElectronDonation.cdk());
+        BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
         /*Save the picture*/
         new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme4/Original.png").mkdirs();
         File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme4/Original.png");
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
-        /*Generate picture of the SchuffenhauerScaffold with removed ring*/
-        //Generate SchuffenhauerScaffold
-        IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule, true, ElectronDonation.cdk());
         //Get rings
         List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(tmpSchuffenhauerScaffold, true);
         int tmpCounter = 0;
