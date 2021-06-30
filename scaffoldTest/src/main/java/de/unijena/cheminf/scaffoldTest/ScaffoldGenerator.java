@@ -675,6 +675,18 @@ public class ScaffoldGenerator {
                 //After a new fragment has been added, the next one is investigated
                 continue;
             }
+            /*Apply rule number three*/
+            tmpRemovableRings = this.applySchuffenhauerRuleThree(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings);
+            if (tmpRemovableRings.size() == 1) { //If only one eligible ring remains, it can be removed
+                //Remove the ring from from the fragment currently being treated
+                IAtomContainer tmpRingRemoved = this.removeRing(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings.get(0));
+                //Remove the linkers
+                IAtomContainer tmpSchuffRingRemoved = this.getSchuffenhauerScaffold(tmpRingRemoved, false, null);
+                //Add the fragment to the list of fragments
+                tmpSchuffenhauerFragments.add(tmpSchuffRingRemoved);
+                //After a new fragment has been added, the next one is investigated
+                continue;
+            }
             /*Apply rule number thirteen, the tiebreaking rule */
             tmpSchuffenhauerFragments.add(this.applySchuffenhauerRuleThirteen(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings));
         }
@@ -682,6 +694,7 @@ public class ScaffoldGenerator {
     }
 
     /**
+     * Sort out the rings according to the first Schuffenhauer rule.
      * Based on the first rule from the "The Scaffold Tree" Paper by Schuffenhauer et al.
      * The rule says: Remove Heterocycles of Size 3 First.
      * Therefore, size 3 hetero rings are preferred when available.
@@ -749,9 +762,51 @@ public class ScaffoldGenerator {
     }
 
     /**
-     * The entered rings are sorted alphabetically by their unique SMILES. The last ring of this sort is returned
+     * Sort out the rings according to the third Schuffenhauer rule.
+     * Based on the third rule from the "The Scaffold Tree" Paper by Schuffenhauer et al.
+     * The rule says: Choose the Parent Scaffold Having the Smallest Number of Acyclic Linker Bonds.
+     * Therefore, linked rings are given priority over fused rings.
+     * The rings that are connected to the rest of the molecule via the longest linkers have priority in the removal process.
+     * @param aRings Removable rings of the molecule to which the rule is applied
+     * @param aMolecule Molecule from which a ring is to be removed
+     * @return aRings to be removed first according to the rule. Returns the unchanged list if the rule cannot be applied to the rings.
+     * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
+     * @throws CloneNotSupportedException if cloning is not possible.
+     */
+    public List<IAtomContainer> applySchuffenhauerRuleThree(IAtomContainer aMolecule, List<IAtomContainer> aRings) throws CDKException, CloneNotSupportedException {
+        IAtomContainer tmpClonedMolecule = aMolecule.clone();
+        List<IAtomContainer> tmpRemoveRings = new ArrayList<>(aRings.size()); //Rings with the longest linker
+        List<Integer> tmpLinkerSize = new ArrayList<>(aRings.size()); //Linker length of each ring
+        Integer tmpMoleculeAtomCount = tmpClonedMolecule.getAtomCount();
+        /*Calculate the linker length of each ring. Negative integers are fused rings*/
+        for(IAtomContainer tmpRing : aRings) {
+            IAtomContainer tmpRemovedRing = this.removeRing(tmpClonedMolecule, tmpRing);
+            IAtomContainer tmpSchuff = this.getSchuffenhauerScaffold(tmpRemovedRing, false, null);
+            //The number of atoms of the removed ring and the molecule from which the ring and the linker were removed are subtracted from the atomic number of the whole molecule
+            //This leaves only the atomic number of the linker
+            tmpLinkerSize.add(tmpMoleculeAtomCount - (tmpRing.getAtomCount() + tmpSchuff.getAtomCount()));
+        }
+        //Get the maximum linker size
+        Integer tmpMaxList = tmpLinkerSize.stream().mapToInt(v->v).max().orElseThrow(NoSuchElementException::new);
+        /*Save the linked rings if available*/
+        if(tmpMaxList > -1) { //Is there a linked rings
+            for(int tmpCounter = 0 ; tmpCounter < tmpLinkerSize.size(); tmpCounter++) {
+                if(tmpLinkerSize.get(tmpCounter) == tmpMaxList) { //Get the rings with the longest linkers
+                    tmpRemoveRings.add(aRings.get(tmpCounter));
+                }
+            }
+            return tmpRemoveRings;
+        }
+        /*Return the unchanged ring list if there are only fused rings*/
+        return aRings;
+    }
+
+    /**
+     * Remove a ring according to the third Schuffenhauer rule.
      * Based on rule number 13 from the "The Scaffold Tree" Paper by Schuffenhauer et al.
      * In contrast to the paper, unique SMILES are used here instead of canonical SMILES.
+     * The entered rings are sorted alphabetically by their unique SMILES. The last ring of this sort is returned.
+     * A few structures do not produce a truly unique SMILES. These are overwritten and are therefore not considered for further selection.
      * @param aRings Removable rings of the molecule to which the rule is applied
      * @param aMolecule Molecule from which a ring is to be removed
      * @return Molecule from which the ring selected by the rule has been removed
