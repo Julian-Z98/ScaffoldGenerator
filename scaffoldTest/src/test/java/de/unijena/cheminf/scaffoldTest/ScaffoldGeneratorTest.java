@@ -66,7 +66,7 @@ public class ScaffoldGeneratorTest {
     //<editor-fold desc="Fundamental Method Tests">
     /**
      * Test of ScaffoldGenerator.getSchuffenhauerScaffold() with V2000 and V3000 mol files.
-     * Loads the 12 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and creates the SchuffenhauerScaffolds with getSchuffenhauerScaffold().
+     * Loads the 22 Test(Test1.mol-Test23.mol) molfiles from the Resources folder and creates the SchuffenhauerScaffolds with getSchuffenhauerScaffold().
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
      * @throws IOException if file format can not be detected
@@ -75,7 +75,7 @@ public class ScaffoldGeneratorTest {
      */
     @Test
     public void getSchuffenhauerScaffoldTest() throws CloneNotSupportedException, CDKException, IOException {
-        for (int tmpCount = 1; tmpCount < 21; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 23; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -601,8 +601,8 @@ public class ScaffoldGeneratorTest {
 
     //<editor-fold desc="Schuffenhauer Rules Tests">
     /**
-     * Test of ScaffoldGenerator.applySchuffenhauerRuleOne() with V2000 and V3000 mol files.
-     * Loads the 12 Test(Test1.mol-Test21.mol) molfiles from the Resources folder and creates the SchuffenhauerScaffolds with getSchuffenhauerScaffold().
+     * Test of ScaffoldGenerator.applySchuffenhauerRules() with V2000 and V3000 mol files.
+     * Loads the Test(Test1.mol-Test21.mol) molfiles from the Resources folder and creates the SchuffenhauerScaffolds with getSchuffenhauerScaffold().
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
      * @throws IOException if file format can not be detected
@@ -610,7 +610,7 @@ public class ScaffoldGeneratorTest {
      * @throws CloneNotSupportedException if cloning is not possible
      */
     @Test
-    public void applySchuffenhauerRuleOneTest() throws CloneNotSupportedException, CDKException, IOException {
+    public void applySchuffenhauerRulesTest() throws CloneNotSupportedException, CDKException, IOException {
         for (int tmpCount = 1; tmpCount < 23; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
@@ -619,14 +619,60 @@ public class ScaffoldGeneratorTest {
             AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpMolecule);
             CDKHydrogenAdder.getInstance(tmpMolecule.getBuilder()).addImplicitHydrogens(tmpMolecule);
             DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
-            IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule, true, ElectronDonation.cdk());
-            IAtomContainer tmpRuleOne = scaffoldGenerator.applySchuffenhauerRuleOne(tmpSchuffenhauerScaffold);
-            BufferedImage tmpImgRuleOne = tmpGenerator.depict(tmpRuleOne).toImg();
-            /*Save the picture*/
-            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/RuleOne.png").mkdirs();
-            File tmpOutputRuleOne = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/RuleOne.png");
-            ImageIO.write(tmpImgRuleOne, "png" ,tmpOutputRuleOne);
+            List<IAtomContainer> tmpSchuffenhauerFragments = scaffoldGenerator.applySchuffenhauerRules(tmpMolecule, ElectronDonation.cdk());
+            int tmpCounter = 0;
+            for(IAtomContainer tmpFragment : tmpSchuffenhauerFragments) {
+                tmpCounter++;
+                /*Generate picture*/
+                BufferedImage tmpImgFragment = tmpGenerator.depict(tmpFragment).toImg();
+                /*Save the picture*/
+                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/SchuffenhauerRules/Fragment"+  tmpCounter + ".png").mkdirs();
+                File tmpOutputFragment = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/SchuffenhauerRules/Fragment"+  tmpCounter + ".png");
+                ImageIO.write(tmpImgFragment, "png", tmpOutputFragment);
+            }
         }
+    }
+
+    /**
+     * Test of ScaffoldGenerator.applySchuffenhauerRules() with SMILES.
+     * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
+     * The subfolder has the name of the input file.
+     * @throws IOException if file format can not be detected
+     * @throws CDKException if file can not be read
+     * @throws CloneNotSupportedException if cloning is not possible
+     */
+    @Test
+    public void applySchuffenhauerRulesSMILESTest() throws CloneNotSupportedException, CDKException, IOException {
+        //SMILES to IAtomContainer
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        IAtomContainer tmpMolecule = tmpParser.parseSmiles("C5CCCCCCCCCCCCCC1NC1CCCCCCCCCCCCCC(C3CC2CC2C4NC34)CC5");//Original
+        //tmpMolecule = tmpParser.parseSmiles("C3CCC1[F+]C1C2CC2C3");
+        //tmpMolecule = tmpParser.parseSmiles("C2=C1[F+]C1CC2");
+        //tmpMolecule = tmpParser.parseSmiles("C2CCC1SC1C2");
+        //tmpMolecule = tmpParser.parseSmiles("C2CCC(C1C[Br+]1)C2");
+        //tmpMolecule = tmpParser.parseSmiles("C2=C1[I+]C1CCC2");
+        //tmpMolecule = tmpParser.parseSmiles("C2=C1[I+]C1=CCC2");
+        //tmpMolecule = tmpParser.parseSmiles("C2CC(C1C[Br+]1)CC2C3C[F+]3");
+        //tmpMolecule = tmpParser.parseSmiles("[Cl+]2C3C1[I+]C1C4[Cl+]C234");
+        //tmpMolecule = tmpParser.parseSmiles("O=C1C2CCCCC12");
+        //tmpMolecule = tmpParser.parseSmiles("C2CCC(C1NO1)C2");
+        //tmpMolecule = tmpParser.parseSmiles("C2CC(C1NO1)C3NC23");
+        /*Generate picture of molecule*/
+        AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpMolecule);
+        CDKHydrogenAdder.getInstance(tmpMolecule.getBuilder()).addImplicitHydrogens(tmpMolecule);
+        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+        List<IAtomContainer> tmpSchuffenhauerFragments = scaffoldGenerator.applySchuffenhauerRules(tmpMolecule, ElectronDonation.cdk());
+        int tmpCounter = 0;
+        for(IAtomContainer tmpFragment : tmpSchuffenhauerFragments) {
+            tmpCounter++;
+            /*Generate picture*/
+            BufferedImage tmpImgFragment = tmpGenerator.depict(tmpFragment).toImg();
+            /*Save the picture*/
+            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SMILESTest/Fragment" + tmpCounter + ".png").mkdirs();
+            File tmpOutputFragment = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SMILESTest/Fragment" + tmpCounter + ".png");
+            ImageIO.write(tmpImgFragment, "png", tmpOutputFragment);
+        }
+
     }
 
     /**
@@ -847,8 +893,8 @@ public class ScaffoldGeneratorTest {
             tmpCounter++;
         }
         /*Generate picture of the SchuffenhauerRuleOne*/
-        IAtomContainer tmpRuleOne = scaffoldGenerator.applySchuffenhauerRuleOne(tmpSchuffenhauerScaffold);
-        BufferedImage tmpImgRuleOne = tmpGenerator.depict(tmpRuleOne).toImg();
+        List<IAtomContainer> tmpRuleOne = scaffoldGenerator.applySchuffenhauerRules(tmpSchuffenhauerScaffold, ElectronDonation.cdk());
+        BufferedImage tmpImgRuleOne = tmpGenerator.depict(tmpRuleOne.get(1)).toImg();
         /*Save the picture*/
         new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme4/RuleOne.png").mkdirs();
         File tmpOutputRuleOne = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme4/RuleOne.png");
@@ -895,13 +941,13 @@ public class ScaffoldGeneratorTest {
         new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme5/ModifiedMolecule" + ".png").mkdirs();
         File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme5/ModifiedMolecule" + ".png");
         ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
-        /*Generate picture of the SchuffenhauerRuleOne*/
-        IAtomContainer tmpRuleOne = scaffoldGenerator.applySchuffenhauerRuleTwo(scaffoldGenerator.getSchuffenhauerScaffold(tmpSchuffenhauerScaffold, false, null));
-        BufferedImage tmpImgRuleOne = tmpGenerator.depict(tmpRuleOne).toImg();
+        /*Generate picture of the SchuffenhauerRule*/
+        List<IAtomContainer> tmpRule = scaffoldGenerator.applySchuffenhauerRules(tmpSchuffenhauerScaffold, ElectronDonation.cdk());
+        BufferedImage tmpImgRule = tmpGenerator.depict(tmpRule.get(1)).toImg();
         /*Save the picture*/
         new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme5/RuleTwo.png").mkdirs();
-        File tmpOutputRuleOne = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme5/RuleTwo.png");
-        ImageIO.write(tmpImgRuleOne, "png" ,tmpOutputRuleOne);
+        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme5/RuleTwo.png");
+        ImageIO.write(tmpImgRule, "png" ,tmpOutputRule);
     }
     //</editor-fold>
 
