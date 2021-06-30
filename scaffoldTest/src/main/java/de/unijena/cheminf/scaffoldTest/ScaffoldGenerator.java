@@ -617,26 +617,85 @@ public class ScaffoldGenerator {
     }
     //</editor-fold>
 
-    //<editor-fold desc="Schuffenhauer Rules">
     /**
-     * If there is only one heterocycle of size 3, it is removed.
-     * Any ring containing an atom that is not a C is considered a heterocycle.
-     * Based on the first rule from the "The Scaffold Tree" Paper by Schuffenhauer et al.
-     * @param aMolecule Molecule to which the first rule is to be applied
-     * @return Molecule to which the first rule was applied
-     * @throws CloneNotSupportedException if cloning is not possible.
+     * Iteratively removes the rings of the molecule according to specific rules that are queried hierarchically.
+     * Based on the rules from the "The Scaffold Tree" Paper by Schuffenhauer et al.
+     * @param aMolecule Molecule that is to be broken down into its fragments
+     * @param anElectronDonation Electron donation model that should be used
+     * @return Fragments of the molecule according to the Schuffenhauer rules
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
+     * @throws CloneNotSupportedException if cloning is not possible.
      */
-    public IAtomContainer applySchuffenhauerRuleOne(IAtomContainer aMolecule) throws CloneNotSupportedException, CDKException {
-        IAtomContainer tmpClonedMolecule = aMolecule.clone();
-        List<IAtomContainer> tmpRings = this.getRings(tmpClonedMolecule, true);
-        IAtomContainer tmpHeteroRing = null; //Saved size 3 heterocycle
+    //<editor-fold desc="Schuffenhauer Rules">
+    public List<IAtomContainer> applySchuffenhauerRules(IAtomContainer aMolecule, ElectronDonation anElectronDonation) throws CloneNotSupportedException, CDKException {
+        IAtomContainer tmpSchuffenhauer = this.getSchuffenhauerScaffold(aMolecule,true ,anElectronDonation );
+        //List of all generated fragments
+        List<IAtomContainer> tmpSchuffenhauerFragments = new ArrayList<>(this.getRings(tmpSchuffenhauer, false).size());
+        tmpSchuffenhauerFragments.add(tmpSchuffenhauer);
+        /*Go through all the fragments generated and try to break them down further*/
+        for(int tmpCounter = 0 ; tmpCounter < tmpSchuffenhauerFragments.size(); tmpCounter++) {
+            List<IAtomContainer> tmpRings = this.getRings(tmpSchuffenhauerFragments.get(tmpCounter), true);
+            /*If the fragment has only one ring or no ring, it does not need to be disassembled further*/
+            if(tmpRings.size() == 1 || tmpRings.size() == 0) {
+                break;
+            }
+            /*Only the removable terminal rings are further investigated*/
+            List<IAtomContainer> tmpRemovableRings = new ArrayList<>(tmpRings.size());
+            for (IAtomContainer tmpRing : tmpRings) {
+                if (this.isRingTerminal(tmpSchuffenhauerFragments.get(tmpCounter), tmpRing)
+                        && this.isRingRemovable(tmpRing, tmpRings, tmpSchuffenhauerFragments.get(tmpCounter))) {
+                    tmpRemovableRings.add(tmpRing); //Add the candidate rings
+                }
+            }
+            /*If the fragment has no  candidate ring, it does not need to be disassembled further*/
+            if(tmpRemovableRings.size() == 0) {
+                break;
+            }
+            /*Apply rule number one*/
+            tmpRemovableRings = this.applySchuffenhauerRuleOne(tmpRemovableRings);
+            if (tmpRemovableRings.size() == 1) { //If only one eligible ring remains, it can be removed
+                //Remove the ring from from the fragment currently being treated
+                IAtomContainer tmpRingRemoved = this.removeRing(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings.get(0));
+                //Remove the linkers
+                IAtomContainer tmpSchuffRingRemoved = this.getSchuffenhauerScaffold(tmpRingRemoved, false, null);
+                //Add the fragment to the list of fragments
+                tmpSchuffenhauerFragments.add(tmpSchuffRingRemoved);
+                //After a new fragment has been added, the next one is investigated
+                continue;
+            }
+            /*Apply rule number two*/
+            tmpRemovableRings = this.applySchuffenhauerRuleTwo(tmpRemovableRings);
+            if (tmpRemovableRings.size() == 1) { //If only one eligible ring remains, it can be removed
+                //Remove the ring from from the fragment currently being treated
+                IAtomContainer tmpRingRemoved = this.removeRing(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings.get(0));
+                //Remove the linkers
+                IAtomContainer tmpSchuffRingRemoved = this.getSchuffenhauerScaffold(tmpRingRemoved, false, null);
+                //Add the fragment to the list of fragments
+                tmpSchuffenhauerFragments.add(tmpSchuffRingRemoved);
+                //After a new fragment has been added, the next one is investigated
+                continue;
+            }
+            /*Apply rule number thirteen, the tiebreaking rule */
+            tmpSchuffenhauerFragments.add(this.applySchuffenhauerRuleThirteen(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings));
+        }
+        return tmpSchuffenhauerFragments;
+    }
+
+    /**
+     * Based on the first rule from the "The Scaffold Tree" Paper by Schuffenhauer et al.
+     * The rule says: Remove Heterocycles of Size 3 First.
+     * Therefore, size 3 hetero rings are preferred when available.
+     * Only these rings will be returned if present. If none are present, all rings entered will be returned.
+     * @param aRings Rings to which the first rule is to be applied
+     * @return Rings to be removed first according to the rule. Returns the unchanged list if the rule cannot be applied to the rings.
+     */
+    public List<IAtomContainer> applySchuffenhauerRuleOne(List<IAtomContainer> aRings) {
         int tmpHeteroCyclesCounter = 0; //Number of size 3 heterocycles
+        List<IAtomContainer> tmpHeteroRingList = new ArrayList<>(aRings.size()); //Saved size 3 heterocycles
         /*Investigate how many size 3 heterocycles there are*/
-        for(IAtomContainer tmpRing : tmpRings) {
-            //All removable and terminal rings of size 3
-            if(tmpRing.getAtomCount() == 3 && this.isRingTerminal(tmpClonedMolecule, tmpRing)
-                    && this.isRingRemovable(tmpRing, tmpRings, tmpClonedMolecule)) {
+        for(IAtomContainer tmpRing : aRings) {
+            //All rings of size 3
+            if(tmpRing.getAtomCount() == 3 ) {
                 int tmpHeteroAtomCounter = 0;
                 for(IAtom tmpAtom : tmpRing.atoms()) { //Atoms of the ring
                     if(tmpAtom.getSymbol() != "C"){
@@ -645,66 +704,73 @@ public class ScaffoldGenerator {
                 }
                 if(tmpHeteroAtomCounter == 1) { //If it is an heterocycle
                     tmpHeteroCyclesCounter++;
-                    tmpHeteroRing = tmpRing; //Save this ring
+                    tmpHeteroRingList.add(tmpRing); //Save this ring
                 }
             }
         }
-        if(tmpHeteroCyclesCounter == 1) { //If there is exactly one heterocycle of size 3
-            return this.removeRing(tmpClonedMolecule, tmpHeteroRing); //Molecule with one ring removed
+        if(tmpHeteroCyclesCounter == 0) { //If there is no heterocycles of size 3
+            return aRings; //Unchanged ring list
+        } else { //If there are heterocycles of size 3
+            return (tmpHeteroRingList); //Only the heterocycles of size 3
         }
-        return tmpClonedMolecule; //Unchanged molecule
     }
 
-/**
- * If there is only one removable ring with < 12 atoms it will be removed.
- * If there is no ring that has >= 12 atoms or there is not only one small ring, the original molecule is returned.
- * Otherwise the smaller ring is removed.
- * The rule says: Do not remove rings with >= 12 Atoms if there are still smaller rings to remove.
- * Based on the second rule from the "The Scaffold Tree" Paper by Schuffenhauer et al.
- * @param aMolecule Molecule to be treated with the rule.
- * @return Molecule that has been modified or not modified according to the rule
- * @throws CloneNotSupportedException if cloning is not possible.
- * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
- */
-    public IAtomContainer applySchuffenhauerRuleTwo(IAtomContainer aMolecule) throws CloneNotSupportedException, CDKException {
-        IAtomContainer tmpClonedMolecule = aMolecule.clone();
-        List<IAtomContainer> tmpRings = this.getRings(tmpClonedMolecule, true);
-        List<IAtomContainer> tmpRemovableRings = new ArrayList<>();
-        boolean tmpHasMacroCycle = false;
-        /*Check whether the molecule has a macrocycle at all*/
-        for(IAtomContainer tmpRing : tmpRings) {
-            //To determine the ring size, the double-bonded atoms must be removed
-            if(this.getRings(tmpRing,false).get(0).getAtomCount() > 11 ) {
-                tmpHasMacroCycle = true; //True if the molecule has a macrocycle
-            }
-        }
-        /*Return the unchanged molecule if there is no macrocycle*/
-        if(tmpHasMacroCycle == false) {
-            return tmpClonedMolecule; //Unchanged molecule
-        }
-        /*Identify removable macrocycles and smaller removable rings*/
+    /**
+     * Sort out the rings according to the second Schuffenhauer rule.
+     * Based on the second rule from the "The Scaffold Tree" Paper by Schuffenhauer et al.
+     * The rule says: Do not remove rings with >= 12 Atoms if there are still smaller rings to remove.
+     * Therefore, this method prefers smaller rings when macro rings are present.
+     * If no macro rings are present, all rings entered will be returned.
+     * @param aRings Removable rings of the molecule to which the rule is applied
+     * @return aRings to be removed first according to the rule. Returns the unchanged list if the rule cannot be applied to the rings.
+     * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
+     */
+    public List<IAtomContainer> applySchuffenhauerRuleTwo(List<IAtomContainer> aRings) throws CDKException {
+        List<IAtomContainer> tmpSmallRings = new ArrayList<>(aRings.size()); //Rings smaller 12
+        /*Identify macrocycles and smaller rings*/
         boolean tmpHasRemovableMacroCycle = false;
-        for(IAtomContainer tmpRing : tmpRings) {
-            //Only terminal and removable rings
-            if(this.isRingTerminal(tmpClonedMolecule, tmpRing) && this.isRingRemovable(tmpRing, tmpRings, tmpClonedMolecule)) {
-                //To determine the ring size, the double-bonded atoms must be removed
-                if(this.getRings(tmpRing,false).get(0).getAtomCount() > 11 ) {
-                    tmpHasRemovableMacroCycle = true;
-                } else { //All removable non macro rings
-                    tmpRemovableRings.add(tmpRing);
-                }
+        for(IAtomContainer tmpRing : aRings) {
+            /*To determine the ring size, the exocyclic atoms must be removed*/
+            CycleFinder tmpCycleFinder = ScaffoldGenerator.CYCLE_FINDER;
+            Cycles tmpRemovedExocyclic = tmpCycleFinder.find(tmpRing);
+            /*Check whether there are any removable macrocycles at all*/
+            if(tmpRemovedExocyclic.toRingSet().getAtomContainer(0).getAtomCount() > 11 ) {
+                tmpHasRemovableMacroCycle = true;
+            } else { //All removable non macro rings
+                tmpSmallRings.add(tmpRing);
             }
         }
-        /*Return the unchanged molecule if there is no removable macrocycle*/
-        if(tmpHasRemovableMacroCycle == false) {
-            return tmpClonedMolecule;
+        /*Return the unchanged ring list if there are no macrocycles or small rings*/
+        if(tmpHasRemovableMacroCycle == false || tmpSmallRings.size() == 0) {
+            return aRings;
         }
-        /*Remove the small ring if there is only one*/
-        if (tmpRemovableRings.size() == 1) {
-            return this.removeRing(tmpClonedMolecule, tmpRemovableRings.get(0));
+        /*Return the small rings if there are any*/
+        return tmpSmallRings;
+    }
+
+    /**
+     * The entered rings are sorted alphabetically by their unique SMILES. The last ring of this sort is returned
+     * Based on rule number 13 from the "The Scaffold Tree" Paper by Schuffenhauer et al.
+     * In contrast to the paper, unique SMILES are used here instead of canonical SMILES.
+     * @param aRings Removable rings of the molecule to which the rule is applied
+     * @param aMolecule Molecule from which a ring is to be removed
+     * @return Molecule from which the ring selected by the rule has been removed
+     * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
+     * @throws CloneNotSupportedException if cloning is not possible.
+     */
+    public IAtomContainer applySchuffenhauerRuleThirteen(IAtomContainer aMolecule, List<IAtomContainer> aRings) throws CDKException, CloneNotSupportedException {
+        IAtomContainer tmpClonedMolecule = aMolecule.clone();
+        TreeMap<String, IAtomContainer> tmpRingRemovedMap = new TreeMap();//Sorted map
+        SmilesGenerator tmpGenerator = new SmilesGenerator(SmiFlavor.Unique);
+        for (IAtomContainer tmpRing : aRings) {
+            IAtomContainer tmpRingRemoved = this.removeRing(tmpClonedMolecule, tmpRing);
+            //Remove linker
+            IAtomContainer tmpSchuff = this.getSchuffenhauerScaffold(tmpRingRemoved, false, null);
+            //A few structures do not produce a truly unique SMILES. These are overwritten and are therefore not considered for further selection.
+            tmpRingRemovedMap.put(tmpGenerator.create(tmpSchuff), tmpSchuff);
         }
-        //Return the unchanged molecule if there is more than one small ring that could be removed
-        return tmpClonedMolecule;
+        //The last key in the map is automatically the SMILES key, which is at the end of the alphabetical order
+        return tmpRingRemovedMap.get(tmpRingRemovedMap.lastKey());
     }
     //</editor-fold>
     //</editor-fold>
