@@ -35,6 +35,8 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
 import java.util.*;
 
+import static junit.framework.TestCase.assertEquals;
+
 public class ScaffoldGenerator {
     //<editor-fold desc="Public Static Final Constants">
     /**
@@ -140,34 +142,6 @@ public class ScaffoldGenerator {
                 tmpMurckoFragment.addBond(tmpNewBond); //Add the whole bond
             }
         }
-
-        /*for(IAtom tmpAtom : tmpMurckoFragment.atoms()) {
-            int tmpAtomProperty = tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY);
-            //Every atom that occurs in the tmpAddAtomMap and in the SchuffenhauerScaffold
-            if(tmpAddAtomMap.containsKey(tmpAtomProperty)) {
-                //Skip the bond if it has been added before
-                if(tmpBondSaved.contains(tmpAddAtomMap.get(tmpAtomProperty))) {
-                    continue;
-                }
-                /*Select the atom that is no longer in the MurckoFragment*/
-                /*IAtom tmpClonedAtom = null;
-                int tmpAtom1Property = tmpAddAtomMap.get(tmpAtomProperty).getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY);
-                if(tmpAtom1Property == tmpAtomProperty) {
-                    tmpClonedAtom = tmpAddAtomMap.get(tmpAtomProperty).getAtom(0).clone();
-                } else {
-                    tmpClonedAtom = tmpAddAtomMap.get(tmpAtomProperty).getAtom(1).clone();
-                }
-                /*Add all components to the Murcko fragment*/
-                /*tmpMurckoFragment.addAtom(tmpClonedAtom); //Add cloned Atom to the molecule
-                //Save the bonds that have been added
-                tmpBondSaved.add(tmpAddAtomMap.get(tmpAtomProperty));
-                //Clone the bond from the original molecule
-                IBond tmpNewBond = tmpAddAtomMap.get(tmpAtomProperty).clone();
-                tmpNewBond.setAtom(tmpAtom,0); //Add tmpMurckoFragment C to the bond
-                tmpNewBond.setAtom(tmpClonedAtom,1); //Add cloned Atom to the bond
-                tmpMurckoFragment.addBond(tmpNewBond); //Add the new bond
-            }
-        }*/
         /*Add back hydrogens removed by the MurckoFragmenter*/
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpMurckoFragment);
         CDKHydrogenAdder.getInstance(tmpMurckoFragment.getBuilder()).addImplicitHydrogens(tmpMurckoFragment);
@@ -295,24 +269,45 @@ public class ScaffoldGenerator {
         for(IAtom tmpRingAtom : tmpRingClone.atoms()) {
             tmpIsNotRing.remove(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
         }
-        /*Get the number of bonds of the ring to other atoms and store the bond atoms of the ring*/
+        /*Get the number of bonds of the ring to other atoms*/
         for(IAtom tmpRingAtom : tmpRingClone.atoms()) {
             for(IAtom tmpMolAtom : tmpMoleculeClone.atoms()) {
                 //All atoms of the ring in the original molecule
                 if(tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)) {
                     for(IBond tmpBond : tmpMolAtom.bonds()){
                         //Bond between ring an non ring atom
-                        if(tmpIsNotRing.contains(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                        if(tmpIsNotRing.contains(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)) ||
+                                tmpIsNotRing.contains(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
                             tmpBoundNumber++;
-                            //Store ring atom
-                            tmpDoNotRemove.add(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
                         }
-                        //Bond between ring an non ring atom
-                        if(tmpIsNotRing.contains(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
-                            tmpBoundNumber++;
-                            //Store ring atom
-                            tmpDoNotRemove.add(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
-                        }
+                    }
+                }
+            }
+        }
+        /*Add all atoms of rings that are not to be removed to tmpDoNotRemove*/
+        CycleFinder tmpCycleFinder = ScaffoldGenerator.CYCLE_FINDER;
+        //Get all cycles of the molecule
+        Cycles tmpCycles = tmpCycleFinder.find(tmpMoleculeClone);
+        HashSet<Integer> tmpRingProperties = new HashSet(tmpRingClone.getAtomCount(), 1);
+        //Save the properties of the ring
+        for(IAtom tmpRingAtom : tmpRingClone.atoms()) {
+            tmpRingProperties.add(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
+        }
+        for(IAtomContainer tmpCycle : tmpCycles.toRingSet().atomContainers()) {
+            boolean tmpIsRingToRemove = true;
+            /*Check if it is the ring to be removed*/
+            for(IAtom tmpCycleAtom : tmpCycle.atoms()) {
+                //If one of the atoms of the ring to be removed is not included, it is not this ring
+                if(!tmpRingProperties.contains(tmpCycleAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                    tmpIsRingToRemove = false;
+                }
+            }
+            /*If it is not the ring you want to remove, add its atoms to the tmpDoNotRemove list*/
+            if(tmpIsRingToRemove == false) {
+                for(IAtom tmpCycleAtom : tmpCycle.atoms()) {
+                    Integer tmpProperty = tmpCycleAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY);
+                    if(!tmpDoNotRemove.contains(tmpProperty)) {
+                        tmpDoNotRemove.add(tmpProperty);
                     }
                 }
             }
@@ -383,14 +378,16 @@ public class ScaffoldGenerator {
             * In these atoms, a double bond was removed without changing the hybridisation from sp2 to sp3.*/
             if(tmpIsRingAromatic) { //Perform calculation only if the ring to be removed is aromatic
                 for (IAtom tmpMolAtom : tmpMoleculeClone.atoms()) {
-                    if (tmpMolAtom.getHybridization() == IAtomType.Hybridization.SP2) { //All Atoms that are sp2 hybridised
+                    //All Atoms that are sp2 hybridised and in the ring to be removed
+                    if (tmpMolAtom.getHybridization() == IAtomType.Hybridization.SP2
+                            && tmpRingProperties.contains(tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
                         boolean tmpIsSp3 = true;
                         for (IBond tmpBond : tmpMolAtom.bonds()) { //All bonds of the Atom
                             if (tmpBond.getOrder() != IBond.Order.SINGLE) { //If it contains a non single bond it cannot be sp3
                                 tmpIsSp3 = false;
                             }
                         }
-                        if (tmpIsSp3) { //If the Atom contains only single bonds, it must be a wanted Atom atom
+                        if (tmpIsSp3) { //If the Atom contains only single bonds, it must be a wanted atom
                             tmpEdgeAtomNumbers.add(tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
                         }
                     }
@@ -616,7 +613,7 @@ public class ScaffoldGenerator {
         return tmpParentNode;
     }
     //</editor-fold>
-
+    //<editor-fold desc="Schuffenhauer Rules">
     /**
      * Iteratively removes the rings of the molecule according to specific rules that are queried hierarchically.
      * Based on the rules from the "The Scaffold Tree" Paper by Schuffenhauer et al.
@@ -626,7 +623,6 @@ public class ScaffoldGenerator {
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
      * @throws CloneNotSupportedException if cloning is not possible.
      */
-    //<editor-fold desc="Schuffenhauer Rules">
     public List<IAtomContainer> applySchuffenhauerRules(IAtomContainer aMolecule, ElectronDonation anElectronDonation) throws CloneNotSupportedException, CDKException {
         IAtomContainer tmpSchuffenhauer = this.getSchuffenhauerScaffold(aMolecule,true ,anElectronDonation );
         //List of all generated fragments
@@ -687,6 +683,18 @@ public class ScaffoldGenerator {
                 //After a new fragment has been added, the next one is investigated
                 continue;
             }
+            /*Apply rule number four*/
+            tmpRemovableRings = this.applySchuffenhauerRuleFour(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings);
+            if (tmpRemovableRings.size() == 1) { //If only one eligible ring remains, it can be removed
+                //Remove the ring from from the fragment currently being treated
+                IAtomContainer tmpRingRemoved = this.removeRing(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings.get(0));
+                //Remove the linkers
+                IAtomContainer tmpSchuffRingRemoved = this.getSchuffenhauerScaffold(tmpRingRemoved, false, null);
+                //Add the fragment to the list of fragments
+                tmpSchuffenhauerFragments.add(tmpSchuffRingRemoved);
+                //After a new fragment has been added, the next one is investigated
+                continue;
+            }
             /*Apply rule number thirteen, the tiebreaking rule */
             tmpSchuffenhauerFragments.add(this.applySchuffenhauerRuleThirteen(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings));
         }
@@ -700,7 +708,7 @@ public class ScaffoldGenerator {
      * Therefore, size 3 hetero rings are preferred when available.
      * Only these rings will be returned if present. If none are present, all rings entered will be returned.
      * @param aRings Rings to which the first rule is to be applied
-     * @return Rings to be removed first according to the rule. Returns the unchanged list if the rule cannot be applied to the rings.
+     * @return List of rings to be removed first according to the rule. Returns the unchanged list if the rule cannot be applied to the rings.
      */
     public List<IAtomContainer> applySchuffenhauerRuleOne(List<IAtomContainer> aRings) {
         int tmpHeteroCyclesCounter = 0; //Number of size 3 heterocycles
@@ -735,7 +743,7 @@ public class ScaffoldGenerator {
      * Therefore, this method prefers smaller rings when macro rings are present.
      * If no macro rings are present, all rings entered will be returned.
      * @param aRings Removable rings of the molecule to which the rule is applied
-     * @return aRings to be removed first according to the rule. Returns the unchanged list if the rule cannot be applied to the rings.
+     * @return List of rings to be removed first according to the rule. Returns the unchanged list if the rule cannot be applied to the rings.
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
      */
     public List<IAtomContainer> applySchuffenhauerRuleTwo(List<IAtomContainer> aRings) throws CDKException {
@@ -769,7 +777,7 @@ public class ScaffoldGenerator {
      * The rings that are connected to the rest of the molecule via the longest linkers have priority in the removal process.
      * @param aRings Removable rings of the molecule to which the rule is applied
      * @param aMolecule Molecule from which a ring is to be removed
-     * @return aRings to be removed first according to the rule. Returns the unchanged list if the rule cannot be applied to the rings.
+     * @return List of rings to be removed first according to the rule. Returns the unchanged list if the rule cannot be applied to the rings.
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
      * @throws CloneNotSupportedException if cloning is not possible.
      */
@@ -789,7 +797,7 @@ public class ScaffoldGenerator {
         //Get the maximum linker size
         Integer tmpMaxList = tmpLinkerSize.stream().mapToInt(v->v).max().orElseThrow(NoSuchElementException::new);
         /*Save the linked rings if available*/
-        if(tmpMaxList > -1) { //Is there a linked rings
+        if(tmpMaxList > -1) { //Is there is a linked ring
             for(int tmpCounter = 0 ; tmpCounter < tmpLinkerSize.size(); tmpCounter++) {
                 if(tmpLinkerSize.get(tmpCounter) == tmpMaxList) { //Get the rings with the longest linkers
                     tmpRemoveRings.add(aRings.get(tmpCounter));
@@ -802,7 +810,61 @@ public class ScaffoldGenerator {
     }
 
     /**
-     * Remove a ring according to the third Schuffenhauer rule.
+     * Sort out the rings according to the fourth Schuffenhauer rule.
+     * Based on the fourth rule from the "The Scaffold Tree" Paper by Schuffenhauer et al.
+     * The rule says: Retain Bridged Rings, Spiro Rings, and Nonlinear Ring Fusion Patterns with Preference.
+     * Therefore, delta is calculated as follows: |nrrb - (nR - 1)|
+     * nrrb: number of bonds being a member in more than one ring
+     * nR: number of rings
+     * The rings with the highest delta are returned
+     * @param aRings Removable rings of the molecule to which the rule is applied
+     * @param aMolecule Molecule from which a ring is to be removed
+     * @return List of rings to be removed first according to the rule. Returns the unchanged list if the rule cannot be applied to the rings.
+     * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
+     * @throws CloneNotSupportedException if cloning is not possible.
+     */
+    public List<IAtomContainer> applySchuffenhauerRuleFour(IAtomContainer aMolecule, List<IAtomContainer> aRings) throws CDKException, CloneNotSupportedException {
+        IAtomContainer tmpClonedMolecule = aMolecule.clone();
+        List<IAtomContainer> tmpRingsReturn = new ArrayList<>(aRings.size()); //Rings that are returned
+        List<Integer> tmpDeltaList = new ArrayList<>(aRings.size()); //Delta values of all rings
+        /*Calculate the delta values for all rings*/
+        for(IAtomContainer tmpRing : aRings) {
+            IAtomContainer tmpRingRemoved = this.removeRing(tmpClonedMolecule, tmpRing); //Remove the ring
+            CycleFinder tmpCycleFinder = ScaffoldGenerator.CYCLE_FINDER;
+            Cycles tmpCycles = tmpCycleFinder.find(tmpRingRemoved); //get cycle number(nR)
+            List<IBond> tmpCycleBonds = new ArrayList<>(aRings.size());
+            int tmpFusedRingBondCounter = 0; // Number of bonds being a member in more than one ring(nrrb)
+            /*Count nrrb*/
+            for(IAtomContainer tmpCycle : tmpCycles.toRingSet().atomContainers()) { //Go through all cycle
+                for(IBond tmpBond : tmpCycle.bonds()) { //Go through all bonds of each cycle
+                    //If the bond is already included in the list, it occurs in several rings
+                    if(tmpCycleBonds.contains(tmpBond)) {
+                        tmpFusedRingBondCounter++;
+                    }
+                    tmpCycleBonds.add(tmpBond);
+                }
+            }
+            //Calculate the delta
+            int tmpDelta = Math.abs((tmpFusedRingBondCounter - (tmpCycles.numberOfCycles() - 1)));
+            tmpDeltaList.add(tmpDelta);
+        }
+        //Get the maximum delta
+        Integer tmpMaxList = tmpDeltaList.stream().mapToInt(v->v).max().orElseThrow(NoSuchElementException::new);
+        if(tmpMaxList > 0) {
+            /* Add all rings that have the highest delta to the list*/
+            for(int tmpCounter = 0 ; tmpCounter < tmpDeltaList.size(); tmpCounter++) {
+                if(tmpDeltaList.get(tmpCounter) == tmpMaxList) {
+                    tmpRingsReturn.add(aRings.get(tmpCounter));
+                }
+            }
+            return tmpRingsReturn; //All rings that have the highest delta
+        }
+        /*Return the unchanged ring list*/
+        return aRings;
+    }
+
+    /**
+     * Remove a ring according to the thirteenth Schuffenhauer rule.
      * Based on rule number 13 from the "The Scaffold Tree" Paper by Schuffenhauer et al.
      * In contrast to the paper, unique SMILES are used here instead of canonical SMILES.
      * The entered rings are sorted alphabetically by their unique SMILES. The last ring of this sort is returned.
