@@ -451,9 +451,8 @@ public class ScaffoldGenerator {
      * @param aMolecule Whole molecule
      * @return Whether the ring is removable
      * @throws CloneNotSupportedException if cloning is not possible.
-     * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
      */
-    public boolean isRingRemovable(IAtomContainer aRing, List<IAtomContainer> aRings, IAtomContainer aMolecule) throws CloneNotSupportedException, CDKException {
+    public boolean isRingRemovable(IAtomContainer aRing, List<IAtomContainer> aRings, IAtomContainer aMolecule) throws CloneNotSupportedException {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
         IAtomContainer tmpClonedRing = aRing.clone();
 
@@ -529,6 +528,79 @@ public class ScaffoldGenerator {
         return true;
     }
     //</editor-fold>
+
+    /**
+     * Checks whether the ring of a molecule is in an aromatic fused ring system. These systems cannot easily be further disassembled.
+     * @param aRing Ring tested to see if it is in an aromatic fused ring system
+     * @param aRings All Rings of the molecule
+     * @param aMolecule Whole molecule
+     * @return Whether the ring is part of an aromatic fused ring system
+     * @throws CloneNotSupportedException if cloning is not possible.
+     */
+    public boolean hasFusedRings(IAtomContainer aRing, List<IAtomContainer> aRings, IAtomContainer aMolecule) throws CloneNotSupportedException {
+        IAtomContainer tmpClonedMolecule = aMolecule.clone();
+        IAtomContainer tmpClonedRing = aRing.clone();
+        List<IAtomContainer> tmpClonedRings = new ArrayList<>(aRings.size());
+        List<Integer> tmpRingNumbers = new ArrayList<>(aMolecule.getAtomCount());
+        List<Integer> tmpRingsNumbers = new ArrayList<>(aMolecule.getAtomCount());
+        /*If the examined ring itself is not aromatic, it is not such a case*/
+        for(IAtom tmpAtom : tmpClonedRing.atoms()){
+            if(!tmpAtom.isAromatic()) {
+                return false;
+            }
+            //Save the property numbers of the ring
+            tmpRingNumbers.add(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
+        }
+        /*Store all ring atoms of the whole molecule without the tested ring*/
+        for(IAtomContainer tmpRing : aRings) {
+            if(tmpRing == aRing) { //Skip the tested ring
+                continue;
+            }
+            boolean tmpIsRingAromatic = true;
+            /*Store the atoms of the aromatic rings*/
+            for(IAtom tmpAtom : tmpRing.atoms()) {
+                if(!tmpAtom.isAromatic()) {
+                    tmpIsRingAromatic = false;
+                }
+            }
+            if(tmpIsRingAromatic == false) { //Skip non aromatic rings
+                continue;
+            }
+            tmpClonedRings.add(tmpRing.clone()); //Store the aromatic rings
+            for(IAtom tmpAtom : tmpRing.atoms()) { //Store the atoms of the aromatic rings
+                tmpRingsNumbers.add(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
+            }
+        }
+
+        /*Store all the atoms of the other rings bordering the aromatic ring*/
+        HashSet<Integer> tmpEdgeAtomNumbers = new HashSet(tmpClonedMolecule.getAtomCount(), 1);
+        for(IAtom tmpRingAtom : tmpClonedRing.atoms()) {
+            //Skip the atom if it is already in the HashSet
+            if(tmpRingsNumbers.contains(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                tmpEdgeAtomNumbers.add(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
+            }
+        }
+        /*At least 3 edge atoms are needed to cause a problem*/
+        if(tmpEdgeAtomNumbers.size() < 3) {
+            return false;
+        }
+        /*If one of the edge atoms occurs in more than one other aromatic ring, it is not possible to remove the ring*/
+        for(Integer tmpEdgeAtomNumber : tmpEdgeAtomNumbers) {
+            int tmpRingCounter = 0;
+            for(IAtomContainer tmpRing : tmpClonedRings) {
+                for(IAtom tmpRingAtom : tmpRing.atoms()) {
+                    //If one of the atoms of the ring to be tested matches one of the edge atoms
+                    if(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpEdgeAtomNumber) {
+                        tmpRingCounter++;
+                        if(tmpRingCounter > 1) { //More than one bordering ring
+                            return true; //Ring is in an aromatic fused ring system
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
 
     //<editor-fold desc="Output Methods">
     /**
@@ -684,7 +756,7 @@ public class ScaffoldGenerator {
                 continue;
             }
             /*Apply rule number four*/
-            tmpRemovableRings = this.applySchuffenhauerRuleFour(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings);
+            tmpRemovableRings = this.applySchuffenhauerRuleFourAndFive(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings);
             if (tmpRemovableRings.size() == 1) { //If only one eligible ring remains, it can be removed
                 //Remove the ring from from the fragment currently being treated
                 IAtomContainer tmpRingRemoved = this.removeRing(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings.get(0));
@@ -810,23 +882,26 @@ public class ScaffoldGenerator {
     }
 
     /**
-     * Sort out the rings according to the fourth Schuffenhauer rule.
-     * Based on the fourth rule from the "The Scaffold Tree" Paper by Schuffenhauer et al.
-     * The rule says: Retain Bridged Rings, Spiro Rings, and Nonlinear Ring Fusion Patterns with Preference.
+     * Sort out the rings according to the fourth and fifth Schuffenhauer rule.
+     * Based on the fourth and fifth rule from the "The Scaffold Tree" Paper by Schuffenhauer et al.
+     * The fourth rule says: Retain Bridged Rings, Spiro Rings, and Nonlinear Ring Fusion Patterns with Preference.
      * Therefore, delta is calculated as follows: |nrrb - (nR - 1)|
      * nrrb: number of bonds being a member in more than one ring
      * nR: number of rings
-     * The rings with the highest delta are returned
+     * The rings with the highest absolute delta are returned
+     * The fifth rule says: Bridged Ring Systems Are Retained with Preference over Spiro Ring Systems.
+     * Therefore, the rings with the positive maximum delta are preferred over the rings with the negative one.
      * @param aRings Removable rings of the molecule to which the rule is applied
      * @param aMolecule Molecule from which a ring is to be removed
      * @return List of rings to be removed first according to the rule. Returns the unchanged list if the rule cannot be applied to the rings.
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
      * @throws CloneNotSupportedException if cloning is not possible.
      */
-    public List<IAtomContainer> applySchuffenhauerRuleFour(IAtomContainer aMolecule, List<IAtomContainer> aRings) throws CDKException, CloneNotSupportedException {
+    public List<IAtomContainer> applySchuffenhauerRuleFourAndFive(IAtomContainer aMolecule, List<IAtomContainer> aRings) throws CDKException, CloneNotSupportedException {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
         List<IAtomContainer> tmpRingsReturn = new ArrayList<>(aRings.size()); //Rings that are returned
         List<Integer> tmpDeltaList = new ArrayList<>(aRings.size()); //Delta values of all rings
+        List<Integer> tmpDeltaListAbs = new ArrayList<>(aRings.size()); //Absolute Delta values of all rings
         /*Calculate the delta values for all rings*/
         for(IAtomContainer tmpRing : aRings) {
             IAtomContainer tmpRingRemoved = this.removeRing(tmpClonedMolecule, tmpRing); //Remove the ring
@@ -845,19 +920,31 @@ public class ScaffoldGenerator {
                 }
             }
             //Calculate the delta
-            int tmpDelta = Math.abs((tmpFusedRingBondCounter - (tmpCycles.numberOfCycles() - 1)));
+            int tmpDelta = (tmpFusedRingBondCounter - (tmpCycles.numberOfCycles() - 1));
+            tmpDeltaListAbs.add(Math.abs(tmpDelta));
             tmpDeltaList.add(tmpDelta);
         }
         //Get the maximum delta
+        Integer tmpMaxAbsList = tmpDeltaListAbs.stream().mapToInt(v->v).max().orElseThrow(NoSuchElementException::new);
         Integer tmpMaxList = tmpDeltaList.stream().mapToInt(v->v).max().orElseThrow(NoSuchElementException::new);
-        if(tmpMaxList > 0) {
-            /* Add all rings that have the highest delta to the list*/
-            for(int tmpCounter = 0 ; tmpCounter < tmpDeltaList.size(); tmpCounter++) {
-                if(tmpDeltaList.get(tmpCounter) == tmpMaxList) {
+        if(tmpMaxAbsList > 0) {
+            /*Rule five: if there is a positive maximum delta, only get the maximum positive deltas*/
+            if(tmpMaxAbsList == tmpMaxList) {
+                /* Add all rings that have the highest delta to the list*/
+                for(int tmpCounter = 0 ; tmpCounter < tmpDeltaList.size(); tmpCounter++) {
+                    if(tmpDeltaList.get(tmpCounter) == tmpMaxAbsList) {
+                        tmpRingsReturn.add(aRings.get(tmpCounter));
+                    }
+                }
+                return tmpRingsReturn; //All rings that have the highest delta
+            }
+            /*Rule four: Add all rings that have the highest absolute delta to the list*/
+            for(int tmpCounter = 0 ; tmpCounter < tmpDeltaListAbs.size(); tmpCounter++) {
+                if(tmpDeltaListAbs.get(tmpCounter) == tmpMaxAbsList) {
                     tmpRingsReturn.add(aRings.get(tmpCounter));
                 }
             }
-            return tmpRingsReturn; //All rings that have the highest delta
+            return tmpRingsReturn; //All rings that have the highest absolute delta
         }
         /*Return the unchanged ring list*/
         return aRings;
