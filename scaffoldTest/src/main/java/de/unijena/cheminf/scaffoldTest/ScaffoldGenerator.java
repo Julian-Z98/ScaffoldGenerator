@@ -755,8 +755,20 @@ public class ScaffoldGenerator {
                 //After a new fragment has been added, the next one is investigated
                 continue;
             }
-            /*Apply rule number four*/
+            /*Apply rule number four and five*/
             tmpRemovableRings = this.applySchuffenhauerRuleFourAndFive(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings);
+            if (tmpRemovableRings.size() == 1) { //If only one eligible ring remains, it can be removed
+                //Remove the ring from from the fragment currently being treated
+                IAtomContainer tmpRingRemoved = this.removeRing(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings.get(0));
+                //Remove the linkers
+                IAtomContainer tmpSchuffRingRemoved = this.getSchuffenhauerScaffold(tmpRingRemoved, false, null);
+                //Add the fragment to the list of fragments
+                tmpSchuffenhauerFragments.add(tmpSchuffRingRemoved);
+                //After a new fragment has been added, the next one is investigated
+                continue;
+            }
+            /*Apply rule number six*/
+            tmpRemovableRings = this.applySchuffenhauerRuleSix(tmpRemovableRings);
             if (tmpRemovableRings.size() == 1) { //If only one eligible ring remains, it can be removed
                 //Remove the ring from from the fragment currently being treated
                 IAtomContainer tmpRingRemoved = this.removeRing(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings.get(0));
@@ -947,6 +959,37 @@ public class ScaffoldGenerator {
             return tmpRingsReturn; //All rings that have the highest absolute delta
         }
         /*Return the unchanged ring list*/
+        return aRings;
+    }
+
+    /**
+     * Sort out the rings according to the third Schuffenhauer rule.
+     * Based on the sixth rule from the "The Scaffold Tree" Paper by Schuffenhauer et al.
+     * The rule says: Remove Rings of Sizes 3, 5, and 6 First.
+     * Therefore, the exocyclic atoms are removed and the size of the ring is determined.
+     * Rings of size 3, 5 and 6 are preferred.
+     * If no ring of these sizes is present, the original list is returned.
+     * @param aRings Removable rings of the molecule to which the rule is applied
+     * @return List of rings to be removed first according to the rule. Returns the unchanged list if the rule cannot be applied to the rings.
+     * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
+     */
+    public List<IAtomContainer> applySchuffenhauerRuleSix(List<IAtomContainer> aRings) throws CDKException {
+        List<IAtomContainer> tmpReturnRingList = new ArrayList<>(aRings.size());
+        /*Size 3, 5 and 6 rings will be added to the list if present*/
+        CycleFinder tmpCycleFinder = ScaffoldGenerator.CYCLE_FINDER;
+        for(IAtomContainer tmpRing : aRings) {
+            //To determine the ring size, the exocyclic atoms must be removed
+            Cycles tmpRemovedExocyclic = tmpCycleFinder.find(tmpRing);
+            IAtomContainer tmpRemovedExoRing = tmpRemovedExocyclic.toRingSet().getAtomContainer(0);
+            if(tmpRemovedExoRing.getAtomCount() == 3 || tmpRemovedExoRing.getAtomCount() == 5 || tmpRemovedExoRing.getAtomCount() == 6) {
+                tmpReturnRingList.add(tmpRing);
+            }
+        }
+        /*If there are rings of the sizes searched for, they are returned*/
+        if(tmpReturnRingList.size() != 0) {
+            return tmpReturnRingList;
+        }
+        /*If there are no rings of the searched sizes, the original rings are returned*/
         return aRings;
     }
 
