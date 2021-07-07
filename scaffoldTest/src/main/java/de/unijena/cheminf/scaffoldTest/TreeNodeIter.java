@@ -26,7 +26,7 @@ import java.util.Objects;
  *
  * Inspired by: https://github.com/gt4dev/yet-another-tree-structure
  */
-public class TreeNodeIter<IAtomContainer> implements Iterator<TreeNode<IAtomContainer>> {
+public class TreeNodeIter<MoleculeType> implements Iterator<TreeNode<MoleculeType>> {
 
     /**
      * Indicates which part of the tree is currently being processed.
@@ -38,7 +38,7 @@ public class TreeNodeIter<IAtomContainer> implements Iterator<TreeNode<IAtomCont
     /**
      * Just handled node of the tree
      */
-    private TreeNode<IAtomContainer> treeNode;
+    private TreeNode<MoleculeType> treeNode;
 
     /**
      * Next PROCESS_STAGE
@@ -46,9 +46,9 @@ public class TreeNodeIter<IAtomContainer> implements Iterator<TreeNode<IAtomCont
     private PROCESS_STAGES doNext;
 
     /**
-     * Next IAtomContainer being processed
+     * Next MoleculeType being processed
      */
-    private TreeNode<IAtomContainer> next;
+    private TreeNode<MoleculeType> next;
 
     /**
      * Shows whether the nextNode() has already been calculated.
@@ -59,18 +59,18 @@ public class TreeNodeIter<IAtomContainer> implements Iterator<TreeNode<IAtomCont
     /**
      * Currently treated TreeNode
      */
-    private Iterator<TreeNode<IAtomContainer>> childrenCurNodeIter;
+    private Iterator<TreeNode<MoleculeType>> childrenCurNodeIter;
     /**
      * Next treated TreeNode
      */
-    private Iterator<TreeNode<IAtomContainer>> childrenSubNodeIter;
+    private Iterator<TreeNode<MoleculeType>> childrenSubNodeIter;
 
     /**
      * Constructor
      * Iteration through the tree of a specific node
      * @param aTreeNode Node through whose tree it is to be iterated
      */
-    public TreeNodeIter(TreeNode<IAtomContainer> aTreeNode) {
+    public TreeNodeIter(TreeNode<MoleculeType> aTreeNode) {
         Objects.requireNonNull(aTreeNode, "Given TreeNode is 'null'");
         this.treeNode = aTreeNode;
         this.doNext = PROCESS_STAGES.ProcessParent;
@@ -92,7 +92,7 @@ public class TreeNodeIter<IAtomContainer> implements Iterator<TreeNode<IAtomCont
 
         if (this.doNext == PROCESS_STAGES.ProcessChildCurNode) {
             if (childrenCurNodeIter.hasNext()) {
-                TreeNode<IAtomContainer> childDirect = childrenCurNodeIter.next();
+                TreeNode<MoleculeType> childDirect = childrenCurNodeIter.next();
                 childrenSubNodeIter = childDirect.iterator();
                 this.doNext = PROCESS_STAGES.ProcessChildSubNode;
                 return hasNext();
@@ -123,7 +123,7 @@ public class TreeNodeIter<IAtomContainer> implements Iterator<TreeNode<IAtomCont
      * @return next TreeNode in the tree
      */
     @Override
-    public TreeNode<IAtomContainer> next() {
+    public TreeNode<MoleculeType> next() {
         if(this.nextNodeHasBeenCalculated == false) { //execute hasnext() if it has not been executed yet
             this.hasNext();
         }
