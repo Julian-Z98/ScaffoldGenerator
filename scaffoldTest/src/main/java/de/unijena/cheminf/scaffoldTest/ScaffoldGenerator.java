@@ -108,36 +108,36 @@ public class ScaffoldGenerator {
             }
         }
         /*Add the missing atom and the respective bond*/
-        HashMap<Integer, IAtom> tmpMurckoProperties = new HashMap(tmpMurckoFragment.getAtomCount(), 1);
+        HashMap<Integer, IAtom> tmpMurckoAtomMap = new HashMap(tmpMurckoFragment.getAtomCount(), 1);
         for(IAtom tmpAtom : tmpMurckoFragment.atoms()) {
             /*Save the properties of the murcko fragment*/
             int tmpAtomProperty = tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY);
-            tmpMurckoProperties.put(tmpAtomProperty, tmpAtom);
+            tmpMurckoAtomMap.put(tmpAtomProperty, tmpAtom);
         }
         for(IBond tmpBond : tmpAddBondSet) { //Go though all saved bonds
             /*If both atoms of the bond are contained in the murcko fragment, this bond does not need to be added any more*/
-            if(tmpMurckoProperties.containsKey(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)) &&
-                    tmpMurckoProperties.containsKey(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+            if(tmpMurckoAtomMap.containsKey(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)) &&
+                    tmpMurckoAtomMap.containsKey(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
                 continue; //Skip this bond
             }
             /*Atom 1 of the bond is in the Murcko fragment*/
-            if(tmpMurckoProperties.containsKey(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+            if(tmpMurckoAtomMap.containsKey(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
                 IAtom tmpClonedAtom = tmpBond.getAtom(0).clone();
                 tmpMurckoFragment.addAtom(tmpClonedAtom); //Add the atom that is not yet in the murcko fragment
                 IBond tmpNewBond = tmpBond.clone();
                 //Set the first atom
-                tmpNewBond.setAtom(tmpMurckoProperties.get(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)), 1);
+                tmpNewBond.setAtom(tmpMurckoAtomMap.get(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)), 1);
                 tmpNewBond.setAtom(tmpClonedAtom, 0); //Set the second atom
                 tmpMurckoFragment.addBond(tmpNewBond); //Add the whole bond
                 continue; //Next bond
             }
             /*Atom 0 of the bond is in the Murcko fragment*/
-            if(tmpMurckoProperties.containsKey(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+            if(tmpMurckoAtomMap.containsKey(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
                 IAtom tmpClonedAtom = tmpBond.getAtom(1).clone();
                 tmpMurckoFragment.addAtom(tmpClonedAtom); //Add the atom that is not yet in the murcko fragment
                 IBond tmpNewBond = tmpBond.clone();
                 //Set the first atom
-                tmpNewBond.setAtom(tmpMurckoProperties.get(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)), 0);
+                tmpNewBond.setAtom(tmpMurckoAtomMap.get(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)), 0);
                 tmpNewBond.setAtom(tmpClonedAtom, 1); //Set the second atom
                 tmpMurckoFragment.addBond(tmpNewBond); //Add the whole bond
             }
@@ -149,7 +149,7 @@ public class ScaffoldGenerator {
     }
 
     /**
-     * Generates the smallest set of smallest rings(SSSR) with Cycles.relevant() for the entered molecule, adds double bounded oxygens and returns it.
+     * Generates the smallest set of smallest rings(SSSR) with Cycles.relevant() for the entered molecule, adds double bounded atoms and returns it.
      * @param aMolecule molecule whose rings are produced.
      * @param anIsKeepingNonSingleBonds if true, double bonded atoms are retained on the ring.
      * @return rings of the inserted molecule.
@@ -199,36 +199,36 @@ public class ScaffoldGenerator {
             IAtomContainer tmpCycle = tmpRingSet.getAtomContainer(tmpCount); //Store rings as AtomContainer
             if(anIsKeepingNonSingleBonds == true) {
                 /*Add the missing atom and the respective bond*/
-                HashMap<Integer, IAtom> tmpMurckoProperties = new HashMap(tmpCycle.getAtomCount(), 1);
+                HashMap<Integer, IAtom> tmpMurckoAtomMap = new HashMap(tmpCycle.getAtomCount(), 1);
                 for(IAtom tmpAtom : tmpCycle.atoms()) {
                     /*Save the properties of the murcko fragment*/
-                    int tmpAtomProperty = tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY);
-                    tmpMurckoProperties.put(tmpAtomProperty, tmpAtom);
+                    int tmpAtomPropertyNumber = tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY);
+                    tmpMurckoAtomMap.put(tmpAtomPropertyNumber, tmpAtom);
                 }
                 for(IBond tmpBond : tmpAddBondSet) { //Go though all saved bonds
                     /*If both atoms of the bond are contained in the murcko fragment, this bond does not need to be added any more*/
-                    if(tmpMurckoProperties.containsKey(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)) &&
-                            tmpMurckoProperties.containsKey(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                    if(tmpMurckoAtomMap.containsKey(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)) &&
+                            tmpMurckoAtomMap.containsKey(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
                         continue; //Skip this bond
                     }
                     /*Atom 1 of the bond is in the Murcko fragment*/
-                    if(tmpMurckoProperties.containsKey(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                    if(tmpMurckoAtomMap.containsKey(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
                         IAtom tmpClonedAtom = tmpBond.getAtom(0).clone();
                         tmpCycle.addAtom(tmpClonedAtom); //Add the atom that is not yet in the murcko fragment
                         IBond tmpNewBond = tmpBond.clone();
                         //Set the first atom
-                        tmpNewBond.setAtom(tmpMurckoProperties.get(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)), 1);
+                        tmpNewBond.setAtom(tmpMurckoAtomMap.get(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)), 1);
                         tmpNewBond.setAtom(tmpClonedAtom, 0); //Set the second atom
                         tmpCycle.addBond(tmpNewBond); //Add the whole bond
                         continue; //Next bond
                     }
                     /*Atom 0 of the bond is in the Murcko fragment*/
-                    if(tmpMurckoProperties.containsKey(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                    if(tmpMurckoAtomMap.containsKey(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
                         IAtom tmpClonedAtom = tmpBond.getAtom(1).clone();
                         tmpCycle.addAtom(tmpClonedAtom); //Add the atom that is not yet in the murcko fragment
                         IBond tmpNewBond = tmpBond.clone();
                         //Set the first atom
-                        tmpNewBond.setAtom(tmpMurckoProperties.get(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)), 0);
+                        tmpNewBond.setAtom(tmpMurckoAtomMap.get(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)), 0);
                         tmpNewBond.setAtom(tmpClonedAtom, 1); //Set the second atom
                         tmpCycle.addBond(tmpNewBond); //Add the whole bond
                     }
@@ -288,26 +288,26 @@ public class ScaffoldGenerator {
         CycleFinder tmpCycleFinder = ScaffoldGenerator.CYCLE_FINDER;
         //Get all cycles of the molecule
         Cycles tmpCycles = tmpCycleFinder.find(tmpMoleculeClone);
-        HashSet<Integer> tmpRingProperties = new HashSet(tmpRingClone.getAtomCount(), 1);
+        HashSet<Integer> tmpRingPropertyCounter = new HashSet(tmpRingClone.getAtomCount(), 1);
         //Save the properties of the ring
         for(IAtom tmpRingAtom : tmpRingClone.atoms()) {
-            tmpRingProperties.add(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
+            tmpRingPropertyCounter.add(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
         }
         for(IAtomContainer tmpCycle : tmpCycles.toRingSet().atomContainers()) {
             boolean tmpIsRingToRemove = true;
             /*Check if it is the ring to be removed*/
             for(IAtom tmpCycleAtom : tmpCycle.atoms()) {
                 //If one of the atoms of the ring to be removed is not included, it is not this ring
-                if(!tmpRingProperties.contains(tmpCycleAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                if(!tmpRingPropertyCounter.contains(tmpCycleAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
                     tmpIsRingToRemove = false;
                 }
             }
             /*If it is not the ring you want to remove, add its atoms to the tmpDoNotRemove list*/
             if(tmpIsRingToRemove == false) {
                 for(IAtom tmpCycleAtom : tmpCycle.atoms()) {
-                    Integer tmpProperty = tmpCycleAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY);
-                    if(!tmpDoNotRemove.contains(tmpProperty)) {
-                        tmpDoNotRemove.add(tmpProperty);
+                    Integer tmpPropertyNumber = tmpCycleAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY);
+                    if(!tmpDoNotRemove.contains(tmpPropertyNumber)) {
+                        tmpDoNotRemove.add(tmpPropertyNumber);
                     }
                 }
             }
@@ -380,7 +380,7 @@ public class ScaffoldGenerator {
                 for (IAtom tmpMolAtom : tmpMoleculeClone.atoms()) {
                     //All Atoms that are sp2 hybridised and in the ring to be removed
                     if (tmpMolAtom.getHybridization() == IAtomType.Hybridization.SP2
-                            && tmpRingProperties.contains(tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                            && tmpRingPropertyCounter.contains(tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
                         boolean tmpIsSp3 = true;
                         for (IBond tmpBond : tmpMolAtom.bonds()) { //All bonds of the Atom
                             if (tmpBond.getOrder() != IBond.Order.SINGLE) { //If it contains a non single bond it cannot be sp3
@@ -416,6 +416,7 @@ public class ScaffoldGenerator {
 
     /**
      * Checks whether the tmpRing in the tmpMolecule is terminal. This means whether it can be removed without creating several unconnected parts.
+     * Rings that lead to spiro ring systems when removed are also considered non-terminal.
      * Important: Property (ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY) must be set for tmpMolecule/tmpRing and match.
      * @param aMolecule Molecule whose ring is to be checked
      * @param aRing Ring to check
@@ -537,7 +538,7 @@ public class ScaffoldGenerator {
      * @return Whether the ring is part of an aromatic fused ring system
      * @throws CloneNotSupportedException if cloning is not possible.
      */
-    public boolean hasFusedRings(IAtomContainer aRing, List<IAtomContainer> aRings, IAtomContainer aMolecule) throws CloneNotSupportedException {
+    public boolean hasFusedAromaticRings(IAtomContainer aRing, List<IAtomContainer> aRings, IAtomContainer aMolecule) throws CloneNotSupportedException {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
         IAtomContainer tmpClonedRing = aRing.clone();
         List<IAtomContainer> tmpClonedRings = new ArrayList<>(aRings.size());
@@ -859,6 +860,8 @@ public class ScaffoldGenerator {
      * The rule says: Choose the Parent Scaffold Having the Smallest Number of Acyclic Linker Bonds.
      * Therefore, linked rings are given priority over fused rings.
      * The rings that are connected to the rest of the molecule via the longest linkers have priority in the removal process.
+     * The number of atoms of the linkers is calculated here. The number of linkers is directly dependent on the number of atoms:
+     * LinkerBonds = LinkerAtoms - 1
      * @param aRings Removable rings of the molecule to which the rule is applied
      * @param aMolecule Molecule from which a ring is to be removed
      * @return List of rings to be removed first according to the rule. Returns the unchanged list if the rule cannot be applied to the rings.
@@ -869,14 +872,18 @@ public class ScaffoldGenerator {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
         List<IAtomContainer> tmpRemoveRings = new ArrayList<>(aRings.size()); //Rings with the longest linker
         List<Integer> tmpLinkerSize = new ArrayList<>(aRings.size()); //Linker length of each ring
-        Integer tmpMoleculeAtomCount = tmpClonedMolecule.getAtomCount();
+        /*Generate the murcko fragment, as this removes the double bonded atoms at the linkers*/
+        MurckoFragmenter tmpMurckoFragmenter = new MurckoFragmenter(true,1);
+        tmpMurckoFragmenter.setComputeRingFragments(false);
+        Integer tmpMoleculeAtomCount = tmpMurckoFragmenter.scaffold(tmpClonedMolecule).getAtomCount();
         /*Calculate the linker length of each ring. Negative integers are fused rings*/
         for(IAtomContainer tmpRing : aRings) {
             IAtomContainer tmpRemovedRing = this.removeRing(tmpClonedMolecule, tmpRing);
-            IAtomContainer tmpSchuff = this.getSchuffenhauerScaffold(tmpRemovedRing, false, null);
+            //Generate the murcko fragment, as this removes the double bonded atoms at the linkers
+            IAtomContainer tmpRemovedRingMurckoFragment = tmpMurckoFragmenter.scaffold(tmpRemovedRing);
             //The number of atoms of the removed ring and the molecule from which the ring and the linker were removed are subtracted from the atomic number of the whole molecule
             //This leaves only the atomic number of the linker
-            tmpLinkerSize.add(tmpMoleculeAtomCount - (tmpRing.getAtomCount() + tmpSchuff.getAtomCount()));
+            tmpLinkerSize.add(tmpMoleculeAtomCount - (tmpRing.getAtomCount() + tmpRemovedRingMurckoFragment.getAtomCount()));
         }
         //Get the maximum linker size
         Integer tmpMaxList = tmpLinkerSize.stream().mapToInt(v->v).max().orElseThrow(NoSuchElementException::new);
@@ -903,6 +910,8 @@ public class ScaffoldGenerator {
      * The rings with the highest absolute delta are returned
      * The fifth rule says: Bridged Ring Systems Are Retained with Preference over Spiro Ring Systems.
      * Therefore, the rings with the positive maximum delta are preferred over the rings with the negative one.
+     * Through the isRingTerminal() method, a removal that leads to spiro ring systems is not available for selection anyway.
+     * For performance reasons, rules four and five are combined. This way, delta only has to be calculated once.
      * @param aRings Removable rings of the molecule to which the rule is applied
      * @param aMolecule Molecule from which a ring is to be removed
      * @return List of rings to be removed first according to the rule. Returns the unchanged list if the rule cannot be applied to the rings.
@@ -919,13 +928,14 @@ public class ScaffoldGenerator {
             IAtomContainer tmpRingRemoved = this.removeRing(tmpClonedMolecule, tmpRing); //Remove the ring
             CycleFinder tmpCycleFinder = ScaffoldGenerator.CYCLE_FINDER;
             Cycles tmpCycles = tmpCycleFinder.find(tmpRingRemoved); //get cycle number(nR)
-            List<IBond> tmpCycleBonds = new ArrayList<>(aRings.size());
+            HashSet<IBond> tmpCycleBonds = new HashSet(aRings.size());
             int tmpFusedRingBondCounter = 0; // Number of bonds being a member in more than one ring(nrrb)
             /*Count nrrb*/
             for(IAtomContainer tmpCycle : tmpCycles.toRingSet().atomContainers()) { //Go through all cycle
                 for(IBond tmpBond : tmpCycle.bonds()) { //Go through all bonds of each cycle
                     //If the bond is already included in the list, it occurs in several rings
                     if(tmpCycleBonds.contains(tmpBond)) {
+                        //It is assumed that a bond can be in a maximum of two rings
                         tmpFusedRingBondCounter++;
                     }
                     tmpCycleBonds.add(tmpBond);
@@ -937,14 +947,15 @@ public class ScaffoldGenerator {
             tmpDeltaList.add(tmpDelta);
         }
         //Get the maximum delta
-        Integer tmpMaxAbsList = tmpDeltaListAbs.stream().mapToInt(v->v).max().orElseThrow(NoSuchElementException::new);
-        Integer tmpMaxList = tmpDeltaList.stream().mapToInt(v->v).max().orElseThrow(NoSuchElementException::new);
-        if(tmpMaxAbsList > 0) {
-            /*Rule five: if there is a positive maximum delta, only get the maximum positive deltas*/
-            if(tmpMaxAbsList == tmpMaxList) {
+        Integer tmpDeltaAbsMax = tmpDeltaListAbs.stream().mapToInt(v->v).max().getAsInt();
+        Integer tmpDeltaMax = tmpDeltaList.stream().mapToInt(v->v).max().getAsInt();
+        if(tmpDeltaAbsMax > 0) {
+            /* In case the delta and the absolute delta are equal we jump to rule five.
+            Rule five: if there is a positive maximum delta, only get the maximum positive deltas*/
+            if(tmpDeltaAbsMax == tmpDeltaMax) {
                 /* Add all rings that have the highest delta to the list*/
                 for(int tmpCounter = 0 ; tmpCounter < tmpDeltaList.size(); tmpCounter++) {
-                    if(tmpDeltaList.get(tmpCounter) == tmpMaxAbsList) {
+                    if(tmpDeltaList.get(tmpCounter) == tmpDeltaAbsMax) {
                         tmpRingsReturn.add(aRings.get(tmpCounter));
                     }
                 }
@@ -952,7 +963,7 @@ public class ScaffoldGenerator {
             }
             /*Rule four: Add all rings that have the highest absolute delta to the list*/
             for(int tmpCounter = 0 ; tmpCounter < tmpDeltaListAbs.size(); tmpCounter++) {
-                if(tmpDeltaListAbs.get(tmpCounter) == tmpMaxAbsList) {
+                if(tmpDeltaListAbs.get(tmpCounter) == tmpDeltaAbsMax) {
                     tmpRingsReturn.add(aRings.get(tmpCounter));
                 }
             }
@@ -998,7 +1009,7 @@ public class ScaffoldGenerator {
      * Based on rule number 13 from the "The Scaffold Tree" Paper by Schuffenhauer et al.
      * In contrast to the paper, unique SMILES are used here instead of canonical SMILES.
      * The entered rings are sorted alphabetically by their unique SMILES. The last ring of this sort is returned.
-     * A few structures do not produce a truly unique SMILES. These are overwritten and are therefore not considered for further selection.
+     * If two structures are the same, one is selected arbitrary.
      * @param aRings Removable rings of the molecule to which the rule is applied
      * @param aMolecule Molecule from which a ring is to be removed
      * @return Molecule from which the ring selected by the rule has been removed
@@ -1007,6 +1018,7 @@ public class ScaffoldGenerator {
      */
     public IAtomContainer applySchuffenhauerRuleThirteen(IAtomContainer aMolecule, List<IAtomContainer> aRings) throws CDKException, CloneNotSupportedException {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
+        //Strings are stored in a sorted map. The natural order is alphabetical
         TreeMap<String, IAtomContainer> tmpRingRemovedMap = new TreeMap();//Sorted map
         SmilesGenerator tmpGenerator = new SmilesGenerator(SmiFlavor.Unique);
         for (IAtomContainer tmpRing : aRings) {
@@ -1016,8 +1028,9 @@ public class ScaffoldGenerator {
             //A few structures do not produce a truly unique SMILES. These are overwritten and are therefore not considered for further selection.
             tmpRingRemovedMap.put(tmpGenerator.create(tmpSchuff), tmpSchuff);
         }
-        //The last key in the map is automatically the SMILES key, which is at the end of the alphabetical order
-        return tmpRingRemovedMap.get(tmpRingRemovedMap.lastKey());
+        //The first key in the map is automatically the SMILES key, which has the lower rank in alphabetical order
+        IAtomContainer tmpReturnedStructure = tmpRingRemovedMap.get(tmpRingRemovedMap.firstKey());
+        return tmpReturnedStructure;
     }
     //</editor-fold>
     //</editor-fold>
