@@ -156,7 +156,7 @@ public class ScaffoldGeneratorTest {
         tmpMolecule = tmpParser.parseSmiles("c1cc2CCCc3cccc(c1)c23");//Test
         //tmpMolecule = tmpParser.parseSmiles("c1ccc3c(c1)c2ccccc2c4ccccc34");//Test
         //tmpMolecule = tmpParser.parseSmiles("c1ccc2c(c1)c7cccc6CC3CCc4cccc5cc2c(c3c45)c67");//Test
-        tmpMolecule = tmpParser.parseSmiles("C1=CC2=C3C(=C1)C=CC4=CC=CC(=C43)C=C2");//Test
+        tmpMolecule = tmpParser.parseSmiles("CCN(C1=CC=CC(=C1)C2=CC=NC3=C(C=NN23)C#N)C(=O)C");//Test
         //tmpMolecule = tmpParser.parseSmiles("c7ccc(c5c(c1ccccc1)c(c2ccccc2)c(c3ccccc3)c(c4ccccc4)c5c6ccccc6)cc7");//Test
         //tmpMolecule = tmpParser.parseSmiles("c1c3CCC4CCC5CCC6CCc7cc2CCc1c2c8c3C4=C5C6c78");//Test
         /*Generate picture of the Original*/
@@ -668,7 +668,7 @@ public class ScaffoldGeneratorTest {
         //tmpMolecule = tmpParser.parseSmiles("[Cl+]2C3C1[I+]C1C4[Cl+]C234");
         //tmpMolecule = tmpParser.parseSmiles("C=1C=CC=2C(C1)=C3C=CC4=C5C=CC=CC5=C6C=CC2C3=C46");
         //tmpMolecule = tmpParser.parseSmiles("c1ccc3c(c1)c2ccccc2c4ccccc34");
-        tmpMolecule = tmpParser.parseSmiles("N=1C=CC2=CC=NC=3C=4C=CC=CC4C1C23");
+        tmpMolecule = tmpParser.parseSmiles("CCN(C1=CC=CC(=C1)C2=CC=NC3=C(C=NN23)C#N)C(=O)C");
         //tmpMolecule = tmpParser.parseSmiles("O=C(O)C(OC)C1CC2=CC3=CC(OC4OC(C)C(O)C(OC5OC(C)C(O)C(O)C5)C4)=C(C(O)=C3C(O)=C2C(=O)C1OC6OC(C)C(O)C(OC7OC(C)C(O)C(OC8OC(C)C(O)C(O)(C)C8)C7)C6)C");
         /*Generate picture of molecule*/
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpMolecule);
@@ -978,6 +978,7 @@ public class ScaffoldGeneratorTest {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1=C(C(=NO1)C2=C(C=CC=C2Cl)F)C(=O)NC3C4N(C3=O)C(C(S4)(C)C)C(=O)O");//Original
+        //tmpMolecule = tmpParser.parseSmiles("O=C(CC(=S)C(=O)C2CCCC(CCCCCCC1CCCCC1)C2)C(=[I+])C3CCCCC3");//Linker with double bond
         /*Generate picture of the SchuffenhauerScaffold*/
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
         //Generate SchuffenhauerScaffold
@@ -1292,8 +1293,11 @@ public class ScaffoldGeneratorTest {
         /*Counter*/
         int tmpExceptionCounter = 0;
         int tmpNumberCounter = 0;
+
         int tmpSkipCounter = 0;
+        //Number of molecules that have more than 10 rings and were skipped in the getIterativeRemoval speed test
         int tmpToManyRingsCounter = 0;
+        //Number of molecules where more than 1000 rings were detected and skipped in the calculaterRemoveRingsSpeedTest().
         int tmpFusedRingCounter = 0;
         /*Loading and reading the library*/
         File tmpResourcesDirectory = new File("src/test/resources/COCONUT_DB.sdf");
@@ -1358,8 +1362,8 @@ public class ScaffoldGeneratorTest {
                 }
                 /*Calculate SchuffenhauerScaffolds, Rings and the molecules for which the rings have been removed from the Schuffenhauer scaffolds*/
                 if(aIsRemoveRingCalculated == true && aIsIterativeRemovalCalculated == false) {
-                    tmpMolecule = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule, true, ElectronDonation.cdk());
-                    List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(tmpMolecule,true);
+                    IAtomContainer tmpSchuff = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule, true, ElectronDonation.cdk());
+                    List<IAtomContainer> tmpRings = scaffoldGenerator.getRings(tmpSchuff,true);
                     /*Skip all molecules with more than 1000 rings*/
                     if(tmpRings.size() > 1000) {
                         System.out.println(tmpCoconutID);
@@ -1371,15 +1375,15 @@ public class ScaffoldGeneratorTest {
                     boolean tmpIsFused = false;
                     for(IAtomContainer tmpRing : tmpRings) {
                         /*Detect molecules with aromatic fused ring systems*/
-                        if(scaffoldGenerator.hasFusedRings(tmpRing,tmpRings,tmpMolecule) == true) {
+                        if(scaffoldGenerator.hasFusedAromaticRings(tmpRing,tmpRings,tmpSchuff) == true) {
                             tmpIsFused = true;
                         }
-                        IAtomContainer tmpRemoveMol = scaffoldGenerator.removeRing(tmpMolecule, tmpRing);
+                        IAtomContainer tmpRemoveMol = scaffoldGenerator.removeRing(tmpSchuff, tmpRing);
                         /*Generate control pictures*/
                         if(aIsPictureCreated && (aPictureNumber) == tmpNumberCounter) {
                             DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
                             /*Generate and save molecule picture*/
-                            BufferedImage tmpImgMol = tmpGenerator.depict(tmpMolecule).toImg();
+                            BufferedImage tmpImgMol = tmpGenerator.depict(tmpSchuff).toImg();
                             new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest/SpeedTestMol.png").mkdirs();
                             File tmpOutputMol = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SpeedTest/SpeedTestMol.png");
                             ImageIO.write(tmpImgMol, "png", tmpOutputMol);
@@ -1397,6 +1401,15 @@ public class ScaffoldGeneratorTest {
                     }
                     /*Detected molecule with aromatic fused ring system*/
                     if(tmpIsFused == true) {
+                        tmpMolecule = AtomContainerManipulator.removeHydrogens(tmpMolecule);
+                        //CDKHydrogenAdder.getInstance(tmpMolecule.getBuilder()).addImplicitHydrogens(tmpMolecule);
+                        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+                        BufferedImage tmpImgMod = tmpGenerator.depict(tmpMolecule).toImg();
+                        /*Save the picture*/
+                        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/AromaticFused/" + tmpCoconutID + ".png").mkdirs();
+                        File tmpOutputMod = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/AromaticFused/" + tmpCoconutID + ".png");
+                        ImageIO.write(tmpImgMod, "png" ,tmpOutputMod);
+
                         System.out.println("Fused ring detected " + tmpCoconutID);
                         tmpFusedRingCounter++;
                     }
