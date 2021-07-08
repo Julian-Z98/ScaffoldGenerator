@@ -780,6 +780,18 @@ public class ScaffoldGenerator {
                 //After a new fragment has been added, the next one is investigated
                 continue;
             }
+            /*Apply rule number seven*/
+            tmpRemovableRings = this.applySchuffenhauerRuleSeven(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings);
+            if (tmpRemovableRings.size() == 1) { //If only one eligible ring remains, it can be removed
+                //Remove the ring from from the fragment currently being treated
+                IAtomContainer tmpRingRemoved = this.removeRing(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings.get(0));
+                //Remove the linkers
+                IAtomContainer tmpSchuffRingRemoved = this.getSchuffenhauerScaffold(tmpRingRemoved, false, null);
+                //Add the fragment to the list of fragments
+                tmpSchuffenhauerFragments.add(tmpSchuffRingRemoved);
+                //After a new fragment has been added, the next one is investigated
+                continue;
+            }
             /*Apply rule number thirteen, the tiebreaking rule */
             tmpSchuffenhauerFragments.add(this.applySchuffenhauerRuleThirteen(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings));
         }
@@ -1002,6 +1014,61 @@ public class ScaffoldGenerator {
         }
         /*If there are no rings of the searched sizes, the original rings are returned*/
         return aRings;
+    }
+
+    /**
+     * Sort out the rings according to the seventh Schuffenhauer rule.
+     * Based on the seventh rule from the "The Scaffold Tree" Paper by Schuffenhauer et al.
+     * The rule says: A Fully Aromatic Ring System Must Not Be Dissected in a Way That the Resulting System Is Not Aromatic Any More
+     * Therefore, only fully aromatic ring systems are examined in more detail here.
+     * In these systems, all rings are selected, whose removal leads to fully aromatic ring systems.
+     * @param aRings Removable rings of the molecule to which the rule is applied
+     * @param aMolecule Molecule from which a ring is to be removed
+     * @return List of rings to be removed first according to the rule. Returns the unchanged list if the rule cannot be applied to the rings.
+     * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
+     * @throws CloneNotSupportedException if cloning is not possible.
+     */
+    public List<IAtomContainer> applySchuffenhauerRuleSeven(IAtomContainer aMolecule, List<IAtomContainer> aRings) throws CDKException, CloneNotSupportedException {
+        IAtomContainer tmpClonedMolecule = aMolecule.clone();
+        CycleFinder tmpCycleFinder = ScaffoldGenerator.CYCLE_FINDER;
+        /*Check that the ring system is fully aromatic*/
+        for(IAtomContainer tmpRing : aRings) {
+            //Remove the exocyclic double bonds
+            Cycles tmpRemovedExocyclic = tmpCycleFinder.find(tmpRing);
+            IAtomContainer tmpCycle = tmpRemovedExocyclic.toRingSet().getAtomContainer(0);
+            for(IAtom tmpAtom : tmpCycle.atoms()) {
+                //Check the aromaticity of each atom
+                if(!tmpAtom.isAromatic()) {
+                    //Return the unchanged ring list if the Ring system is not fully aromatic
+                    return aRings;
+                }
+            }
+        }
+        /*Investigate the resulting fragments when the ring system is fully aromatic*/
+        List<IAtomContainer> tmpReturnRings = new ArrayList<>(aRings.size());
+        for(IAtomContainer tmpRing : aRings) {
+            /*Remove each ring once and examine the resulting fragments*/
+            IAtomContainer tmpRingsRemoved = this.removeRing(tmpClonedMolecule, tmpRing);
+            boolean tmpIsRingRemovedAromatic = true;
+            //Remove the exocyclic double bonds
+            Cycles tmpRemovedExocyclic = tmpCycleFinder.find(tmpRingsRemoved);
+            for(IAtomContainer tmpCycle : tmpRemovedExocyclic.toRingSet().atomContainers()) {
+                /*Investigate each Atom of each ring*/
+                for(IAtom tmpCycleAtom : tmpCycle.atoms()) {
+                    /*If the ring is not aromatic, the fragment is not interesting*/
+                    if(!tmpCycleAtom.isAromatic()) {
+                        tmpIsRingRemovedAromatic = false;
+                        break;
+                    }
+                }
+            }
+            /*Add to the list all rings whose removal results in fully aromatic fragments*/
+            if(tmpIsRingRemovedAromatic = true) {
+                tmpReturnRings.add(tmpRing);
+            }
+        }
+        //return the list of all rings whose removal results in fully aromatic fragments
+        return tmpReturnRings;
     }
 
     /**

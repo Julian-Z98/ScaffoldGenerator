@@ -667,8 +667,8 @@ public class ScaffoldGeneratorTest {
         //tmpMolecule = tmpParser.parseSmiles("C2CC(C1C[Br+]1)CC2C3C[F+]3");
         //tmpMolecule = tmpParser.parseSmiles("[Cl+]2C3C1[I+]C1C4[Cl+]C234");
         //tmpMolecule = tmpParser.parseSmiles("C=1C=CC=2C(C1)=C3C=CC4=C5C=CC=CC5=C6C=CC2C3=C46");
-        //tmpMolecule = tmpParser.parseSmiles("c1ccc3c(c1)c2ccccc2c4ccccc34");
-        tmpMolecule = tmpParser.parseSmiles("CCN(C1=CC=CC(=C1)C2=CC=NC3=C(C=NN23)C#N)C(=O)C");
+        tmpMolecule = tmpParser.parseSmiles("c2ccc1[nH]ccc1c2");
+        //tmpMolecule = tmpParser.parseSmiles("CCN(C1=CC=CC(=C1)C2=CC=NC3=C(C=NN23)C#N)C(=O)C");
         //tmpMolecule = tmpParser.parseSmiles("O=C(O)C(OC)C1CC2=CC3=CC(OC4OC(C)C(O)C(OC5OC(C)C(O)C(O)C5)C4)=C(C(O)=C3C(O)=C2C(=O)C1OC6OC(C)C(O)C(OC7OC(C)C(O)C(OC8OC(C)C(O)C(O)(C)C8)C7)C6)C");
         /*Generate picture of molecule*/
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpMolecule);
@@ -1198,7 +1198,7 @@ public class ScaffoldGeneratorTest {
 
     /**
      * Loads Scheme 11b from the "The Scaffold Tree" Paper by Schuffenhauer et al as SMILES.
-     * Epinastine is generated from a SMILES and the aromatic rings are removed
+     * Epinastine is generated from a SMILES and the aromatic rings are removed.
      * Then, according to the sixth rule, the ring of size 5 is removed.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
      * @throws IOException if file format can not be detected
@@ -1237,6 +1237,49 @@ public class ScaffoldGeneratorTest {
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
         assertEquals(tmpSmilesGenerator.create(tmpRule.get(3)), "C1=CCC=CCN1");
+    }
+
+    /**
+     * Loads Scheme 12 from the "The Scaffold Tree" Paper by Schuffenhauer et al as SMILES.
+     * Zaleplon is generated from a SMILES and the aromatic 6 ring is removed.
+     * Then, according to the seventh rule, the ring of size 6 is removed.
+     * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
+     * @throws IOException if file format can not be detected
+     * @throws CDKException if file can not be read
+     * @throws CloneNotSupportedException if cloning is not possible
+     */
+    @Test
+    public void getScheme12Test() throws CDKException, CloneNotSupportedException, IOException {
+        //SMILES to IAtomContainer
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        IAtomContainer tmpMolecule = tmpParser.parseSmiles("CCN(C1=CC=CC(=C1)C2=CC=NC3=C(C=NN23)C#N)C(=O)C");
+        //tmpMolecule = tmpParser.parseSmiles("c3ccc2cc1ccccc1cc2c3");
+        /*Generate picture of the SchuffenhauerScaffold*/
+        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+        //Generate SchuffenhauerScaffold
+        IAtomContainer tmpSchuffenhauerScaffold = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule, true, ElectronDonation.daylight());
+        BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
+        /*Save the picture*/
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme12/Original.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme12/Original.png");
+        ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
+        /*Generate picture of the modified molecule*/
+        List<IAtomContainer> tmpMod = scaffoldGenerator.applySchuffenhauerRules(tmpSchuffenhauerScaffold, ElectronDonation.daylight());
+        BufferedImage tmpImgMod = tmpGenerator.depict(tmpMod.get(1)).toImg();
+        /*Save the picture*/
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme12/Scheme12.png").mkdirs();
+        File tmpOutputMod = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme12/Scheme12.png");
+        ImageIO.write(tmpImgMod, "png" ,tmpOutputMod);
+        /*Generate picture of the SchuffenhauerRule*/
+        List<IAtomContainer> tmpRule = scaffoldGenerator.applySchuffenhauerRules(tmpSchuffenhauerScaffold, ElectronDonation.daylight());
+        BufferedImage tmpImgRule = tmpGenerator.depict(tmpRule.get(2)).toImg();
+        /*Save the picture*/
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme12/RuleSeven.png").mkdirs();
+        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme12/RuleSeven.png");
+        ImageIO.write(tmpImgRule, "png" ,tmpOutputRule);
+        /*Generate and check SMILES*/
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
+        //assertEquals(tmpSmilesGenerator.create(tmpRule.get(2)), "C1=CCC=CCN1");
     }
     //</editor-fold>
 
@@ -1293,7 +1336,6 @@ public class ScaffoldGeneratorTest {
         /*Counter*/
         int tmpExceptionCounter = 0;
         int tmpNumberCounter = 0;
-
         int tmpSkipCounter = 0;
         //Number of molecules that have more than 10 rings and were skipped in the getIterativeRemoval speed test
         int tmpToManyRingsCounter = 0;
