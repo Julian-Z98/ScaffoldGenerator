@@ -35,7 +35,6 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
 import java.util.*;
 
-import static junit.framework.TestCase.assertEquals;
 
 public class ScaffoldGenerator {
     //<editor-fold desc="Public Static Final Constants">
@@ -756,12 +755,15 @@ public class ScaffoldGenerator {
                 //After a new fragment has been added, the next one is investigated
                 continue;
             }
-            /*Apply rule number seven*/
-            tmpRemovableRings = this.applySchuffenhauerRuleSeven(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings, anIsAromaticitySet, anElectronDonation);
-            if (tmpRemovableRings.size() == 1) { //If only one eligible ring remains, it can be removed
-                this.removeRingForSchuffenhauerRule(tmpRemovableRings.get(0), tmpSchuffenhauerFragments);
-                //After a new fragment has been added, the next one is investigated
-                continue;
+            //Rule seven is only useful when aromaticity is redetermined
+            if(anIsAromaticitySet) {
+                /*Apply rule number seven*/
+                tmpRemovableRings = this.applySchuffenhauerRuleSeven(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings, anIsAromaticitySet, anElectronDonation);
+                if (tmpRemovableRings.size() == 1) { //If only one eligible ring remains, it can be removed
+                    this.removeRingForSchuffenhauerRule(tmpRemovableRings.get(0), tmpSchuffenhauerFragments);
+                    //After a new fragment has been added, the next one is investigated
+                    continue;
+                }
             }
             /*Apply rule number eight*/
             tmpRemovableRings = this.applySchuffenhauerRuleEight(tmpRemovableRings);
@@ -779,6 +781,20 @@ public class ScaffoldGenerator {
             }
             /*Apply rule number ten*/
             tmpRemovableRings = this.applySchuffenhauerRuleTen(tmpRemovableRings);
+            if (tmpRemovableRings.size() == 1) { //If only one eligible ring remains, it can be removed
+                this.removeRingForSchuffenhauerRule(tmpRemovableRings.get(0), tmpSchuffenhauerFragments);
+                //After a new fragment has been added, the next one is investigated
+                continue;
+            }
+            /*Apply rule number eleven*/
+            tmpRemovableRings = this.applySchuffenhauerRuleEleven(tmpRemovableRings);
+            if (tmpRemovableRings.size() == 1) { //If only one eligible ring remains, it can be removed
+                this.removeRingForSchuffenhauerRule(tmpRemovableRings.get(0), tmpSchuffenhauerFragments);
+                //After a new fragment has been added, the next one is investigated
+                continue;
+            }
+            /*Apply rule number twelve*/
+            tmpRemovableRings = this.applySchuffenhauerRuleTwelve(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings);
             if (tmpRemovableRings.size() == 1) { //If only one eligible ring remains, it can be removed
                 this.removeRingForSchuffenhauerRule(tmpRemovableRings.get(0), tmpSchuffenhauerFragments);
                 //After a new fragment has been added, the next one is investigated
@@ -1038,15 +1054,17 @@ public class ScaffoldGenerator {
      */
     public List<IAtomContainer> applySchuffenhauerRuleSeven(IAtomContainer aMolecule, List<IAtomContainer> aRings, boolean anIsAromaticitySet, ElectronDonation anElectronDonation) throws CDKException, CloneNotSupportedException {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
+        Aromaticity tmpAromaticity = new Aromaticity(anElectronDonation, ScaffoldGenerator.CYCLE_FINDER);
+        tmpAromaticity.apply(tmpClonedMolecule);
         CycleFinder tmpCycleFinder = ScaffoldGenerator.CYCLE_FINDER;
         //Remove exocyclic atoms
-        Cycles tmpRemovedExocyclic = tmpCycleFinder.find(aMolecule);
+        Cycles tmpRemovedExocyclic = tmpCycleFinder.find(tmpClonedMolecule);
         /*Check that the ring system is fully aromatic*/
         for(IAtomContainer tmpRing : tmpRemovedExocyclic.toRingSet().atomContainers()) {
             for(IAtom tmpAtom : tmpRing.atoms()) {
                 //Check the aromaticity of each atom
                 if(!tmpAtom.isAromatic()) {
-                    //Return the unchanged ring list if the Ring system is not fully aromatic
+                    //System.out.println("Atom is not Aromatic:" + tmpAtom.getSymbol());
                     return aRings;
                 }
             }
@@ -1056,44 +1074,55 @@ public class ScaffoldGenerator {
         for(IAtomContainer tmpRing : aRings) {
             /*Remove each ring once and examine the resulting fragments*/
             IAtomContainer tmpRingsRemoved = this.removeRing(tmpClonedMolecule, tmpRing);
-            if(anIsAromaticitySet) {
-                Aromaticity tmpAromaticity = new Aromaticity(anElectronDonation, ScaffoldGenerator.CYCLE_FINDER);
-                tmpAromaticity.apply(tmpRingsRemoved);
-            }
+            tmpRingsRemoved = this.getSchuffenhauerScaffold(tmpRingsRemoved, false, null);
+            AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpRingsRemoved);
+            CDKHydrogenAdder.getInstance(tmpRingsRemoved.getBuilder()).addImplicitHydrogens(tmpRingsRemoved);
+            //Redetermine aromaticity after removal
+            tmpAromaticity.apply(tmpRingsRemoved);
             boolean tmpIsRingRemovedAromatic = true;
             //Remove the exocyclic double bonds
             Cycles tmpRemovedExocyclicFragment = tmpCycleFinder.find(tmpRingsRemoved);
             for(IAtomContainer tmpCycle : tmpRemovedExocyclicFragment.toRingSet().atomContainers()) {
+                SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
+                //AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpCycle);
+                CDKHydrogenAdder.getInstance(tmpCycle.getBuilder()).addImplicitHydrogens(tmpCycle);
+                //System.out.println(tmpSmilesGenerator.create(tmpCycle));
+
                 /*Investigate each Atom of each ring*/
                 for(IAtom tmpCycleAtom : tmpCycle.atoms()) {
                     /*If the ring is not aromatic, the fragment is not interesting*/
                     if(!tmpCycleAtom.isAromatic()) {
+                        //System.out.println("Fragment is not aromatic: " + tmpCycleAtom.getSymbol());
                         tmpIsRingRemovedAromatic = false;
                         break;
                     }
                 }
             }
             /*Add to the list all rings whose removal results in fully aromatic fragments*/
-            if(tmpIsRingRemovedAromatic = true) {
+            if(tmpIsRingRemovedAromatic == true) {
                 tmpReturnRings.add(tmpRing);
             }
         }
         //return the list of all rings whose removal results in fully aromatic fragments
-        return tmpReturnRings;
+        if(tmpReturnRings.size() > 0) {
+            //System.out.println("Output Ring Number: " + tmpReturnRings.size());
+            return tmpReturnRings;
+        }
+        return aRings;
     }
 
     public boolean ruleSevenTest(IAtomContainer aMolecule, List<IAtomContainer> aRings , boolean anIsAromaticitySet, ElectronDonation anElectronDonation) throws CDKException, CloneNotSupportedException {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
+        Aromaticity tmpAromaticity = new Aromaticity(anElectronDonation, ScaffoldGenerator.CYCLE_FINDER);
+        tmpAromaticity.apply(tmpClonedMolecule);
         CycleFinder tmpCycleFinder = ScaffoldGenerator.CYCLE_FINDER;
+        //Remove exocyclic atoms
+        Cycles tmpRemovedExocyclic = tmpCycleFinder.find(tmpClonedMolecule);
         /*Check that the ring system is fully aromatic*/
-        for(IAtomContainer tmpRing : aRings) {
-            //Remove the exocyclic double bonds
-            Cycles tmpRemovedExocyclic = tmpCycleFinder.find(tmpRing);
-            IAtomContainer tmpCycle = tmpRemovedExocyclic.toRingSet().getAtomContainer(0);
-            for(IAtom tmpAtom : tmpCycle.atoms()) {
+        for(IAtomContainer tmpRing : tmpRemovedExocyclic.toRingSet().atomContainers()) {
+            for(IAtom tmpAtom : tmpRing.atoms()) {
                 //Check the aromaticity of each atom
                 if(!tmpAtom.isAromatic()) {
-                    //Return the unchanged ring list if the Ring system is not fully aromatic
                     return false;
                 }
             }
@@ -1103,14 +1132,15 @@ public class ScaffoldGenerator {
         for(IAtomContainer tmpRing : aRings) {
             /*Remove each ring once and examine the resulting fragments*/
             IAtomContainer tmpRingsRemoved = this.removeRing(tmpClonedMolecule, tmpRing);
-            if(anIsAromaticitySet) {
-                Aromaticity tmpAromaticity = new Aromaticity(anElectronDonation, ScaffoldGenerator.CYCLE_FINDER);
-                tmpAromaticity.apply(tmpRingsRemoved);
-            }
+            AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpRingsRemoved);
+            CDKHydrogenAdder.getInstance(tmpRingsRemoved.getBuilder()).addImplicitHydrogens(tmpRingsRemoved);
+            //Redetermine aromaticity after removal
+            tmpAromaticity.apply(tmpRingsRemoved);
             boolean tmpIsRingRemovedAromatic = true;
             //Remove the exocyclic double bonds
-            Cycles tmpRemovedExocyclic = tmpCycleFinder.find(tmpRingsRemoved);
-            for(IAtomContainer tmpCycle : tmpRemovedExocyclic.toRingSet().atomContainers()) {
+            Cycles tmpRemovedExocyclicFragment = tmpCycleFinder.find(tmpRingsRemoved);
+            for(IAtomContainer tmpCycle : tmpRemovedExocyclicFragment.toRingSet().atomContainers()) {
+                SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
                 /*Investigate each Atom of each ring*/
                 for(IAtom tmpCycleAtom : tmpCycle.atoms()) {
                     /*If the ring is not aromatic, the fragment is not interesting*/
@@ -1121,12 +1151,12 @@ public class ScaffoldGenerator {
                 }
             }
             /*Add to the list all rings whose removal results in fully aromatic fragments*/
-            if(tmpIsRingRemovedAromatic = true) {
+            if(tmpIsRingRemovedAromatic == true) {
                 tmpReturnRings.add(tmpRing);
             }
         }
         //return the list of all rings whose removal results in fully aromatic fragments
-        if(tmpReturnRings.size() < aRings.size()){
+        if(tmpReturnRings.size() != aRings.size() && tmpReturnRings.size() != 0) {
             return true;
         }
         return false;
@@ -1310,6 +1340,89 @@ public class ScaffoldGenerator {
         }
         return tmpReturnRingList;
     }
+
+    /**
+     * Sort out the rings according to the eleventh Schuffenhauer rule.
+     * Based on the eleventh rule from the "The Scaffold Tree" Paper by Schuffenhauer et al.
+     * The rule says: For Mixed Aromatic/Nonaromatic Ring Systems, Retain Nonaromatic Rings with Priority.
+     * Therefore, all rings are tested for aromaticity and the non-aromatic ones are preferably removed.
+     * If it is not a mixed system, all rings will be returned.
+     * @param aRings Removable rings of the molecule to which the rule is applied
+     * @return List of rings to be removed first according to the rule. Returns the unchanged list,
+     * if the molecule is not a mixed ring system.
+     * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
+     */
+    public List<IAtomContainer> applySchuffenhauerRuleEleven(List<IAtomContainer> aRings) throws CDKException {
+        List<IAtomContainer> tmpReturnRingList = new ArrayList<>(aRings.size());
+        CycleFinder tmpCycleFinder = ScaffoldGenerator.CYCLE_FINDER;
+        /*Add all fully aromatic rings to the list*/
+        for(IAtomContainer tmpRing  : aRings) {
+            boolean tmpIsAromatic = true;
+            //Remove the exocyclic atoms
+            Cycles tmpRemovedExocyclic = tmpCycleFinder.find(tmpRing);
+            IAtomContainer tmpCycle = tmpRemovedExocyclic.toRingSet().getAtomContainer(0);
+            /*The ring is only fully aromatic, if all cyclic atoms are aromatic*/
+            for(IAtom tmpAtom : tmpCycle.atoms()) {
+                if(!tmpAtom.isAromatic()) {
+                    tmpIsAromatic = false;
+                }
+            }
+            /*Add aromatic rings to the list*/
+            if(tmpIsAromatic == true) {
+                tmpReturnRingList.add(tmpRing);
+            }
+        }
+        //Return aromatic rings if any are present
+        if(tmpReturnRingList.size() > 0){
+            return tmpReturnRingList;
+        }
+        //Return all rings if non aromatic rings are present
+        return aRings;
+    }
+
+    /**
+     * Sort out the rings according to the twelfth  Schuffenhauer rule.
+     * Based on the twelfth rule from the "The Scaffold Tree" Paper by Schuffenhauer et al.
+     * The rule says: Remove Rings First Where the Linker Is Attached
+     * to a Ring Heteroatom at Either End of the Linker.
+     * Therefore rings that attached to a linker that have a heteroatom at at least one end are prioritised.
+     *
+     * Two cases are treated differently.
+     * In the first case, linkers consisting of only one bond are selected.
+     * In this case, the ring to be examined is directly linked to the Murcko fragment from which this ring was removed.
+     * This bond is found and it is checked whether it contains at least one heteroatom.
+     * In the second case, all other linkers are treated. These consist of at least one atom.
+     * Here, the linker atoms are filtered out by subtracting the atoms of the ring to be examined and
+     * the atoms of the murcko fragment in which this ring was removed from the total molecule.
+     * The remaining atoms are the linker atoms. Now it is checked whether their atoms are bound to heteroatoms of the rest of the molecule.
+     *
+     * @param aRings Removable rings of the molecule to which the rule is applied
+     * @param aMolecule Molecule from which a ring is to be removed
+     * @return List of rings to be removed first according to the rule. Returns the unchanged list if the rule cannot be applied to the rings.
+     * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
+     * @throws CloneNotSupportedException if cloning is not possible.
+     */
+    public List<IAtomContainer> applySchuffenhauerRuleTwelve(IAtomContainer aMolecule, List<IAtomContainer> aRings) throws CDKException, CloneNotSupportedException {
+        IAtomContainer tmpClonedMolecule = aMolecule.clone();
+        List<IAtomContainer> tmpRemoveRings = new ArrayList<>(aRings.size()); //Rings with the longest linker
+        /*Generate the murcko fragment, as this removes the double bonded atoms at the linkers*/
+        MurckoFragmenter tmpMurckoFragmenter = new MurckoFragmenter(true,1);
+        tmpMurckoFragmenter.setComputeRingFragments(false);
+        /*Check for each ring whether it is attached to a linker with a heteroatom at the end*/
+        for(IAtomContainer tmpRing : aRings) {
+            if(this.isRingAttachedToHeteroatomLinker(tmpClonedMolecule, tmpRing, tmpMurckoFragmenter)) {
+                //If the ring is bound to such a linker add it to the list
+                tmpRemoveRings.add(tmpRing);
+            }
+        }
+        /*Return the rings attached to a linker with a heteroatom at the end if available*/
+        if(tmpRemoveRings.size() > 0) {
+            return tmpRemoveRings;
+        }
+        /*Return the unchanged ring list if the rule cannot be applied to the rings*/
+        return aRings;
+    }
+
     /**
      * Remove a ring according to the thirteenth Schuffenhauer rule.
      * Based on rule number 13 from the "The Scaffold Tree" Paper by Schuffenhauer et al.
@@ -1340,4 +1453,103 @@ public class ScaffoldGenerator {
     }
     //</editor-fold>
     //</editor-fold>
+
+    /**
+     * The ring to be examined is checked to determine whether it is attached to a linker that has a heteroatom at at least one end.
+     *
+     * Two cases are treated differently.
+     * In the first case, linkers consisting of only one bond are selected.
+     * In this case, the ring to be examined is directly linked to the Murcko fragment from which this ring was removed.
+     * This bond is found and it is checked whether it contains at least one heteroatom.
+     * In the second case, all other linkers are treated. These consist of at least one atom.
+     * Here, the linker atoms are filtered out by subtracting the atoms of the ring to be examined and
+     * the atoms of the Murcko fragment in which this ring was removed from the total molecule.
+     * The remaining atoms are the linker atoms. Now it is checked whether their atoms are bound to heteroatoms of the rest of the molecule.
+     *
+     * Used in the applySchuffenhauerRuleTwelve() method.
+     * @param aMolecule Molecule from which a ring is to be removed
+     * @param aRing rings of the molecule to which the rule is applied
+     * @param aMurckoFragmenter MurckoFragmenter with which the molecules are treated
+     * @return Whether it is one of the rings sought for
+     * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
+     * @throws CloneNotSupportedException if cloning is not possible.
+     */
+    private boolean isRingAttachedToHeteroatomLinker(IAtomContainer aMolecule, IAtomContainer aRing, MurckoFragmenter aMurckoFragmenter) throws CDKException, CloneNotSupportedException {
+        HashSet<Integer> tmpRingPropertyNumbers = new HashSet(aRing.getAtomCount(), 1);
+        HashSet<Integer> tmpRemovedMurckoAtomNumbers = new HashSet(aMolecule.getAtomCount(), 1);
+        /*Save all numbers of the ring atoms*/
+        for(IAtom tmpAtom : aRing.atoms()) {
+            tmpRingPropertyNumbers.add(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
+        }
+        //Remove the examined ring
+        IAtomContainer tmpRemovedRing = this.removeRing(aMolecule, aRing);
+        //Generate the murcko fragment, as this removes the double bonded atoms at the linkers and exocyclic double bonds
+        IAtomContainer tmpRemovedRingMurckoFragment = aMurckoFragmenter.scaffold(tmpRemovedRing);
+        /*Save all numbers of the murcko fragment atoms*/
+        for(IAtom tmpAtom : tmpRemovedRingMurckoFragment.atoms()) {
+            tmpRemovedMurckoAtomNumbers.add(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
+        }
+        /*Treatment of linkers consisting of only one bond*/
+        for(IAtom tmpAtom : aMolecule.atoms()) {
+            /*Get all ring atoms*/
+            if(tmpRingPropertyNumbers.contains(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                /*Go though all bonds of the ring atoms*/
+                for(IBond tmpBond : tmpAtom.bonds()) {
+                    /*Bond that connects ring atom and murcko fragment, so a linker*/
+                    if(tmpRemovedMurckoAtomNumbers.contains(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                        /*If the atom of the murcko fragment is a heteroatom, it is one of the rings we are looking for*/
+                        if(tmpBond.getAtom(0).getSymbol() != "C") {
+                            return true;
+                        }
+                        /*If the atom of the ring is a heteroatom, it is one of the rings we are looking for*/
+                        if(tmpAtom.getSymbol() != "C") {
+                            return true;
+                        }
+                    }
+                    /*Bond that connects ring atom and murcko fragment, so a linker.*/
+                    if(tmpRemovedMurckoAtomNumbers.contains(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                        /*If the atom of the murcko fragment is a heteroatom, it is one of the rings we are looking for*/
+                        if(tmpBond.getAtom(1).getSymbol() != "C") {
+                            return true;
+                        }
+                        /*If the atom of the ring is a heteroatom, it is one of the rings we are looking for*/
+                        if(tmpAtom.getSymbol() != "C") {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        /*Treatment for linkers that consist of more than one bond, i.e. at least one atom*/
+        //Generate the murcko fragment, as this removes the double bonded atoms at the linkers and exocyclic double bonds
+        IAtomContainer tmpMurcko = aMurckoFragmenter.scaffold(aMolecule);
+        for(IAtom tmpAtom : tmpMurcko.atoms()) {
+            /*Atom is not part of the murcko fragment from which the ring was removed, nor is it part of the ring under investigation.
+            It is therefore a linker atom.*/
+            if(!tmpRemovedMurckoAtomNumbers.contains(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)) &&
+                    !tmpRingPropertyNumbers.contains(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                /*Investigate all bonds of the atom*/
+                for(IBond tmpBond : tmpAtom.bonds()) {
+                    /*Check if atom 0 of the bond is a heteroatom*/
+                    if(tmpBond.getAtom(0).getSymbol() != "C") {
+                        /*If the heteroatom is in the ring or in the Murcko fragment with the ring removed, it must be a terminal linker atom*/
+                        if(tmpRemovedMurckoAtomNumbers.contains(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)) ||
+                                tmpRingPropertyNumbers.contains(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                            return true;
+                        }
+                    }
+                    /*Check if atom 1 of the bond is a heteroatom*/
+                    if(tmpBond.getAtom(1).getSymbol() != "C") {
+                        /*If the heteroatom is in the ring or in the Murcko fragment with the ring removed, it must be a terminal linker atom*/
+                        if(tmpRemovedMurckoAtomNumbers.contains(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)) ||
+                                tmpRingPropertyNumbers.contains(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        //If none of the cases apply, it is not one of the rings we are looking for
+        return false;
+    }
 }
