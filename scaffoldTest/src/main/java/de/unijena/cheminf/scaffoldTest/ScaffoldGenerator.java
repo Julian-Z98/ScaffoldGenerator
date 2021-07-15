@@ -19,6 +19,7 @@
 package de.unijena.cheminf.scaffoldTest;
 
 import org.openscience.cdk.CDKConstants;
+import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.aromaticity.ElectronDonation;
 import org.openscience.cdk.exception.CDKException;
@@ -30,6 +31,7 @@ import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.*;
 import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.smiles.SmilesGenerator;
+import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.tools.CDKHydrogenAdder;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
@@ -692,12 +694,14 @@ public class ScaffoldGenerator {
      * @param aMolecule Molecule that is to be broken down into its fragments
      * @param anIsAromaticitySet Indicates whether the aromaticity is to be set.
      * @param anElectronDonation Electron donation model that should be used. Can be null if anIsAromaticitySet == false.
+     * @param anIsRuleSevenUsed Indicates whether rule seven is applied.
      * @return Fragments of the molecule according to the Schuffenhauer rules
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
      * @throws CloneNotSupportedException if cloning is not possible.
      */
-    public List<IAtomContainer> applySchuffenhauerRules(IAtomContainer aMolecule, boolean anIsAromaticitySet, ElectronDonation anElectronDonation) throws CloneNotSupportedException, CDKException {
-        IAtomContainer tmpSchuffenhauer = this.getSchuffenhauerScaffold(aMolecule,anIsAromaticitySet ,anElectronDonation );
+    public List<IAtomContainer> applySchuffenhauerRules(IAtomContainer aMolecule, boolean anIsAromaticitySet, ElectronDonation anElectronDonation, boolean anIsRuleSevenUsed) throws CloneNotSupportedException, CDKException {
+        IAtomContainer tmpClonedMolecule = aMolecule.clone();
+        IAtomContainer tmpSchuffenhauer = this.getSchuffenhauerScaffold(tmpClonedMolecule,anIsAromaticitySet ,anElectronDonation );
         //List of all generated fragments
         List<IAtomContainer> tmpSchuffenhauerFragments = new ArrayList<>(this.getRings(tmpSchuffenhauer, false).size());
         tmpSchuffenhauerFragments.add(tmpSchuffenhauer);
@@ -756,7 +760,7 @@ public class ScaffoldGenerator {
                 continue;
             }
             //Rule seven is only useful when aromaticity is redetermined
-            if(anIsAromaticitySet) {
+            if(anIsRuleSevenUsed) {
                 /*Apply rule number seven*/
                 tmpRemovableRings = this.applySchuffenhauerRuleSeven(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings, anIsAromaticitySet, anElectronDonation);
                 if (tmpRemovableRings.size() == 1) { //If only one eligible ring remains, it can be removed
@@ -999,7 +1003,7 @@ public class ScaffoldGenerator {
             }
             /*Rule four: Add all rings that have the highest absolute delta to the list*/
             for(int tmpCounter = 0 ; tmpCounter < tmpDeltaListAbs.size(); tmpCounter++) {
-                if(tmpDeltaListAbs.get(tmpCounter) == tmpDeltaAbsMax) {
+                if(tmpDeltaListAbs.get(tmpCounter).equals(tmpDeltaAbsMax)) {
                     tmpRingsReturn.add(aRings.get(tmpCounter));
                 }
             }
@@ -1053,6 +1057,7 @@ public class ScaffoldGenerator {
      * @throws CloneNotSupportedException if cloning is not possible.
      */
     public List<IAtomContainer> applySchuffenhauerRuleSeven(IAtomContainer aMolecule, List<IAtomContainer> aRings, boolean anIsAromaticitySet, ElectronDonation anElectronDonation) throws CDKException, CloneNotSupportedException {
+        System.out.println("Input Ring Number: " + aRings.size());
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
         Aromaticity tmpAromaticity = new Aromaticity(anElectronDonation, ScaffoldGenerator.CYCLE_FINDER);
         tmpAromaticity.apply(tmpClonedMolecule);
@@ -1064,7 +1069,6 @@ public class ScaffoldGenerator {
             for(IAtom tmpAtom : tmpRing.atoms()) {
                 //Check the aromaticity of each atom
                 if(!tmpAtom.isAromatic()) {
-                    //System.out.println("Atom is not Aromatic:" + tmpAtom.getSymbol());
                     return aRings;
                 }
             }
@@ -1073,26 +1077,31 @@ public class ScaffoldGenerator {
         List<IAtomContainer> tmpReturnRings = new ArrayList<>(aRings.size());
         for(IAtomContainer tmpRing : aRings) {
             /*Remove each ring once and examine the resulting fragments*/
+            SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
             IAtomContainer tmpRingsRemoved = this.removeRing(tmpClonedMolecule, tmpRing);
-            tmpRingsRemoved = this.getSchuffenhauerScaffold(tmpRingsRemoved, false, null);
+            //Problem: Durch die [] um N werden die Ringe nicht mehr als Aromatisch erkannt.
+            // Die [] entstehen bei der Entfernung des Rings. Wie werde ich [] auf elegantem Weg los?
+            //Bsp: CNP0001107
+            //Außerdem entstehen durch diesen "Fix" jetzt probleme mit geladenen Molekülen
+            String tmpString = tmpSmilesGenerator.create(tmpRingsRemoved);
+            System.out.println("Vorher:" + tmpString);
+            tmpString = tmpString.replace("[", "");
+            tmpString = tmpString.replace("]", "");
+            System.out.println("Nachher:" + tmpString);
+            SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+            tmpRingsRemoved = tmpParser.parseSmiles(tmpString);
             AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpRingsRemoved);
             CDKHydrogenAdder.getInstance(tmpRingsRemoved.getBuilder()).addImplicitHydrogens(tmpRingsRemoved);
-            //Redetermine aromaticity after removal
+            //Problem end
             tmpAromaticity.apply(tmpRingsRemoved);
             boolean tmpIsRingRemovedAromatic = true;
             //Remove the exocyclic double bonds
             Cycles tmpRemovedExocyclicFragment = tmpCycleFinder.find(tmpRingsRemoved);
             for(IAtomContainer tmpCycle : tmpRemovedExocyclicFragment.toRingSet().atomContainers()) {
-                SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
-                //AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpCycle);
-                CDKHydrogenAdder.getInstance(tmpCycle.getBuilder()).addImplicitHydrogens(tmpCycle);
-                //System.out.println(tmpSmilesGenerator.create(tmpCycle));
-
                 /*Investigate each Atom of each ring*/
                 for(IAtom tmpCycleAtom : tmpCycle.atoms()) {
                     /*If the ring is not aromatic, the fragment is not interesting*/
                     if(!tmpCycleAtom.isAromatic()) {
-                        //System.out.println("Fragment is not aromatic: " + tmpCycleAtom.getSymbol());
                         tmpIsRingRemovedAromatic = false;
                         break;
                     }
@@ -1105,7 +1114,7 @@ public class ScaffoldGenerator {
         }
         //return the list of all rings whose removal results in fully aromatic fragments
         if(tmpReturnRings.size() > 0) {
-            //System.out.println("Output Ring Number: " + tmpReturnRings.size());
+            System.out.println("Output Ring Number: " + tmpReturnRings.size());
             return tmpReturnRings;
         }
         return aRings;
@@ -1132,15 +1141,21 @@ public class ScaffoldGenerator {
         for(IAtomContainer tmpRing : aRings) {
             /*Remove each ring once and examine the resulting fragments*/
             IAtomContainer tmpRingsRemoved = this.removeRing(tmpClonedMolecule, tmpRing);
+            SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
+            String tmpString = tmpSmilesGenerator.create(tmpRingsRemoved);
+            tmpString = tmpString.replace("[", "");
+            tmpString = tmpString.replace("]", "");
+            SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+            tmpRingsRemoved = tmpParser.parseSmiles(tmpString);
             AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpRingsRemoved);
             CDKHydrogenAdder.getInstance(tmpRingsRemoved.getBuilder()).addImplicitHydrogens(tmpRingsRemoved);
+
             //Redetermine aromaticity after removal
             tmpAromaticity.apply(tmpRingsRemoved);
             boolean tmpIsRingRemovedAromatic = true;
             //Remove the exocyclic double bonds
             Cycles tmpRemovedExocyclicFragment = tmpCycleFinder.find(tmpRingsRemoved);
             for(IAtomContainer tmpCycle : tmpRemovedExocyclicFragment.toRingSet().atomContainers()) {
-                SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
                 /*Investigate each Atom of each ring*/
                 for(IAtom tmpCycleAtom : tmpCycle.atoms()) {
                     /*If the ring is not aromatic, the fragment is not interesting*/
