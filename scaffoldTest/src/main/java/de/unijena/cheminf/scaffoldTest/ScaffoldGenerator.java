@@ -48,6 +48,16 @@ public class ScaffoldGenerator {
      * Cycle finder used to detect rings and to determine aromaticity
      */
     public static final CycleFinder CYCLE_FINDER = Cycles.relevant();
+    /**
+     * Property is true if the backup cycle finder is to be used instead of the normal cycle finder.
+     */
+    public static final String CYCLE_FINDER_BACKUP_PROPERTY = "CYCLE_FINDER_BACKUP_PROPERTY";
+    /**
+     * Backup cycle finder used to detect rings and to determine aromaticity.
+     * The relevant cycle finder has problems with a few molecules and also finds too many rings in some molecules.
+     * Therefore, the mcb is used in these cases.
+     */
+    public static final CycleFinder CYCLE_FINDER_BACKUP = Cycles.mcb();
     //</editor-fold>
 
     //<editor-fold desc="Public Methods">
@@ -64,13 +74,15 @@ public class ScaffoldGenerator {
      */
     public IAtomContainer getSchuffenhauerScaffold(IAtomContainer aMolecule, boolean anIsAromaticitySet, ElectronDonation anElectronDonation) throws CDKException, CloneNotSupportedException {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
-        /*Determine aromaticity*/
+        /*Set aromaticity if necessary*/
         if(anIsAromaticitySet) {
-            /*Set aromaticity*/
+            /*Preprocessing*/
             AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpClonedMolecule);
             CDKHydrogenAdder.getInstance(tmpClonedMolecule.getBuilder()).addImplicitHydrogens(tmpClonedMolecule);
             Objects.requireNonNull(anElectronDonation, "If anIsAromaticitySet == true, anElectronDonation must be non null");
-            Aromaticity tmpAromaticity = new Aromaticity(anElectronDonation, ScaffoldGenerator.CYCLE_FINDER);
+            /*Choose the right CycleFinder*/
+            Aromaticity tmpAromaticity = new Aromaticity(anElectronDonation, this.getCycleFinder(tmpClonedMolecule));
+            //Set aromaticity
             tmpAromaticity.apply(tmpClonedMolecule);
         }
         /*Clear the stereo chemistry of the molecule*/
@@ -160,9 +172,7 @@ public class ScaffoldGenerator {
     public List<IAtomContainer> getRings(IAtomContainer aMolecule, boolean anIsKeepingNonSingleBonds) throws CloneNotSupportedException, Intractable {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
         /*Generate cycles*/
-        CycleFinder tmpCycleFinder = ScaffoldGenerator.CYCLE_FINDER;
-        Cycles tmpNewCycles = tmpCycleFinder.find(tmpClonedMolecule);
-        //Cycles tmpNewCycles = Cycles.relevant(tmpClonedMolecule);
+        Cycles tmpNewCycles = this.getCycleFinder(tmpClonedMolecule).find(tmpClonedMolecule);
         IRingSet tmpRingSet = tmpNewCycles.toRingSet();
         List<IAtomContainer> tmpCycles = new ArrayList<>(tmpNewCycles.numberOfCycles());
         int tmpCycleNumber = tmpNewCycles.numberOfCycles();
@@ -286,9 +296,8 @@ public class ScaffoldGenerator {
             }
         }
         /*Add all atoms of rings that are not to be removed to tmpDoNotRemove*/
-        CycleFinder tmpCycleFinder = ScaffoldGenerator.CYCLE_FINDER;
         //Get all cycles of the molecule
-        Cycles tmpCycles = tmpCycleFinder.find(tmpMoleculeClone);
+        Cycles tmpCycles = this.getCycleFinder(tmpMoleculeClone).find(tmpMoleculeClone);
         HashSet<Integer> tmpRingPropertyCounter = new HashSet(tmpRingClone.getAtomCount(), 1);
         //Save the properties of the ring
         for(IAtom tmpRingAtom : tmpRingClone.atoms()) {
@@ -702,8 +711,21 @@ public class ScaffoldGenerator {
     public List<IAtomContainer> applySchuffenhauerRules(IAtomContainer aMolecule, boolean anIsAromaticitySet, ElectronDonation anElectronDonation, boolean anIsRuleSevenUsed) throws CloneNotSupportedException, CDKException {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
         IAtomContainer tmpSchuffenhauer = this.getSchuffenhauerScaffold(tmpClonedMolecule,anIsAromaticitySet ,anElectronDonation );
+        /*All molecules with an atom-to-ring ratio of less than 2.5 are assigned the CYCLE_FINDER_BACKUP_PROPERTY = true property,
+         since too many rings were probably detected. This value was determined on the basis of Adamantane.*/
+        int tmpRingNumber = this.getRings(tmpSchuffenhauer, false).size();
+        float tmpRingAtomRatio = (float) tmpSchuffenhauer.getAtomCount() / tmpRingNumber;
+        if(tmpRingAtomRatio < 2.5 ) {
+            /*Change the property of all atoms of the molecule*/
+            for(IAtom tmpAtom : tmpClonedMolecule.atoms()) {
+                tmpAtom.setProperty(ScaffoldGenerator.CYCLE_FINDER_BACKUP_PROPERTY, true);
+            }
+            /*Apply the new Cyclefinder to the molecules*/
+            tmpRingNumber = this.getRings(tmpSchuffenhauer, false).size();
+            tmpSchuffenhauer = this.getSchuffenhauerScaffold(tmpClonedMolecule,anIsAromaticitySet ,anElectronDonation );
+        }
         //List of all generated fragments
-        List<IAtomContainer> tmpSchuffenhauerFragments = new ArrayList<>(this.getRings(tmpSchuffenhauer, false).size());
+        List<IAtomContainer> tmpSchuffenhauerFragments = new ArrayList<>(tmpRingNumber);
         tmpSchuffenhauerFragments.add(tmpSchuffenhauer);
         /*Go through all the fragments generated and try to break them down further*/
         for(int tmpCounter = 0 ; tmpCounter < tmpSchuffenhauerFragments.size(); tmpCounter++) {
@@ -877,8 +899,7 @@ public class ScaffoldGenerator {
         boolean tmpHasRemovableMacroCycle = false;
         for(IAtomContainer tmpRing : aRings) {
             /*To determine the ring size, the exocyclic atoms must be removed*/
-            CycleFinder tmpCycleFinder = ScaffoldGenerator.CYCLE_FINDER;
-            Cycles tmpRemovedExocyclic = tmpCycleFinder.find(tmpRing);
+            Cycles tmpRemovedExocyclic = this.getCycleFinder(tmpRing).find(tmpRing);
             /*Check whether there are any removable macrocycles at all*/
             if(tmpRemovedExocyclic.toRingSet().getAtomContainer(0).getAtomCount() > 11 ) {
                 tmpHasRemovableMacroCycle = true;
@@ -966,12 +987,34 @@ public class ScaffoldGenerator {
         /*Calculate the delta values for all rings*/
         for(IAtomContainer tmpRing : aRings) {
             IAtomContainer tmpRingRemoved = this.removeRing(tmpClonedMolecule, tmpRing); //Remove the ring
-            CycleFinder tmpCycleFinder = ScaffoldGenerator.CYCLE_FINDER;
-            Cycles tmpCycles = tmpCycleFinder.find(tmpRingRemoved); //get cycle number(nR)
+
+            //-----Eliminate Cycle Error-----
+            Cycles tmpCycles = null;
+            Iterable<IAtomContainer> tmpCycleIterable = null;
+            /*With a few molecules, an error occurs with the relevant CycleFinder. Then the mcb CycleFinder is automatically used.*/
+            try {
+                tmpCycles = this.getCycleFinder(tmpRingRemoved).find(tmpRingRemoved); //get cycle number(nR)
+                tmpCycleIterable = tmpCycles.toRingSet().atomContainers();
+            } catch (NegativeArraySizeException e) {
+                /*Save as a property of the atoms that from now on the CYCLE_FINDER_BACKUP is to be used*/
+                for(IAtomContainer tmpOriginalRing : aRings) {
+                    for(IAtom tmpAtom : tmpOriginalRing.atoms()) {
+                        tmpAtom.setProperty(ScaffoldGenerator.CYCLE_FINDER_BACKUP_PROPERTY, true);
+                    }
+                }
+                for(IAtom tmpAtom : aMolecule.atoms()) {
+                    tmpAtom.setProperty(ScaffoldGenerator.CYCLE_FINDER_BACKUP_PROPERTY, true);
+                }
+                for(IAtom tmpAtom : tmpRingRemoved.atoms()) {
+                    tmpAtom.setProperty(ScaffoldGenerator.CYCLE_FINDER_BACKUP_PROPERTY, true);
+                }
+                tmpCycles = this.getCycleFinder(tmpRingRemoved).find(tmpRingRemoved); //get cycle number(nR)
+                tmpCycleIterable = tmpCycles.toRingSet().atomContainers();
+            }
             HashSet<IBond> tmpCycleBonds = new HashSet(aRings.size());
             int tmpFusedRingBondCounter = 0; // Number of bonds being a member in more than one ring(nrrb)
             /*Count nrrb*/
-            for(IAtomContainer tmpCycle : tmpCycles.toRingSet().atomContainers()) { //Go through all cycle
+            for(IAtomContainer tmpCycle : tmpCycleIterable) { //Go through all cycle
                 for(IBond tmpBond : tmpCycle.bonds()) { //Go through all bonds of each cycle
                     //If the bond is already included in the list, it occurs in several rings
                     if(tmpCycleBonds.contains(tmpBond)) {
@@ -1027,10 +1070,9 @@ public class ScaffoldGenerator {
     public List<IAtomContainer> applySchuffenhauerRuleSix(List<IAtomContainer> aRings) throws CDKException {
         List<IAtomContainer> tmpReturnRingList = new ArrayList<>(aRings.size());
         /*Size 3, 5 and 6 rings will be added to the list if present*/
-        CycleFinder tmpCycleFinder = ScaffoldGenerator.CYCLE_FINDER;
         for(IAtomContainer tmpRing : aRings) {
             //To determine the ring size, the exocyclic atoms must be removed
-            Cycles tmpRemovedExocyclic = tmpCycleFinder.find(tmpRing);
+            Cycles tmpRemovedExocyclic = this.getCycleFinder(tmpRing).find(tmpRing);
             IAtomContainer tmpRemovedExoRing = tmpRemovedExocyclic.toRingSet().getAtomContainer(0);
             if(tmpRemovedExoRing.getAtomCount() == 3 || tmpRemovedExoRing.getAtomCount() == 5 || tmpRemovedExoRing.getAtomCount() == 6) {
                 tmpReturnRingList.add(tmpRing);
@@ -1059,11 +1101,10 @@ public class ScaffoldGenerator {
     public List<IAtomContainer> applySchuffenhauerRuleSeven(IAtomContainer aMolecule, List<IAtomContainer> aRings, boolean anIsAromaticitySet, ElectronDonation anElectronDonation) throws CDKException, CloneNotSupportedException {
         System.out.println("Input Ring Number: " + aRings.size());
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
-        Aromaticity tmpAromaticity = new Aromaticity(anElectronDonation, ScaffoldGenerator.CYCLE_FINDER);
+        Aromaticity tmpAromaticity = new Aromaticity(anElectronDonation, this.getCycleFinder(tmpClonedMolecule));
         tmpAromaticity.apply(tmpClonedMolecule);
-        CycleFinder tmpCycleFinder = ScaffoldGenerator.CYCLE_FINDER;
         //Remove exocyclic atoms
-        Cycles tmpRemovedExocyclic = tmpCycleFinder.find(tmpClonedMolecule);
+        Cycles tmpRemovedExocyclic = this.getCycleFinder(tmpClonedMolecule).find(tmpClonedMolecule);
         /*Check that the ring system is fully aromatic*/
         for(IAtomContainer tmpRing : tmpRemovedExocyclic.toRingSet().atomContainers()) {
             for(IAtom tmpAtom : tmpRing.atoms()) {
@@ -1096,7 +1137,7 @@ public class ScaffoldGenerator {
             tmpAromaticity.apply(tmpRingsRemoved);
             boolean tmpIsRingRemovedAromatic = true;
             //Remove the exocyclic double bonds
-            Cycles tmpRemovedExocyclicFragment = tmpCycleFinder.find(tmpRingsRemoved);
+            Cycles tmpRemovedExocyclicFragment = this.getCycleFinder(tmpRingsRemoved).find(tmpRingsRemoved);
             for(IAtomContainer tmpCycle : tmpRemovedExocyclicFragment.toRingSet().atomContainers()) {
                 /*Investigate each Atom of each ring*/
                 for(IAtom tmpCycleAtom : tmpCycle.atoms()) {
@@ -1122,11 +1163,10 @@ public class ScaffoldGenerator {
 
     public boolean ruleSevenTest(IAtomContainer aMolecule, List<IAtomContainer> aRings , boolean anIsAromaticitySet, ElectronDonation anElectronDonation) throws CDKException, CloneNotSupportedException {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
-        Aromaticity tmpAromaticity = new Aromaticity(anElectronDonation, ScaffoldGenerator.CYCLE_FINDER);
+        Aromaticity tmpAromaticity = new Aromaticity(anElectronDonation, this.getCycleFinder(tmpClonedMolecule));
         tmpAromaticity.apply(tmpClonedMolecule);
-        CycleFinder tmpCycleFinder = ScaffoldGenerator.CYCLE_FINDER;
         //Remove exocyclic atoms
-        Cycles tmpRemovedExocyclic = tmpCycleFinder.find(tmpClonedMolecule);
+        Cycles tmpRemovedExocyclic = this.getCycleFinder(tmpClonedMolecule).find(tmpClonedMolecule);
         /*Check that the ring system is fully aromatic*/
         for(IAtomContainer tmpRing : tmpRemovedExocyclic.toRingSet().atomContainers()) {
             for(IAtom tmpAtom : tmpRing.atoms()) {
@@ -1154,7 +1194,7 @@ public class ScaffoldGenerator {
             tmpAromaticity.apply(tmpRingsRemoved);
             boolean tmpIsRingRemovedAromatic = true;
             //Remove the exocyclic double bonds
-            Cycles tmpRemovedExocyclicFragment = tmpCycleFinder.find(tmpRingsRemoved);
+            Cycles tmpRemovedExocyclicFragment = this.getCycleFinder(tmpRingsRemoved).find(tmpRingsRemoved);
             for(IAtomContainer tmpCycle : tmpRemovedExocyclicFragment.toRingSet().atomContainers()) {
                 /*Investigate each Atom of each ring*/
                 for(IAtom tmpCycleAtom : tmpCycle.atoms()) {
@@ -1190,17 +1230,11 @@ public class ScaffoldGenerator {
      */
     public List<IAtomContainer> applySchuffenhauerRuleEight(List<IAtomContainer> aRings) throws CDKException {
         List<IAtomContainer> tmpReturnRingList = new ArrayList<>(aRings.size());
-        CycleFinder tmpCycleFinder = ScaffoldGenerator.CYCLE_FINDER;
-        int tmpMinNumberOfHeteroAtoms = 0;
-        /*Calculate the maximum number of heteroatoms that can occur*/
-        for(IAtomContainer tmpRing : aRings) {
-            //This value must only be higher than the actual minimum number of heteroatoms
-            tmpMinNumberOfHeteroAtoms = tmpMinNumberOfHeteroAtoms + tmpRing.getAtomCount();
-        }
+        Integer tmpMinNumberOfHeteroAtoms = null;
         /*Store the rings with the lowest number of cyclic heteroatoms*/
         for(IAtomContainer tmpRing : aRings) {
             //get the cyclic atoms
-            Cycles tmpRemovedExocyclic = tmpCycleFinder.find(tmpRing);
+            Cycles tmpRemovedExocyclic = this.getCycleFinder(tmpRing).find(tmpRing);
             //Number of heteroatoms in the ring
             int tmpNumberOfHeteroAtoms = 0;
             /*Count the heteroatoms*/
@@ -1208,6 +1242,10 @@ public class ScaffoldGenerator {
                 if(tmpAtom.getSymbol() != "C") {
                     tmpNumberOfHeteroAtoms++;
                 }
+            }
+            //Set the value of the first ring as starting value
+            if(tmpMinNumberOfHeteroAtoms == null) {
+                tmpMinNumberOfHeteroAtoms = tmpNumberOfHeteroAtoms;
             }
             /*If the number of heteroatoms matches the number of least heteroatoms so far, add the ring to the list*/
             if(tmpNumberOfHeteroAtoms == tmpMinNumberOfHeteroAtoms) {
@@ -1238,24 +1276,17 @@ public class ScaffoldGenerator {
      */
     public List<IAtomContainer> applySchuffenhauerRuleNine(List<IAtomContainer> aRings) throws CDKException {
         List<IAtomContainer> tmpReturnRingList = new ArrayList<>(aRings.size());
-        CycleFinder tmpCycleFinder = ScaffoldGenerator.CYCLE_FINDER;
         /*Calculate the maximum number of heteroatoms that can occur*/
-        int tmpMinNCount = 0;
-        int tmpMinOCount = 0;
-        int tmpMinSCount = 0;
-        for(IAtomContainer tmpRing : aRings) {
-            //This value must only be higher than the actual minimum number of heteroatoms
-            tmpMinNCount = tmpMinNCount + tmpRing.getAtomCount();
-            tmpMinOCount = tmpMinOCount + tmpRing.getAtomCount();
-            tmpMinSCount = tmpMinSCount + tmpRing.getAtomCount();
-        }
+        Integer tmpMinNCount = null;
+        Integer tmpMinOCount = null;
+        Integer tmpMinSCount = null;
         /*Get the rings with with the the smallest value of heteroatoms*/
         for(IAtomContainer tmpRing : aRings) {
             //Only cyclic heteroatoms count
-            Cycles tmpRemovedExocyclic = tmpCycleFinder.find(tmpRing);
-            int tmpNCounter = 0;
-            int tmpOCounter = 0;
-            int tmpSCounter = 0;
+            Cycles tmpRemovedExocyclic = this.getCycleFinder(tmpRing).find(tmpRing);
+            Integer tmpNCounter = 0;
+            Integer tmpOCounter = 0;
+            Integer tmpSCounter = 0;
             /*Record the composition of the heteroatoms for each ring */
             for(IAtom tmpAtom : tmpRemovedExocyclic.toRingSet().getAtomContainer(0).atoms()) {
                 if(tmpAtom.getSymbol() == "N") {
@@ -1267,6 +1298,13 @@ public class ScaffoldGenerator {
                 if(tmpAtom.getSymbol() == "S") {
                     tmpSCounter++;
                 }
+            }
+            /*Search for the ring with lowest value of heteroatoms*/
+            //Set the values of the first ring as starting values
+            if(tmpMinNCount == null) {
+                tmpMinNCount = tmpNCounter;
+                tmpMinOCount = tmpOCounter;
+                tmpMinSCount = tmpSCounter;
             }
             //If the ring contains more N than the previous minimum, it is not eligible for removal
             if(tmpNCounter > tmpMinNCount) {
@@ -1328,19 +1366,17 @@ public class ScaffoldGenerator {
      */
     public List<IAtomContainer> applySchuffenhauerRuleTen(List<IAtomContainer> aRings) throws CDKException {
         List<IAtomContainer> tmpReturnRingList = new ArrayList<>(aRings.size());
-        CycleFinder tmpCycleFinder = ScaffoldGenerator.CYCLE_FINDER;
-        int tmpMinimumAtomNumber = 0;
-        /*Calculate the maximum number of atoms that can occur*/
-        for(IAtomContainer tmpRing : aRings) {
-            //This value must only be higher than the actual minimum number of atoms
-            tmpMinimumAtomNumber = tmpMinimumAtomNumber + tmpRing.getAtomCount();
-        }
+        Integer tmpMinimumAtomNumber = null;
         /*Store the rings with the lowest number of atoms*/
         for(IAtomContainer tmpRing : aRings) {
             //Remove the exocyclic atoms
-            Cycles tmpRemovedExocyclic = tmpCycleFinder.find(tmpRing);
+            Cycles tmpRemovedExocyclic = this.getCycleFinder(tmpRing).find(tmpRing);
             IAtomContainer tmpCycle = tmpRemovedExocyclic.toRingSet().getAtomContainer(0);
             int tmpAtomNumber = tmpCycle.getAtomCount();
+            /*Set the values of the first ring as starting values*/
+            if(tmpMinimumAtomNumber == null) {
+                tmpMinimumAtomNumber = tmpAtomNumber;
+            }
             /*If the number of atoms matches the number of least atoms so far, add the ring to the list*/
             if(tmpAtomNumber == tmpMinimumAtomNumber) {
                 tmpReturnRingList.add(tmpRing);
@@ -1369,12 +1405,11 @@ public class ScaffoldGenerator {
      */
     public List<IAtomContainer> applySchuffenhauerRuleEleven(List<IAtomContainer> aRings) throws CDKException {
         List<IAtomContainer> tmpReturnRingList = new ArrayList<>(aRings.size());
-        CycleFinder tmpCycleFinder = ScaffoldGenerator.CYCLE_FINDER;
         /*Add all fully aromatic rings to the list*/
         for(IAtomContainer tmpRing  : aRings) {
             boolean tmpIsAromatic = true;
             //Remove the exocyclic atoms
-            Cycles tmpRemovedExocyclic = tmpCycleFinder.find(tmpRing);
+            Cycles tmpRemovedExocyclic = this.getCycleFinder(tmpRing).find(tmpRing);
             IAtomContainer tmpCycle = tmpRemovedExocyclic.toRingSet().getAtomContainer(0);
             /*The ring is only fully aromatic, if all cyclic atoms are aromatic*/
             for(IAtom tmpAtom : tmpCycle.atoms()) {
@@ -1396,7 +1431,7 @@ public class ScaffoldGenerator {
     }
 
     /**
-     * Sort out the rings according to the twelfth  Schuffenhauer rule.
+     * Sort out the rings according to the twelfth Schuffenhauer rule.
      * Based on the twelfth rule from the "The Scaffold Tree" Paper by Schuffenhauer et al.
      * The rule says: Remove Rings First Where the Linker Is Attached
      * to a Ring Heteroatom at Either End of the Linker.
@@ -1566,5 +1601,34 @@ public class ScaffoldGenerator {
         }
         //If none of the cases apply, it is not one of the rings we are looking for
         return false;
+    }
+
+    /**
+     * Selects the correct CycleFinder based on ScaffoldGenerator.CYCLE_FINDER_BACKUP_PROPERTY.
+     * @param aMolecule Molecule for which a CycleFinder is to be generated
+     * @return CycleFinder that matches the properties of the molecule
+     */
+    private CycleFinder getCycleFinder(IAtomContainer aMolecule) {
+        boolean tmpIsBackupFinderUsed = false;
+        /*Check whether the backup Cycle finder should be used*/
+        for(IAtom tmpAtom : aMolecule.atoms()) {
+            /*If no CycleFinder has been assigned to the Atom yet*/
+            if(tmpAtom.getProperty(ScaffoldGenerator.CYCLE_FINDER_BACKUP_PROPERTY) == null) {
+                //The ScaffoldGenerator.CYCLE_FINDER is used by default
+                tmpAtom.setProperty(ScaffoldGenerator.CYCLE_FINDER_BACKUP_PROPERTY, false);
+                continue;
+            }
+            /*If one of the atoms has been assigned to the ScaffoldGenerator.CYCLE_FINDER_BACKUP cycle finder, it is used.*/
+            if(tmpAtom.getProperty(ScaffoldGenerator.CYCLE_FINDER_BACKUP_PROPERTY).equals(true)) {
+                tmpIsBackupFinderUsed = true;
+                break;
+            }
+        }
+        /*Return the right CycleFinder*/
+        if(tmpIsBackupFinderUsed == true) {
+            return ScaffoldGenerator.CYCLE_FINDER_BACKUP;
+        } else {
+            return ScaffoldGenerator.CYCLE_FINDER;
+        }
     }
 }
