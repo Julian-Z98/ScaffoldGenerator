@@ -2042,8 +2042,8 @@ public class ScaffoldGeneratorTest {
                             DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
                             BufferedImage tmpImgMod = tmpGenerator.depict(tmpMolecule).toImg();
                             /*Save the picture*/
-                            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Conspicuous/" + tmpCoconutID + tmpIsMoleculeRemovable + ".png").mkdirs();
-                            File tmpOutputMod = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Conspicuous/" + tmpCoconutID + tmpIsMoleculeRemovable + ".png");
+                            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Conspicuous/" + tmpCoconutID + ".png").mkdirs();
+                            File tmpOutputMod = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Conspicuous/" + tmpCoconutID + ".png");
                             ImageIO.write(tmpImgMod, "png" ,tmpOutputMod);
                             System.out.println("Conspicuous: " + tmpCoconutID);
                             tmpFusedRingCounter++;
