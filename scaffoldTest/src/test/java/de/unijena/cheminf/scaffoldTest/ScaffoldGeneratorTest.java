@@ -27,9 +27,12 @@ import org.junit.Test;
 import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.DefaultChemObjectBuilder;
+import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.aromaticity.ElectronDonation;
 import org.openscience.cdk.depict.DepictionGenerator;
 import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.graph.CycleFinder;
+import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomType;
@@ -49,6 +52,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -112,10 +116,11 @@ public class ScaffoldGeneratorTest {
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("[S+]#S1CCCCC1"); //Triple bond
         //IAtomContainer tmpMolecule = tmpParser.parseSmiles("P=[P+]1CCCCC1"); // P=P Test
-        //tmpMolecule = tmpParser.parseSmiles("[H]OC1([H])C2([H])OC3([H])C([H])(O[H])C([H])(O[H])C([H])(OC4([H])C([H])(O[H])C([H])(O[H])C([H])(OC5([H])C([H])(O[H])C([H])(O[H])C([H])(OC6([H])C([H])(O[H])C([H])(O[H])C([H])(OC7([H])C([H])(O[H])C([H])(O[H])C([H])(OC8([H])C([H])(O[H])C([H])(O[H])C([H])(OC9([H])C([H])(O[H])C([H])(O[H])C([H])(OC%10([H])C([H])(O[H])C([H])(O[H])C([H])(OC%11([H])C([H])(O[H])C([H])(O[H])C([H])(OC([H])(C1([H])O[H])C([H])(O2)C([H])([H])O[H])OC%11([H])C([H])([H])O[H])OC%10([H])C([H])([H])O[H])OC9([H])C([H])([H])O[H])OC8([H])C([H])([H])O[H])OC7([H])C([H])([H])O[H])OC6([H])C([H])([H])O[H])OC5([H])C([H])([H])O[H])OC4([H])C([H])([H])O[H])OC3([H])C([H])([H])O[H]"); // Test
+        tmpMolecule = tmpParser.parseSmiles("S=P12N=P3(OC=4C=CC(C=NN(C)P(=S)(C=5C=CC=CC5)N(N=CC=6C=CC(OP(=NP(=S)(OC=7C=CC(C=NN(C)P(=S)(C=8C=CC=CC8)N(N=CC=9C=CC(O1)=CC9)C)=CC7)OC=%10C=CC(C=NN(C)P(=S)(C=%11C=CC=CC%11)N(N=CC=%12C=CC(O2)=CC%12)C)=CC%10)(OC=%13C=CC(C=NN(C)P(=S)(C=%14C=CC=CC%14)N(N=CC=%15C=CC(O3)=CC%15)C)=CC%13)C=%16C=CC=CC%16)=CC6)C)=CC4)C=%17C=CC=CC%17"); // Test
         //IAtomContainer tmpMolecule = tmpParser.parseSmiles("S=S1CCCCC1"); //S=S Test
         /*Generate picture of the Original*/
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+        tmpMolecule = AtomContainerManipulator.removeHydrogens(tmpMolecule);
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpMolecule).toImg();
         /*Save the picture*/
         new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCDoubleBond/Original.png").mkdirs();
@@ -685,7 +690,10 @@ public class ScaffoldGeneratorTest {
         //tmpMolecule = tmpParser.parseSmiles("C5CCN(CCC3CN(CCC1CCNC1)CN(CCN2CCCC2)C3CCC4CCCN4)C5"); //Rule 12
         //tmpMolecule = tmpParser.parseSmiles("C5CCN(C3CN(C1CCCN1)C(C2CCNC2)N3N4CCCC4)C5"); //Rule 12
         //tmpMolecule = tmpParser.parseSmiles("[I+]=C(NC1CCCN1)C4C(CCN2CCCC2)CN(CCC3CCNC3)CN4CCN5CCCC5"); //Rule 12
-        tmpMolecule = tmpParser.parseSmiles("O=C(O)C1CCC(=CO)C(CCCNC=2C=CC(=C[NH+]2)C=3C=CC=4C=CC5C#CCC67CC=CC89C=C%10C(=C%11C=CC=CC%11=CC%10C(C%12=C(C8)C%13%14C%15CCCC%14(CC%12)C1(C=CC%16C%13CCC%17%16CC%18CCC(C=%19C=CC=CC%19)CC%18C%17)C%15O)(CCC6O)C97)C5C4C3)C%20CCCCC%20");
+        tmpMolecule = tmpParser.parseSmiles("O=C(O)C1CCC(=CO)C(CCCNC2=CC=C(C=[NH+]2)C=3C=CC=C(C3)CC4=C5C=CC=CC5=CC6C4=CC78C=CCC9(C)C(O)CCC6(C%10=C(C7)C%11%12CC(O)C%131C=CC%14C%15%16CCC%14%12C(C=CC%16CC(CC=%17C=CC=CC%17CCCCC)C%15)CC(C%10)C%13%11C)C89)C%18CCCCC%18");
+        tmpMolecule = tmpParser.parseSmiles("[H]OC(=O)C1([H])C23C([H])=C([H])C4([H])C56C7(C8=C(C9%10C%11([H])C(C(=C%12C(C([H])=C([H])C([H])=C%12[H])=C%11[H])C([H])([H])C%13=C([H])C(C=%14C([H])=C([H])C(N([H])C([H])([H])C([H])([H])C([H])([H])C([H])(C(=C([H])O[H])C([H])([H])C1([H])[H])C%15([H])C([H])([H])C([H])([H])C([H])([H])C([H])([H])C%15([H])[H])=[N+]([H])C%14[H])=C([H])C([H])=C%13[H])=C([H])C%16(C([H])=C([H])C([H])([H])C(C([H])(O[H])C([H])([H])C9([H])[H])(C%16%10[H])C([H])([H])[H])C8([H])[H])C([H])([H])C([H])(C72C([H])([H])[H])C([H])([H])C6([H])C([H])=C([H])C%17([H])C4(C([H])([H])C([H])(C([H])([H])C=%18C(=C([H])C([H])=C([H])C%18[H])C([H])([H])C([H])([H])C([H])([H])C([H])([H])C([H])([H])[H])C%17([H])[H])C([H])([H])C5([H])[H])C([H])([H])C3([H])O[H]");
+        tmpMolecule = tmpParser.parseSmiles("S=P12N=P3(OC=4C=CC(C=NN(C)P(=S)(C=5C=CC=CC5)N(N=CC=6C=CC(OP(=NP(=S)(OC=7C=CC(C=NN(C)P(=S)(C=8C=CC=CC8)N(N=CC=9C=CC(O1)=CC9)C)=CC7)OC=%10C=CC(C=NN(C)P(=S)(C=%11C=CC=CC%11)N(N=CC=%12C=CC(O2)=CC%12)C)=CC%10)(OC=%13C=CC(C=NN(C)P(=S)(C=%14C=CC=CC%14)N(N=CC=%15C=CC(O3)=CC%15)C)=CC%13)C=%16C=CC=CC%16)=CC6)C)=CC4)C=%17C=CC=CC%17");
+        //tmpMolecule = tmpParser.parseSmiles("OCC1OC2OC3C(O)C(O)C(OC3CO)OC4C(O)C(O)C(OC4CO)OC5C(O)C(O)C(OC5CO)OC6C(O)C(O)C(OC6CO)OC7C(O)C(O)C(OC7CO)OC8C(O)C(O)C(OC8CO)OC9C(O)C(O)C(OC9CO)OC%10C(O)C(O)C(OC%10CO)OC%11C(O)C(O)C(OC%11CO)OC1C(O)C2O");
         /*Generate picture of molecule*/
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
         List<IAtomContainer> tmpSchuffenhauerFragments = scaffoldGenerator.applySchuffenhauerRules(tmpMolecule, true, ElectronDonation.cdk(), false);
@@ -699,9 +707,7 @@ public class ScaffoldGeneratorTest {
             File tmpOutputFragment = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/RulesSMILESTest/Fragment" + tmpCounter + ".png");
             ImageIO.write(tmpImgFragment, "png", tmpOutputFragment);
         }
-
     }
-
     /**
      * Test of ScaffoldGenerator.getSchuffenhauerScaffold() with SMILES.
      * Loads Scheme 1 from the "The Scaffold Tree" Paper by Schuffenhauer et al as SMILES and generates SchuffenhauerScaffold.
@@ -716,7 +722,7 @@ public class ScaffoldGeneratorTest {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1=C(C(=NO1)C2=C(C=CC=C2Cl)F)C(=O)NC3C4N(C3=O)C(C(S4)(C)C)C(=O)O");
-        //tmpMolecule = tmpParser.parseSmiles("O=[P-]1(=O)CCCCC1");
+        //tmpMolecule = tmpParser.parseSmiles("C=C1CCCCNC2=CC=C(C=[NH+]2)C=3C=CC=C(C3)CC4=CC=CC5C4=CC6CC7=C(CC8CC9C=CCCC%10C=CC(CCC1)C8C7C%109)C%115CCCCC6%11");
         /*Generate picture of the Original molecule*/
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
         BufferedImage tmpImgOriginal = tmpGenerator.depict(tmpMolecule).toImg();
@@ -1267,9 +1273,10 @@ public class ScaffoldGeneratorTest {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CCN(C1=CC=CC(=C1)C2=CC=NC3=C(C=NN23)C#N)C(=O)C"); //Original
+        //tmpMolecule = tmpParser.parseSmiles("c2cnc1ccnn1c2");
         //tmpMolecule = tmpParser.parseSmiles("c1(ccn2)n2cccn1");
-        tmpMolecule = tmpParser.parseSmiles("O=C(OC)N1C=NC=2C(=NC=NC21)N"); //better example for CDK
-        tmpMolecule = tmpParser.parseSmiles("[S-]C1=NC=NC2=C1C=NN2C=3C=CC=CC3");
+        //tmpMolecule = tmpParser.parseSmiles("O=C(OC)N1C=NC=2C(=NC=NC21)N"); //better example for CDK
+        //tmpMolecule = tmpParser.parseSmiles("[S-]C1=NC=NC2=C1C=NN2C=3C=CC=CC3");
         /*Generate picture of the SchuffenhauerScaffold*/
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
         //Generate SchuffenhauerScaffold
@@ -1297,6 +1304,47 @@ public class ScaffoldGeneratorTest {
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
         //assertEquals(tmpSmilesGenerator.create(tmpRule.get(2)), "C1=CCC=CCN1");
     }
+
+    /**
+     * Test that illustrates aromaticity detection for pyrimidine, pyrazole, and their combination in
+     * pyrazolo[1,5-a]pyrimidine, which is used in Scheme 12 for illustrating rule 7. Different cycle finder algorithms
+     * and electron donation models are combined and the results printed as SMILES strings with aromaticity encoded.
+     *
+     * @throws Exception if anything goes wrong
+     */
+    @Test
+    public void pyrazoloPyrimidineElectronDonationAndCycleFinderTest() throws Exception {
+        String tmpPyrimidineSMILES = "C1=CC=NC=N1";
+        String tmpPyrazoleSMILES = "C1=CC=NN1";
+        String tmpPyrazoloPyrimidineSMILES = "N1(C=CC=N2)C2=CC=N1";
+        HashMap<String, String> tmpMoleculesMap = new HashMap<>(5, 1);
+        tmpMoleculesMap.put(tmpPyrimidineSMILES, "pyrimidine");
+        tmpMoleculesMap.put(tmpPyrazoleSMILES, "pyrazole");
+        tmpMoleculesMap.put(tmpPyrazoloPyrimidineSMILES, "Pyrazolo[1,5-a]pyrimidine");
+        SmilesParser tmpSmiPar = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        SmilesGenerator tmpSmiGen = new SmilesGenerator(SmiFlavor.Unique | SmiFlavor.UseAromaticSymbols);
+        HashMap<ElectronDonation, String> tmpElectronDonationModelsMap = new HashMap(6, 1);
+        tmpElectronDonationModelsMap.put(ElectronDonation.cdk(), "CDK");
+        tmpElectronDonationModelsMap.put(ElectronDonation.cdkAllowingExocyclic(), "CDK exocyclic");
+        tmpElectronDonationModelsMap.put(ElectronDonation.daylight(), "Daylight");
+        tmpElectronDonationModelsMap.put(ElectronDonation.piBonds(), "pi bonds");
+        CycleFinder[] tmpCycleFinders = {Cycles.all(), Cycles.cdkAromaticSet(), Cycles.mcb(), Cycles.relevant()};
+        for (String tmpSMILES : tmpMoleculesMap.keySet()) {
+            System.out.println("\n" + tmpMoleculesMap.get(tmpSMILES));
+            for (CycleFinder tmpCF : tmpCycleFinders) {
+                System.out.println("\n\t" + tmpCF);
+                for (ElectronDonation tmpEDmodel : tmpElectronDonationModelsMap.keySet()) {
+                    Aromaticity tmpAromaticityModel = new Aromaticity(tmpEDmodel, tmpCF);
+                    IAtomContainer tmpMolecule = tmpSmiPar.parseSmiles(tmpSMILES);
+                    AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpMolecule);
+                    tmpAromaticityModel.apply(tmpMolecule);
+                    int tmpNumberOfRings = tmpCF.find(tmpMolecule).numberOfCycles();
+                    System.out.println("\t\t" + tmpElectronDonationModelsMap.get(tmpEDmodel) + " " + tmpNumberOfRings + " " + tmpSmiGen.create(tmpMolecule));
+                }
+            }
+        }
+    }
+
 
     /**
      * Loads Scheme 13 from the "The Scaffold Tree" Paper by Schuffenhauer et al as SMILES.
@@ -1347,6 +1395,9 @@ public class ScaffoldGeneratorTest {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("C1CN(CC2=C1SC=C2)CC3=CC=CC=C3Cl.Cl");
+        //tmpMolecule = tmpParser.parseSmiles("C2CC1NCOCC1NS2");
+        //tmpMolecule = tmpParser.parseSmiles("N=C2CC1NCOCC1NS2");
+        //tmpMolecule = tmpParser.parseSmiles("P=S2C1NPPPC1S(=P)S(=P)S2=P");
         /*Generate picture of the SchuffenhauerScaffold*/
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
         //Generate SchuffenhauerScaffold
@@ -1738,22 +1789,24 @@ public class ScaffoldGeneratorTest {
     //<editor-fold desc="Speed Tests">
     /**
      * Speed test for the getSchuffenhauerScaffold() Method with over 400000 molecules from the COCONUT DB.
-     * @throws FileNotFoundException if COCONUT DB not found
+     * @throws CDKException problem with the AtomContainerManipulator
+     * @throws IOException if COCONUT DB not found
      */
     @Ignore
     @Test
-    public void calculateSchuffenhauerSpeedTest() throws FileNotFoundException {
+    public void calculateSchuffenhauerSpeedTest() throws IOException, CDKException {
         this.ScaffoldGeneratorSpeedTest(true, false, false, false, true, 4242);
     }
 
     /**
      * Speed test for the getRings() Method with over 400000 molecules from the COCONUT DB.
      * getSchuffenhauerScaffold() must also be executed for all molecules.
-     * @throws FileNotFoundException if COCONUT DB not found
+     * @throws CDKException problem with the AtomContainerManipulator
+     * @throws IOException if COCONUT DB not found
      */
     @Ignore
     @Test
-    public void calculateRingsSpeedTest() throws FileNotFoundException {
+    public void calculateRingsSpeedTest() throws IOException, CDKException {
         this.ScaffoldGeneratorSpeedTest(false, true, false, false, true, 4242);
     }
 
@@ -1763,11 +1816,12 @@ public class ScaffoldGeneratorTest {
      * Skips all molecules with more than 1000 rings.
      * In this case, these are the molecules with the COCONUT IDs: CNP0022608, CNP0029543, CNP0065312 and CNP0103752.
      * Runtime
-     * @throws FileNotFoundException if COCONUT DB not found
+     * @throws CDKException problem with the AtomContainerManipulator
+     * @throws IOException if COCONUT DB not found
      */
     @Ignore
     @Test
-    public void calculateRemoveRingsSpeedTest() throws FileNotFoundException {
+    public void calculateRemoveRingsSpeedTest() throws IOException, CDKException {
         this.ScaffoldGeneratorSpeedTest(false, false, true, false, true, 4242);
     }
 
@@ -1777,11 +1831,12 @@ public class ScaffoldGeneratorTest {
      * Skips all molecules with more than 1000 rings.
      * In this case, these are the molecules with the COCONUT IDs: CNP0022608, CNP0029543, CNP0065312 and CNP0103752.
      * Runtime
-     * @throws FileNotFoundException if COCONUT DB not found
+     * @throws CDKException problem with the AtomContainerManipulator
+     * @throws IOException if COCONUT DB not found
      */
     @Ignore
     @Test
-    public void calculateApplySchuffenhauerRulesSpeedTest() throws FileNotFoundException {
+    public void calculateApplySchuffenhauerRulesSpeedTest() throws CDKException, IOException {
         this.ScaffoldGeneratorSpeedTest(false, false, false, true, true, 4242);
     }
 
@@ -1798,7 +1853,7 @@ public class ScaffoldGeneratorTest {
      * @throws FileNotFoundException if file not found
      */
     private void ScaffoldGeneratorSpeedTest(boolean anIsSchuffenhauerScaffoldCalculated, boolean anIsRingCalculated, boolean anIsRemoveRingCalculated,
-                                            boolean anIsApplySchuffenhauerCalculated, boolean anIsPictureCreated, int aPictureNumber) throws FileNotFoundException {
+                                            boolean anIsApplySchuffenhauerCalculated, boolean anIsPictureCreated, int aPictureNumber) throws IOException, CDKException {
         /*Counter*/
         int tmpExceptionCounter = 0;
         int tmpNumberCounter = 0;
@@ -1830,9 +1885,9 @@ public class ScaffoldGeneratorTest {
         /*Going through the library*/
         while (tmpReader.hasNext()) {
             String tmpCoconutID = null;
+            IAtomContainer tmpMolecule = (IAtomContainer) tmpReader.next();
+            tmpCoconutID = tmpMolecule.getProperty("coconut_id");
             try {
-                IAtomContainer tmpMolecule = (IAtomContainer) tmpReader.next();
-                tmpCoconutID = tmpMolecule.getProperty("coconut_id");
                 /*Calculate SchuffenhauerScaffolds*/
                 if(anIsSchuffenhauerScaffoldCalculated == true && anIsRingCalculated == false) {
                     tmpMolecule = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule, true, ElectronDonation.cdk());
@@ -1946,13 +2001,21 @@ public class ScaffoldGeneratorTest {
 
                 /*Calculate a list of molecules with iteratively removed terminal rings*/
                 if(anIsApplySchuffenhauerCalculated == true) {
-                    if(scaffoldGenerator.getRings(tmpMolecule,false).size() > 100) {
-                        tmpSkipCounter++;
-                        continue;
+                    //if(scaffoldGenerator.getRings(tmpMolecule,false).size() > 100000) {
+                     //   tmpSkipCounter++;
+                     //   continue;
+                    //}
+                    boolean tmpIsConspicuous = false;
+                    IAtomContainer tmpSchuff = scaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule, false, null);
+                    int tmpRingNumber =  scaffoldGenerator.getRings(tmpSchuff, false).size();
+                    float tmpRingAtomRatio = (float) tmpSchuff.getAtomCount() / tmpRingNumber;
+                    if(tmpRingAtomRatio < 2.5 ) {
+                        tmpIsConspicuous = true;
                     }
+
                     List<IAtomContainer> tmpIterations = scaffoldGenerator.applySchuffenhauerRules(tmpMolecule, true, ElectronDonation.cdk(), false);
                     if(anIsPictureCreated && (aPictureNumber) == tmpNumberCounter) {
-                        int tmpIterationCounter =0;
+                        int tmpIterationCounter = 0;
                         for(IAtomContainer tmpIteration : tmpIterations) {
                             /*Generate control pictures*/
                             DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
@@ -1969,7 +2032,22 @@ public class ScaffoldGeneratorTest {
                             tmpIterationCounter++;
                         }
                     }
+                    if(tmpIsConspicuous == true) {
+                        if(tmpNumberCounter != 141586){
+                            tmpMolecule = AtomContainerManipulator.removeHydrogens(tmpMolecule);
+                            //CDKHydrogenAdder.getInstance(tmpMolecule.getBuilder()).addImplicitHydrogens(tmpMolecule);
+                            DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+                            BufferedImage tmpImgMod = tmpGenerator.depict(tmpMolecule).toImg();
+                            /*Save the picture*/
+                            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Conspicuous/" + tmpCoconutID + ".png").mkdirs();
+                            File tmpOutputMod = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Conspicuous/" + tmpCoconutID + ".png");
+                            ImageIO.write(tmpImgMod, "png" ,tmpOutputMod);
+                            System.out.println("Conspicuous: " + tmpCoconutID);
+                            tmpFusedRingCounter++;
+                        }
+                    }
                 }
+
                 if(tmpCounter == 10000){
                     tmpCounter = 0;
                     System.out.println("At molecule Number: " + tmpNumberCounter);
@@ -2002,13 +2080,26 @@ public class ScaffoldGeneratorTest {
             catch(Exception e) {
                 System.out.println("Exception at number: " + tmpNumberCounter);
                 System.out.println("COCONUT ID: " + tmpCoconutID);
+                SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
+                System.out.println("SMILES: " + tmpSmilesGenerator.create(tmpMolecule));
                 /*Print out the exception stack trace*/
                 StringWriter sw = new StringWriter();
                 PrintWriter pw = new PrintWriter(sw);
                 e.printStackTrace(pw);
                 String sStackTrace = sw.toString();
                 System.out.println(sStackTrace);
+
                 tmpExceptionCounter++;
+
+
+                /*Generate control pictures*/
+                DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+                /*Generate and save molecule picture*/
+                tmpMolecule = AtomContainerManipulator.removeHydrogens(tmpMolecule);
+                BufferedImage tmpImgMol = tmpGenerator.depict(tmpMolecule).toImg();
+                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Exception/" + tmpCoconutID + ".png").mkdirs();
+                File tmpOutputMol = new File(System.getProperty("user.dir") +  "/scaffoldTestOutput/Exception/" + tmpCoconutID + ".png");
+                ImageIO.write(tmpImgMol, "png", tmpOutputMol);
             }
             tmpCounter++;
             tmpNumberCounter++;
