@@ -711,11 +711,11 @@ public class ScaffoldGenerator {
     public List<IAtomContainer> applySchuffenhauerRules(IAtomContainer aMolecule, boolean anIsAromaticitySet, ElectronDonation anElectronDonation, boolean anIsRuleSevenUsed) throws CloneNotSupportedException, CDKException {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
         IAtomContainer tmpSchuffenhauer = this.getSchuffenhauerScaffold(tmpClonedMolecule,anIsAromaticitySet ,anElectronDonation );
-        /*All molecules with an atom-to-ring ratio of less than 2.5 are assigned the CYCLE_FINDER_BACKUP_PROPERTY = true property,
-         since too many rings were probably detected. This value was determined on the basis of Adamantane.*/
+        /*All molecules with an atom-to-ring ratio of less than 1.0 are assigned the CYCLE_FINDER_BACKUP_PROPERTY = true property,
+         since too many rings were probably detected. The fact that a molecule has more rings than atoms seems concerning. That is why this value was chosen.*/
         int tmpRingNumber = this.getRings(tmpSchuffenhauer, false).size();
         float tmpRingAtomRatio = (float) tmpSchuffenhauer.getAtomCount() / tmpRingNumber;
-        if(tmpRingAtomRatio < 2.5 ) {
+        if(tmpRingAtomRatio < 1.0 ) {
             /*Change the property of all atoms of the molecule*/
             for(IAtom tmpAtom : tmpClonedMolecule.atoms()) {
                 tmpAtom.setProperty(ScaffoldGenerator.CYCLE_FINDER_BACKUP_PROPERTY, true);
