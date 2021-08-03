@@ -21,7 +21,6 @@ package de.unijena.cheminf.scaffoldTest;
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.aromaticity.Aromaticity;
-import org.openscience.cdk.aromaticity.ElectronDonation;
 import org.openscience.cdk.depict.DepictionGenerator;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.exception.Intractable;
@@ -69,26 +68,24 @@ public class ScaffoldGenerator {
     //<editor-fold desc="Fundamental Methods">
     /**
      * Generates the Schuffenhauer scaffold for the entered molecule and returns it. All stereochemistry information is deleted.
-     * The aromaticity can be set with a selected electron-donation model. Setting the aromaticity is essential for many of the following methods.
+     * The aromaticity can be set with a selected electron-donation model and a CycleFinder. Setting the aromaticity is essential for many of the following methods.
      * @param aMolecule molecule whose Schuffenhauer scaffold is produced.
      * @param anIsAromaticitySet Indicates whether the aromaticity is to be set.
-     * @param anElectronDonation ElectronDonation Model to be used to determine aromaticity. Can be null if anIsAromaticitySet == false.
+     * @param anAromaticity anAromaticity Model to be used to determine aromaticity. Can be null if anIsAromaticitySet == false.
      * @return Schuffenhauer scaffold of the inserted molecule. It can be an empty molecule if the original molecule does not contain a Schuffenhauer scaffold.
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present or problem with aromaticity.apply()
      * @throws CloneNotSupportedException if cloning is not possible.
      */
-    public IAtomContainer getSchuffenhauerScaffold(IAtomContainer aMolecule, boolean anIsAromaticitySet, ElectronDonation anElectronDonation) throws CDKException, CloneNotSupportedException {
+    public IAtomContainer getSchuffenhauerScaffold(IAtomContainer aMolecule, boolean anIsAromaticitySet, Aromaticity anAromaticity) throws CDKException, CloneNotSupportedException {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
         /*Set aromaticity if necessary*/
         if(anIsAromaticitySet) {
             /*Preprocessing*/
             AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpClonedMolecule);
             CDKHydrogenAdder.getInstance(tmpClonedMolecule.getBuilder()).addImplicitHydrogens(tmpClonedMolecule);
-            Objects.requireNonNull(anElectronDonation, "If anIsAromaticitySet == true, anElectronDonation must be non null");
-            /*Choose the right CycleFinder*/
-            Aromaticity tmpAromaticity = new Aromaticity(anElectronDonation, this.getCycleFinder(tmpClonedMolecule));
+            Objects.requireNonNull(anAromaticity, "If anIsAromaticitySet == true, anAromaticity must be non null");
             //Set aromaticity
-            tmpAromaticity.apply(tmpClonedMolecule);
+            anAromaticity.apply(tmpClonedMolecule);
         }
         /*Clear the stereo chemistry of the molecule*/
         List<IStereoElement> tmpStereo = new ArrayList<>();
@@ -630,14 +627,14 @@ public class ScaffoldGenerator {
      * Iteratively removes the terminal rings. All resulting Schuffenhauer scaffolds are returned. Duplicates are not permitted.
      * The Schuffenhauer scaffold of the entire entered molecule is stored first in the list.
      * @param aMolecule Molecule to be disassembled.
-     * @param anElectronDonation used electron donation model
+     * @param anAromaticity anAromaticity Model to be used to determine aromaticity.
      * @return List with all resulting Schuffenhauer scaffolds.
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
      * @throws CloneNotSupportedException if cloning is not possible.
      */
-    public List<IAtomContainer> getIterativeRemoval(IAtomContainer aMolecule, ElectronDonation anElectronDonation) throws CDKException, CloneNotSupportedException {
+    public List<IAtomContainer> getIterativeRemoval(IAtomContainer aMolecule,Aromaticity anAromaticity) throws CDKException, CloneNotSupportedException {
         SmilesGenerator tmpGenerator = new SmilesGenerator(SmiFlavor.Unique);
-        IAtomContainer tmpSchuffenhauerOriginal = this.getSchuffenhauerScaffold(aMolecule, true, anElectronDonation);
+        IAtomContainer tmpSchuffenhauerOriginal = this.getSchuffenhauerScaffold(aMolecule, true, anAromaticity);
         int tmpRingCount = this.getRings(tmpSchuffenhauerOriginal, true).size();
         List<String> tmpAddedSMILESList = new ArrayList<>(tmpRingCount * 45);
         //List of all fragments already created and size estimated on the basis of an empirical value
@@ -674,13 +671,13 @@ public class ScaffoldGenerator {
      * A new level is created with each removal step. Duplicates are permitted.
      * The Schuffenhauer scaffold of the entire entered molecule is the root of the tree.
      * @param aMolecule Molecule to be disassembled.
-     * @param anElectronDonation used electron donation model
+     * @param anAromaticity anAromaticity Model to be used to determine aromaticity.
      * @return List with all resulting Schuffenhauer scaffolds.
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
      * @throws CloneNotSupportedException if cloning is not possible.
      */
-    public TreeNode<IAtomContainer> getRemovalTree(IAtomContainer aMolecule, ElectronDonation anElectronDonation) throws CDKException, CloneNotSupportedException {
-        IAtomContainer tmpSchuffenhauerOriginal = this.getSchuffenhauerScaffold(aMolecule, true, anElectronDonation);
+    public TreeNode<IAtomContainer> getRemovalTree(IAtomContainer aMolecule, Aromaticity anAromaticity) throws CDKException, CloneNotSupportedException {
+        IAtomContainer tmpSchuffenhauerOriginal = this.getSchuffenhauerScaffold(aMolecule, true, anAromaticity);
         int tmpRingCount = this.getRings(tmpSchuffenhauerOriginal, true).size();
         //List of all fragments already created and size estimated on the basis of an empirical value
         List<IAtomContainer> tmpIterativeRemovalList = new ArrayList<>(tmpRingCount * 45);
@@ -714,15 +711,15 @@ public class ScaffoldGenerator {
      * Based on the rules from the "The Scaffold Tree" Paper by Schuffenhauer et al.
      * @param aMolecule Molecule that is to be broken down into its fragments
      * @param anIsAromaticitySet Indicates whether the aromaticity is to be set.
-     * @param anElectronDonation Electron donation model that should be used. Can be null if anIsAromaticitySet == false.
+     * @param @param anAromaticity anAromaticity Model to be used to determine aromaticity. Can be null if anIsAromaticitySet == false.
      * @param anIsRuleSevenUsed Indicates whether rule seven is applied.
      * @return Fragments of the molecule according to the Schuffenhauer rules
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
      * @throws CloneNotSupportedException if cloning is not possible.
      */
-    public List<IAtomContainer> applySchuffenhauerRules(IAtomContainer aMolecule, boolean anIsAromaticitySet, ElectronDonation anElectronDonation, boolean anIsRuleSevenUsed) throws CloneNotSupportedException, CDKException {
+    public List<IAtomContainer> applySchuffenhauerRules(IAtomContainer aMolecule, boolean anIsAromaticitySet, Aromaticity anAromaticity, boolean anIsRuleSevenUsed) throws CloneNotSupportedException, CDKException {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
-        IAtomContainer tmpSchuffenhauer = this.getSchuffenhauerScaffold(tmpClonedMolecule,anIsAromaticitySet ,anElectronDonation );
+        IAtomContainer tmpSchuffenhauer = this.getSchuffenhauerScaffold(tmpClonedMolecule,anIsAromaticitySet , anAromaticity);
         /*All molecules with an atom-to-ring ratio of less than 1.0 are assigned the CYCLE_FINDER_BACKUP_PROPERTY = true property,
          since too many rings were probably detected. The fact that a molecule has more rings than atoms seems concerning. That is why this value was chosen.*/
         int tmpRingNumber = this.getRings(tmpSchuffenhauer, false).size();
@@ -734,7 +731,7 @@ public class ScaffoldGenerator {
             }
             /*Apply the new Cyclefinder to the molecules*/
             tmpRingNumber = this.getRings(tmpSchuffenhauer, false).size();
-            tmpSchuffenhauer = this.getSchuffenhauerScaffold(tmpClonedMolecule,anIsAromaticitySet ,anElectronDonation );
+            tmpSchuffenhauer = this.getSchuffenhauerScaffold(tmpClonedMolecule,anIsAromaticitySet , anAromaticity);
         }
         //List of all generated fragments
         List<IAtomContainer> tmpSchuffenhauerFragments = new ArrayList<>(tmpRingNumber);
@@ -797,9 +794,11 @@ public class ScaffoldGenerator {
             if(anIsRuleSevenUsed) {
                 int tmpRuleSevenRingNumber = tmpRemovableRings.size();
                 /*Apply rule number seven*/
-                tmpRemovableRings = this.applySchuffenhauerRuleSeven(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings, anElectronDonation);
-                //if(tmpRemovableRings.size() < tmpRuleSevenRingNumber) {
-                if(false) {
+                tmpRemovableRings = this.applySchuffenhauerRuleSeven(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings, anAromaticity);
+
+                /*Store molecules in which the number of rings to be examined is reduced*/
+                if(tmpRemovableRings.size() < tmpRuleSevenRingNumber) {
+                //if(false) {
                     System.out.println("COCONUT ID: " + aMolecule.getProperty("coconut_id"));
                     /*Generate control pictures*/
                     DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
@@ -813,8 +812,8 @@ public class ScaffoldGenerator {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-
                 }
+
                 if (tmpRemovableRings.size() == 1) { //If only one eligible ring remains, it can be removed
                     this.removeRingForSchuffenhauerRule(tmpRemovableRings.get(0), tmpSchuffenhauerFragments);
                     //After a new fragment has been added, the next one is investigated
@@ -1120,20 +1119,17 @@ public class ScaffoldGenerator {
      * Sort out the rings according to the seventh Schuffenhauer rule.
      * Based on the seventh rule from the "The Scaffold Tree" Paper by Schuffenhauer et al.
      * The rule says: A Fully Aromatic Ring System Must Not Be Dissected in a Way That the Resulting System Is Not Aromatic Any More
-     * It was changed to: The number of aromatic rings should be reduced by a maximum of one when a ring is removed. Therefore, no additional aromatic rings should be deleted by removing a ring.
+     * It was changed to: The number of aromatic rings should be reduced by a maximum of one, when a ring is removed. Therefore, no additional aromatic rings should be deleted by removing a ring.
      * @param aRings Removable rings of the molecule to which the rule is applied
      * @param aMolecule Molecule from which a ring is to be removed
-     * @param anElectronDonation ElectronDonationmodel to redetermine the aromaticity of the generated fragments.
+     *  @param anAromaticity anAromaticity Model to be used to determine aromaticity.
      * @return List of rings to be removed first according to the rule. Returns the unchanged list if the rule cannot be applied to the rings.
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
      * @throws CloneNotSupportedException if cloning is not possible.
      */
-    public List<IAtomContainer> applySchuffenhauerRuleSeven(IAtomContainer aMolecule, List<IAtomContainer> aRings, ElectronDonation anElectronDonation) throws CDKException, CloneNotSupportedException {
-        System.out.println("Input Rings:" + aRings.size());
+    public List<IAtomContainer> applySchuffenhauerRuleSeven(IAtomContainer aMolecule, List<IAtomContainer> aRings, Aromaticity anAromaticity) throws CDKException, CloneNotSupportedException {
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
-        System.out.println(tmpSmilesGenerator.create(aMolecule));
         List<IAtomContainer> tmpReturnRings = new ArrayList<>(aRings.size());
-        //System.out.println("Input Ring Size: " + aRings.size());
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
         /*Check the number of aromatic rings in the original molecule*/
         int tmpOriginalAromaticRingCounter = 0;
@@ -1157,21 +1153,16 @@ public class ScaffoldGenerator {
         }
         /*Remove each ring and count the number of remaining aromatic rings*/
         for(IAtomContainer tmpRing : aRings) {
-            tmpClonedMolecule = this.getSchuffenhauerScaffold(tmpClonedMolecule, false, null);
             IAtomContainer tmpRemovedRing = this.removeRing(aMolecule, tmpRing);
             String tmpSmiles = tmpSmilesGenerator.create(tmpRemovedRing);
+            /*remove unwanted square brackets from N*/
             tmpSmiles.replace("[N]", "N");
-            //tmpSmiles.replace("]", "");
-            //System.out.println("Removed Ring " + tmpSmiles);
             SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
             tmpRemovedRing = tmpParser.parseSmiles(tmpSmiles);
             tmpRemovedRing = this.getSchuffenhauerScaffold(tmpRemovedRing, false, null);
-            Aromaticity tmpAromaticity = new Aromaticity(anElectronDonation, this.getCycleFinder(tmpRemovedRing));
-            tmpAromaticity.apply(tmpRemovedRing);
+            anAromaticity.apply(tmpRemovedRing);
             /*Check the number of aromatic rings*/
             int tmpRemovedAromaticRingCounter = 0;
-            //Cycles tmpRemovedCycles = this.getCycleFinder(tmpRemovedRing).find(tmpRemovedRing);
-
             //-----Eliminate Cycle Error-----
             Cycles tmpRemovedCycles = null;
             Iterable<IAtomContainer> tmpCycleIterable = null;
@@ -1195,174 +1186,34 @@ public class ScaffoldGenerator {
                 tmpRemovedCycles = this.getCycleFinder(tmpRemovedRing).find(tmpRemovedRing);
                 tmpCycleIterable = tmpRemovedCycles.toRingSet().atomContainers();
             }
-
+            /*Check the aromaticity of each Cycle*/
             for(IAtomContainer tmpCycle : tmpCycleIterable) {
                 boolean tmpIsRingAromatic = true;
                 /*Check the aromaticity of each atom*/
                 for(IAtom tmpAtom : tmpCycle.atoms()) {
                     tmpAtom = tmpAtom.clone();
-                    //The cycle is not aromatic if one atom is not aromatic
+                    /*The cycle is not aromatic if one atom is not aromatic*/
                     if(!tmpAtom.isAromatic()) {
                         tmpIsRingAromatic = false;
-                        //System.out.println(tmpAtom.getSymbol());
                         break;
                     }
                 }
                 /*Count the aromatic rings*/
                 if(tmpIsRingAromatic == true) {
-                    //System.out.println("Aromatic ring " + tmpSmilesGenerator.create(tmpCycle));
                     tmpRemovedAromaticRingCounter++;
                 }
             }
             /*Only fragments whose aromatic rings have decreased by a maximum of 1 are of interest.*/
-            //System.out.println("Original Counter" + tmpOriginalAromaticRingCounter);
-            //System.out.println("Removed Counter" + tmpRemovedAromaticRingCounter);
             if((tmpOriginalAromaticRingCounter - tmpRemovedAromaticRingCounter) < 2 ) {
                 tmpReturnRings.add(tmpRing);
             }
         }
         /*If the number of rings has changed due to this rule, return the changed number*/
         if(tmpReturnRings.size() < aRings.size() && tmpReturnRings.size() != 0) {
-            System.out.println("Rule 7");
-            System.out.println("Output Ring Size " + tmpReturnRings.size());
-            //System.out.println("Output molecules:" + tmpReturnRings.size());
             return tmpReturnRings;
         }
         return aRings;
     }
-
-
-    /**
-     * Sort out the rings according to the seventh Schuffenhauer rule.
-     * Based on the seventh rule from the "The Scaffold Tree" Paper by Schuffenhauer et al.
-     * The rule says: A Fully Aromatic Ring System Must Not Be Dissected in a Way That the Resulting System Is Not Aromatic Any More
-     * Therefore, only fully aromatic ring systems are examined in more detail here.
-     * In these systems, all rings are selected, whose removal leads to fully aromatic ring systems.
-     * @param aRings Removable rings of the molecule to which the rule is applied
-     * @param aMolecule Molecule from which a ring is to be removed
-     * @return List of rings to be removed first according to the rule. Returns the unchanged list if the rule cannot be applied to the rings.
-     * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
-     * @throws CloneNotSupportedException if cloning is not possible.
-     */
-    public List<IAtomContainer> applySchuffenhauerRuleSevenOld(IAtomContainer aMolecule, List<IAtomContainer> aRings, boolean anIsAromaticitySet, ElectronDonation anElectronDonation) throws CDKException, CloneNotSupportedException {
-        System.out.println("Input Ring Number: " + aRings.size());
-        IAtomContainer tmpClonedMolecule = aMolecule.clone();
-        Aromaticity tmpAromaticity = new Aromaticity(anElectronDonation, this.getCycleFinder(tmpClonedMolecule));
-        tmpAromaticity.apply(tmpClonedMolecule);
-        //Remove exocyclic atoms
-        Cycles tmpRemovedExocyclic = this.getCycleFinder(tmpClonedMolecule).find(tmpClonedMolecule);
-        /*Check that the ring system is fully aromatic*/
-        for(IAtomContainer tmpRing : tmpRemovedExocyclic.toRingSet().atomContainers()) {
-            for(IAtom tmpAtom : tmpRing.atoms()) {
-                //Check the aromaticity of each atom
-                if(!tmpAtom.isAromatic()) {
-                    return aRings;
-                }
-            }
-        }
-        /*Investigate the resulting fragments when the ring system is fully aromatic*/
-        List<IAtomContainer> tmpReturnRings = new ArrayList<>(aRings.size());
-        for(IAtomContainer tmpRing : aRings) {
-            /*Remove each ring once and examine the resulting fragments*/
-            SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
-            IAtomContainer tmpRingsRemoved = this.removeRing(tmpClonedMolecule, tmpRing);
-            //Problem: Durch die [] um N werden die Ringe nicht mehr als Aromatisch erkannt.
-            // Die [] entstehen bei der Entfernung des Rings. Wie werde ich [] auf elegantem Weg los?
-            //Bsp: CNP0001107
-            //Außerdem entstehen durch diesen "Fix" jetzt probleme mit geladenen Molekülen
-            String tmpString = tmpSmilesGenerator.create(tmpRingsRemoved);
-            System.out.println("Vorher:" + tmpString);
-            tmpString = tmpString.replace("[", "");
-            tmpString = tmpString.replace("]", "");
-            System.out.println("Nachher:" + tmpString);
-            SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
-            tmpRingsRemoved = tmpParser.parseSmiles(tmpString);
-            AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpRingsRemoved);
-            CDKHydrogenAdder.getInstance(tmpRingsRemoved.getBuilder()).addImplicitHydrogens(tmpRingsRemoved);
-            //Problem end
-            tmpAromaticity.apply(tmpRingsRemoved);
-            boolean tmpIsRingRemovedAromatic = true;
-            //Remove the exocyclic double bonds
-            Cycles tmpRemovedExocyclicFragment = this.getCycleFinder(tmpRingsRemoved).find(tmpRingsRemoved);
-            for(IAtomContainer tmpCycle : tmpRemovedExocyclicFragment.toRingSet().atomContainers()) {
-                /*Investigate each Atom of each ring*/
-                for(IAtom tmpCycleAtom : tmpCycle.atoms()) {
-                    /*If the ring is not aromatic, the fragment is not interesting*/
-                    if(!tmpCycleAtom.isAromatic()) {
-                        tmpIsRingRemovedAromatic = false;
-                        break;
-                    }
-                }
-            }
-            /*Add to the list all rings whose removal results in fully aromatic fragments*/
-            if(tmpIsRingRemovedAromatic == true) {
-                tmpReturnRings.add(tmpRing);
-            }
-        }
-        //return the list of all rings whose removal results in fully aromatic fragments
-        if(tmpReturnRings.size() > 0) {
-            System.out.println("Output Ring Number: " + tmpReturnRings.size());
-            return tmpReturnRings;
-        }
-        return aRings;
-    }
-
-    public boolean ruleSevenTest(IAtomContainer aMolecule, List<IAtomContainer> aRings , boolean anIsAromaticitySet, ElectronDonation anElectronDonation) throws CDKException, CloneNotSupportedException {
-        IAtomContainer tmpClonedMolecule = aMolecule.clone();
-        Aromaticity tmpAromaticity = new Aromaticity(anElectronDonation, this.getCycleFinder(tmpClonedMolecule));
-        tmpAromaticity.apply(tmpClonedMolecule);
-        //Remove exocyclic atoms
-        Cycles tmpRemovedExocyclic = this.getCycleFinder(tmpClonedMolecule).find(tmpClonedMolecule);
-        /*Check that the ring system is fully aromatic*/
-        for(IAtomContainer tmpRing : tmpRemovedExocyclic.toRingSet().atomContainers()) {
-            for(IAtom tmpAtom : tmpRing.atoms()) {
-                //Check the aromaticity of each atom
-                if(!tmpAtom.isAromatic()) {
-                    return false;
-                }
-            }
-        }
-        /*Investigate the resulting fragments when the ring system is fully aromatic*/
-        List<IAtomContainer> tmpReturnRings = new ArrayList<>(aRings.size());
-        for(IAtomContainer tmpRing : aRings) {
-            /*Remove each ring once and examine the resulting fragments*/
-            IAtomContainer tmpRingsRemoved = this.removeRing(tmpClonedMolecule, tmpRing);
-            SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
-            String tmpString = tmpSmilesGenerator.create(tmpRingsRemoved);
-            tmpString = tmpString.replace("[", "");
-            tmpString = tmpString.replace("]", "");
-            SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
-            tmpRingsRemoved = tmpParser.parseSmiles(tmpString);
-            AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpRingsRemoved);
-            CDKHydrogenAdder.getInstance(tmpRingsRemoved.getBuilder()).addImplicitHydrogens(tmpRingsRemoved);
-
-            //Redetermine aromaticity after removal
-            tmpAromaticity.apply(tmpRingsRemoved);
-            boolean tmpIsRingRemovedAromatic = true;
-            //Remove the exocyclic double bonds
-            Cycles tmpRemovedExocyclicFragment = this.getCycleFinder(tmpRingsRemoved).find(tmpRingsRemoved);
-            for(IAtomContainer tmpCycle : tmpRemovedExocyclicFragment.toRingSet().atomContainers()) {
-                /*Investigate each Atom of each ring*/
-                for(IAtom tmpCycleAtom : tmpCycle.atoms()) {
-                    /*If the ring is not aromatic, the fragment is not interesting*/
-                    if(!tmpCycleAtom.isAromatic()) {
-                        tmpIsRingRemovedAromatic = false;
-                        break;
-                    }
-                }
-            }
-            /*Add to the list all rings whose removal results in fully aromatic fragments*/
-            if(tmpIsRingRemovedAromatic == true) {
-                tmpReturnRings.add(tmpRing);
-            }
-        }
-        //return the list of all rings whose removal results in fully aromatic fragments
-        if(tmpReturnRings.size() != aRings.size() && tmpReturnRings.size() != 0) {
-            return true;
-        }
-        return false;
-    }
-
 
     /**
      * Sort out the rings according to the eighth Schuffenhauer rule.
