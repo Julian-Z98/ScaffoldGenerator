@@ -29,7 +29,6 @@ import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.aromaticity.ElectronDonation;
 import org.openscience.cdk.depict.DepictionGenerator;
-import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.graph.CycleFinder;
 import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.IAtom;
@@ -62,18 +61,17 @@ import static junit.framework.TestCase.assertEquals;
  */
 public class ScaffoldGeneratorTest {
 
-    //<editor-fold desc="Fundamental Method Tests">
+    //<editor-fold desc="Tests">
+    //<editor-fold desc="Fundamental method tests">
     /**
-     * Test of ScaffoldGenerator.getSchuffenhauerScaffold() with V2000 and V3000 mol files.
-     * Loads the 22 Test(Test1.mol-Test23.mol) molfiles from the Resources folder and creates the SchuffenhauerScaffolds with getSchuffenhauerScaffold().
+     * Test of ScaffoldGenerator.getScaffold() with V2000 and V3000 mol files.
+     * Loads the 22 Test(Test1.mol-Test23.mol) molfiles from the Resources folder and creates the SchuffenhauerScaffolds with getScaffold().
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getSchuffenhauerScaffoldTest() throws CloneNotSupportedException, CDKException, IOException, IllegalAccessException {
+    public void getScaffoldTest() throws Exception {
         for (int tmpCount = 1; tmpCount < 23; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
@@ -99,14 +97,12 @@ public class ScaffoldGeneratorTest {
         }
     }
     /**
-     * Test of ScaffoldGenerator.getSchuffenhauerScaffold with SMILES.
+     * Test of ScaffoldGenerator.getScaffold with SMILES.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getSchuffenhauerNonCTest() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void getSchuffenhauerNonCTest() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("[S+]#S1CCCCC1"); //Triple bond
@@ -144,14 +140,12 @@ public class ScaffoldGeneratorTest {
     }
 
     /**
-     * Test of ScaffoldGenerator.getSchuffenhauerScaffold with SMILES.
+     * Test of ScaffoldGenerator.getScaffold with SMILES.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void removeRingNonCTest() throws CDKException, CloneNotSupportedException, IOException {
+    public void removeRingNonCTest() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("c2cc[p+]1CCCCc1c2"); //Triple bond
@@ -204,12 +198,10 @@ public class ScaffoldGeneratorTest {
      * Loads the 12 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and creates the rings of the SchuffenhauerScaffold with getRings().
      * All generated Rings are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getRingsTest() throws IOException, CDKException, CloneNotSupportedException, IllegalAccessException {
+    public void getRingsTest() throws Exception {
         for (int tmpCount = 1; tmpCount < 23; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
@@ -237,12 +229,10 @@ public class ScaffoldGeneratorTest {
      * Loads the 12 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and creates for each generated ring, the corresponding total molecule with removed ring.
      * All generated molecules are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void removeRingTest() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void removeRingTest() throws Exception {
         for (int tmpCount = 2; tmpCount < 23; tmpCount++) {
             String tmpFileName = "Test" + tmpCount ;
             //Load molecule from molfile
@@ -275,9 +265,10 @@ public class ScaffoldGeneratorTest {
      * All molecules containing P with 4 bonds throw a NullPointerException in line 1373 of the CDKAtomMatcher.
      * In both cases Atom.getFormalCharge() = null there and triggers this error.
      * In this method, both an example molecule with B and with P are given. Both trigger an error. With tmpBypassError the FormalCharges can be set to 0 and the errors can be bypassed.
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void percieveAtomTypesErrorTest() throws CDKException {
+    public void percieveAtomTypesErrorTest() throws Exception {
         boolean tmpBypassError = false; //Pass the error or not
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = null;
@@ -309,12 +300,10 @@ public class ScaffoldGeneratorTest {
      * Loads the 12 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and creates for each generated terminal ring, the corresponding total molecule with removed ring.
      * All generated molecules are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void isRingTerminalTest() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void isRingTerminalTest() throws Exception {
         for (int tmpCount = 2; tmpCount < 21; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
@@ -344,18 +333,16 @@ public class ScaffoldGeneratorTest {
     }
     //</editor-fold>
 
-    //<editor-fold desc="Output Method Test">
+    //<editor-fold desc="Fundamental method test">
     /**
      * Test of getIterativeRemoval() with V2000 and V3000 mol files.
      * Loads the 12 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and iteratively removes the terminal rings.
      * All generated molecules are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getIterativeRemovalTest() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void getIterativeRemovalTest() throws Exception {
         for (int tmpCount = 1; tmpCount < 24; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
@@ -382,12 +369,10 @@ public class ScaffoldGeneratorTest {
      * Loads the 13 Test(Test1.mol-Test13.mol) molfiles from the Resources folder, iteratively removes the terminal rings and saves the molecules in a tree.
      * All generated molecules are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getRemovalTreeTest() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void getRemovalTreeTest() throws Exception {
         for (int tmpCount = 1; tmpCount < 23; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
@@ -410,17 +395,49 @@ public class ScaffoldGeneratorTest {
     }
 
     /**
+     * Test of ScaffoldGenerator.getScaffold() with SMILES.
+     * Loads Scheme 1 from the "The Scaffold Tree" Paper by Schuffenhauer et al as SMILES and generates the MurckoFragment.
+     * Flucloxacillin is generated from the SMILES and all terminal side chains are removed. Rings and linkers are obtained.
+     * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
+     * @throws Exception if anything goes wrong
+     */
+    @Test
+    public void getMurckoScaffoldTest() throws Exception {
+        //SMILES to IAtomContainer
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1=C(C(=NO1)C2=C(C=CC=C2Cl)F)C(=O)NC3C4N(C3=O)C(C(S4)(C)C)C(=O)O");
+        /*Generate picture of the Original molecule*/
+        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+        BufferedImage tmpImgOriginal = tmpGenerator.depict(tmpMolecule).toImg();
+        /*Save the picture of the original*/
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/MurckoScaffoldTest/Original.png").mkdirs();
+        File tmpOutputOriginal = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/MurckoScaffoldTest/Original.png");
+        ImageIO.write(tmpImgOriginal, "png" ,tmpOutputOriginal);
+        //Generate SchuffenhauerScaffold
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.MURCKO);
+        IAtomContainer tmpSchuffenhauerSMILES = tmpScaffoldGenerator.getScaffold(tmpMolecule);
+        /*Generate picture of the SchuffenhauerScaffold*/
+        BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerSMILES).toImg();
+        /*Save the picture of the schuffenhauer scaffold*/
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/MurckoScaffoldTest/Murcko.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/MurckoScaffoldTest/Murcko.png");
+        ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
+        /*Generate and check SMILES*/
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
+        assertEquals(tmpSmilesGenerator.create(tmpSchuffenhauerSMILES), "N=1OC=C(C1C=2C=CC=CC2)CNC3CN4CCSC43");
+    }
+
+    /**
      * Test of getRemovalTree() with V2000 and V3000 mol files.
      * Loads one molecule(insert in tmpFileName)  from the Resources folder, iteratively removes the terminal rings and saves the molecules in a tree.
      * Saves the parent and the children of one Node and saves them as images.
      * Set file with: tmpFileName
      * Set Node with: tmpTestNumber
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getRemovalTreeStructureTest() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void getRemovalTreeStructureTest() throws Exception {
         String tmpFileName = "Test11"; //File to be tested
         int tmpTestNumber = 2; //Node whose children and parent are to be displayed
         //Load molecule from molfile
@@ -460,12 +477,10 @@ public class ScaffoldGeneratorTest {
 
     /**
      * Tests the methods of the ScaffoldTree class with a V2000 or V3000 mol file as test molecule.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void scaffoldTreeTest() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void scaffoldTreeTest() throws Exception {
         String tmpFileName = "Test11";
         //Load molecule from molfile
         IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -557,14 +572,11 @@ public class ScaffoldGeneratorTest {
 
     /**
      * Creates a ScaffoldTree from a V2000 or V3000 mol file and displays it as a tree with GraphStream.
-     * @throws InterruptedException if a problem with sleep occurs
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Ignore
     @Test
-    public void graphStreamTest() throws InterruptedException, CDKException, IOException, CloneNotSupportedException, IllegalAccessException {
+    public void graphStreamTest() throws Exception {
         String tmpFileName = "Test11" ;
         //Load molecule from molfile
         IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -626,18 +638,16 @@ public class ScaffoldGeneratorTest {
     }
     //</editor-fold>
 
-    //<editor-fold desc="Schuffenhauer Rules Tests">
+    //<editor-fold desc="Schuffenhauer rules tests">
     /**
      * Test oftmpScaffoldGenerator.applySchuffenhauerRules() with V2000 and V3000 mol files.
-     * Loads the Test(Test1.mol-Test21.mol) molfiles from the Resources folder and creates the SchuffenhauerScaffolds with getSchuffenhauerScaffold().
+     * Loads the Test(Test1.mol-Test21.mol) molfiles from the Resources folder and creates the SchuffenhauerScaffolds with getScaffold().
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void applySchuffenhauerRulesTest() throws CloneNotSupportedException, CDKException, IOException, IllegalAccessException {
+    public void applySchuffenhauerRulesTest() throws Exception {
         for (int tmpCount = 1; tmpCount < 23; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
@@ -665,12 +675,10 @@ public class ScaffoldGeneratorTest {
      * Test of ScaffoldGenerator.applySchuffenhauerRules() with SMILES.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void applySchuffenhauerRulesSMILESTest() throws CloneNotSupportedException, CDKException, IOException, IllegalAccessException {
+    public void applySchuffenhauerRulesSMILESTest() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("C5CCCCCCCCCCCCCC1NC1CCCCCCCCCCCCCC(C3CC2CC2C4NC34)CC5");//Original
@@ -725,16 +733,14 @@ public class ScaffoldGeneratorTest {
         }
     }
     /**
-     * Test of ScaffoldGenerator.getSchuffenhauerScaffold() with SMILES.
+     * Test of ScaffoldGenerator.getScaffold() with SMILES.
      * Loads Scheme 1 from the "The Scaffold Tree" Paper by Schuffenhauer et al as SMILES and generates SchuffenhauerScaffold.
      * Flucloxacillin is generated from the SMILES and all terminal side chains are removed. Rings, linkers and double bonds on these structures are obtained.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getScheme1Test() throws IOException, CDKException, CloneNotSupportedException, IllegalAccessException {
+    public void getScheme1Test() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1=C(C(=NO1)C2=C(C=CC=C2Cl)F)C(=O)NC3C4N(C3=O)C(C(S4)(C)C)C(=O)O");
@@ -764,12 +770,10 @@ public class ScaffoldGeneratorTest {
      * Loads Scheme 2b from the "The Scaffold Tree" Paper by Schuffenhauer et al as SMILES.
      * Adamantane is generated from the SMILES and it is checked whether rings can be removed. This should not be the case.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getScheme2bTest() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void getScheme2bTest() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("C1C2CC3CC1CC(C2)C3");
@@ -809,12 +813,10 @@ public class ScaffoldGeneratorTest {
      * One of these rings is aromatic and has to be removed.
      * At the point where this aromatic ring was bound to the other ring, a double bond should now be formed.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getScheme3aTest() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void getScheme3aTest() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("c2ccc1CNCCc1c2");
@@ -851,12 +853,10 @@ public class ScaffoldGeneratorTest {
      * A molecule consisting of three rings is generated from a SMILES. One of these rings is aromatic.
      * It is tested whether this aromatic ring can be removed. This should not be the case.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getScheme3bTest() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void getScheme3bTest() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("c1cc2CCCc3c[nH]c(c1)c23");
@@ -898,12 +898,10 @@ public class ScaffoldGeneratorTest {
      * The removal of this hetero ring should result in a double bond at the removed position.
      * In addition, some similar example molecules are also commented out.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getScheme4Test() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void getScheme4Test() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1CCCC2C(O2)CC(OC(=O)CC(C(C(=O)C(C1O)C)(C)C)O)C(=CC3=CSC(=N3)C)C");//Original
@@ -961,12 +959,10 @@ public class ScaffoldGeneratorTest {
      * Then, according to the second rule, the aromatic 6 ring is removed to obtain the macroring.
      * In addition, some similar example molecules are also commented out.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getScheme5Test() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void getScheme5Test() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1C(=O)NC(C(=O)NC(C(=O)NC(C(=O)NC(C(=O)NC(C(=O)N1C)CC2=CC=CC=C2)C(C)C)CCCCN)CC3=CNC4=CC=CC=C43)CC5=CC=C(C=C5)O");//Original
@@ -1011,12 +1007,10 @@ public class ScaffoldGeneratorTest {
      * Loads Scheme 6  from the "The Scaffold Tree" Paper by Schuffenhauer et al as SMILES.
      * Flucloxacillin is generated from a SMILES and the ring consisting of 6 atoms is removed.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getScheme6Test() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void getScheme6Test() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1=C(C(=NO1)C2=C(C=CC=C2Cl)F)C(=O)NC3C4N(C3=O)C(C(S4)(C)C)C(=O)O");//Original
@@ -1048,12 +1042,10 @@ public class ScaffoldGeneratorTest {
      * Pentazocine is generated from a SMILES and the aromatic ring consisting of 6 atoms is removed.
      * A double bond is inserted at the point where it was removed.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getScheme7Test() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void getScheme7Test() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1C2CC3=C(C1(CCN2CC=C(C)C)C)C=C(C=C3)O");
@@ -1083,12 +1075,10 @@ public class ScaffoldGeneratorTest {
      * Loads Scheme 8 from the "The Scaffold Tree" Paper by Schuffenhauer et al as SMILES.
      * Sophocarpin is generated from a SMILES and the ring that only has an overlapping bond is removed.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getScheme8Test() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void getScheme8Test() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("C1CC2CN3C(CC=CC3=O)C4C2N(C1)CCC4");
@@ -1119,12 +1109,10 @@ public class ScaffoldGeneratorTest {
      * Rhynchophylline is generated from a SMILES and the aromatic ring is removed.
      * The 6 ring is now removed from this fragment.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getScheme9Test() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void getScheme9Test() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CCC1CN2CCC3(C2CC1C(=COC)C(=O)OC)C4=CC=CC=C4NC3=O");
@@ -1162,12 +1150,10 @@ public class ScaffoldGeneratorTest {
      * Cafestol is generated from a SMILES and the aromatic ring is removed.
      * The 6 ring is now removed from this fragment.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getScheme10Test() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void getScheme10Test() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC12CCC3=C(C1CCC45C2CCC(C4)C(C5)(CO)O)C=CO3");
@@ -1205,12 +1191,10 @@ public class ScaffoldGeneratorTest {
      * Flucloxacillin is generated from a SMILES and the rings connected via linkers are removed.
      * Then, according to the sixth rule, the ring of size 5 is removed.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getScheme11aTest() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void getScheme11aTest() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1=C(C(=NO1)C2=C(C=CC=C2Cl)F)C(=O)NC3C4N(C3=O)C(C(S4)(C)C)C(=O)O");
@@ -1249,12 +1233,10 @@ public class ScaffoldGeneratorTest {
      * Epinastine is generated from a SMILES and the aromatic rings are removed.
      * Then, according to the sixth rule, the ring of size 5 is removed.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getScheme11bTest() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void getScheme11bTest() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("C1C2C3=CC=CC=C3CC4=CC=CC=C4N2C(=N1)N");
@@ -1294,12 +1276,10 @@ public class ScaffoldGeneratorTest {
      * Then, according to the seventh rule, the ring of size 6 is removed.
      * If rule 7 is turned off the 5 ring is removed.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getScheme12Test() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void getScheme12Test() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CCN(C1=CC=CC(=C1)C2=CC=NC3=C(C=NN23)C#N)C(=O)C"); //Original
@@ -1348,7 +1328,6 @@ public class ScaffoldGeneratorTest {
      * Test that illustrates aromaticity detection for pyrimidine, pyrazole, and their combination in
      * pyrazolo[1,5-a]pyrimidine, which is used in Scheme 12 for illustrating rule 7. Different cycle finder algorithms
      * and electron donation models are combined and the results printed as SMILES strings with aromaticity encoded.
-     *
      * @throws Exception if anything goes wrong
      */
     @Ignore
@@ -1391,12 +1370,10 @@ public class ScaffoldGeneratorTest {
      * A double ring system is generated from a SMILES.
      * According to the eighth rule the ring with the least heterocycle is removed
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getScheme13Test() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void getScheme13Test() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("c2ccc1[nH]ccc1c2");
@@ -1427,12 +1404,10 @@ public class ScaffoldGeneratorTest {
      * Ticlopidine is generated from a SMILES.
      * According to the ninth rule the ring with the S is removed first
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getScheme14Test() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void getScheme14Test() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("C1CN(CC2=C1SC=C2)CC3=CC=CC=C3Cl.Cl");
@@ -1472,12 +1447,10 @@ public class ScaffoldGeneratorTest {
      * A molecule with two 7 rings and one 8 ring is generated from a SMILES.
      * According to the tenth rule the 7 rings are removed first
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getRule10Test() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void getRule10Test() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("O=C3CC2C(CCCC1CCCCCCC12)C(=O)C(=O)C3=O");
@@ -1515,12 +1488,10 @@ public class ScaffoldGeneratorTest {
      * Sertraline is generated from a SMILES and the linker bonded 6 ring is removed.
      * According to the eleventh rule the aromatic ring is removed.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getScheme15Test() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void getScheme15Test() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CNC1CCC(C2=CC=CC=C12)C3=CC(=C(C=C3)Cl)Cl");
@@ -1558,12 +1529,10 @@ public class ScaffoldGeneratorTest {
      * Deferasirox is generated from a SMILES.
      * According to the twelfth rule the aromatic ring bond to the N is removed.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getScheme16Test() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void getScheme16Test() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("C1=CC=C(C(=C1)C2=NN(C(=N2)C3=CC=CC=C3O)C4=CC=C(C=C4)C(=O)O)O");
@@ -1595,12 +1564,10 @@ public class ScaffoldGeneratorTest {
      * The generated scaffold "Thirteen" does not correspond to the illustration in the paper.
      * This is due to the fact that unique SMILES are generated for rule 13, although canical SMILES are used in the paper.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getScheme17Test() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void getScheme17Test() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1(C(C(C2=C(O1)C=C(C=C2)OC)C3=CC=C(C=C3)OCCN4CCCC4)C5=CC=CC=C5)C");
@@ -1645,12 +1612,10 @@ public class ScaffoldGeneratorTest {
      * Diazepam, Bromazepam, Zolazepam and Clotiazepam are generated from SMILES.
      * The Schuffenhauer rules are then applied to these molecules.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getScheme18Test() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void getScheme18Test() throws Exception {
         /*-----Diazepam-----*/
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
@@ -1780,12 +1745,10 @@ public class ScaffoldGeneratorTest {
      * -Step 3: The 6 ring without DB is removed according to rule 4
      * -Step 4: The 6 ring with DB is removed according to rule 6
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
-     * @throws CloneNotSupportedException if cloning is not possible
+     * @throws Exception if anything goes wrong
      */
     @Test
-    public void getScheme19Test() throws CDKException, CloneNotSupportedException, IOException, IllegalAccessException {
+    public void getScheme19Test() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1=C2C(C(=O)C3(C(CC4C(C3C(C(C2(C)C)(CC1O)O)OC(=O)C5=CC=CC=C5)(CO4)OC(=O)C)O)C)OC(=O)C");
@@ -1834,62 +1797,58 @@ public class ScaffoldGeneratorTest {
     }
     //</editor-fold>
 
-    //<editor-fold desc="Speed Tests">
+    //<editor-fold desc="Speed tests">
     /**
-     * Speed test for the getSchuffenhauerScaffold() Method with over 400000 molecules from the COCONUT DB.
-     * @throws CDKException problem with the AtomContainerManipulator
-     * @throws IOException if COCONUT DB not found
+     * Speed test for the getScaffold() Method with over 400000 molecules from the COCONUT DB.
+     * @throws Exception if anything goes wrong
      */
     @Ignore
     @Test
-    public void calculateSchuffenhauerSpeedTest() throws IOException, CDKException {
+    public void calculateSchuffenhauerSpeedTest() throws Exception {
         this.ScaffoldGeneratorSpeedTest(true, false, false, false, true, 4242);
     }
 
     /**
      * Speed test for the getRings() Method with over 400000 molecules from the COCONUT DB.
-     * getSchuffenhauerScaffold() must also be executed for all molecules.
-     * @throws CDKException problem with the AtomContainerManipulator
-     * @throws IOException if COCONUT DB not found
+     * getScaffold() must also be executed for all molecules.
+     * @throws Exception if anything goes wrong
      */
     @Ignore
     @Test
-    public void calculateRingsSpeedTest() throws IOException, CDKException {
+    public void calculateRingsSpeedTest() throws Exception {
         this.ScaffoldGeneratorSpeedTest(false, true, false, false, true, 4242);
     }
 
     /**
      * Speed test for the removeRing() Method with over 400000 molecules from the COCONUT DB.
-     * getSchuffenhauerScaffold() and getRings() must also be executed for all molecules.
+     * getScaffold() and getRings() must also be executed for all molecules.
      * Skips all molecules with more than 1000 rings.
      * In this case, these are the molecules with the COCONUT IDs: CNP0022608, CNP0029543, CNP0065312 and CNP0103752.
      * Runtime
-     * @throws CDKException problem with the AtomContainerManipulator
-     * @throws IOException if COCONUT DB not found
+     * @throws Exception if anything goes wrong
      */
     @Ignore
     @Test
-    public void calculateRemoveRingsSpeedTest() throws IOException, CDKException {
+    public void calculateRemoveRingsSpeedTest() throws Exception {
         this.ScaffoldGeneratorSpeedTest(false, false, true, false, true, 4242);
     }
 
     /**
      * Speed test for the removeRing() Method with over 400000 molecules from the COCONUT DB.
-     * getSchuffenhauerScaffold() and getRings() must also be executed for all molecules.
+     * getScaffold() and getRings() must also be executed for all molecules.
      * Skips all molecules with more than 1000 rings.
      * In this case, these are the molecules with the COCONUT IDs: CNP0022608, CNP0029543, CNP0065312 and CNP0103752.
      * Runtime
-     * @throws CDKException problem with the AtomContainerManipulator
-     * @throws IOException if COCONUT DB not found
+     * @throws Exception if anything goes wrong
      */
     @Ignore
     @Test
-    public void calculateApplySchuffenhauerRulesSpeedTest() throws CDKException, IOException {
+    public void calculateApplySchuffenhauerRulesSpeedTest() throws Exception {
         this.ScaffoldGeneratorSpeedTest(false, false, false, true, true, 4242);
     }
 
     /**
-     * Speed test for the getSchuffenhauerScaffold(), getRing() and removeRing() Method with over 400000 molecules from the COCONUT DB.
+     * Speed test for the getScaffold(), getRing() and removeRing() Method with over 400000 molecules from the COCONUT DB.
      * Which methods are tested can be set via the booleans.
      * To perform the test download the COCONUT DB(https://coconut.naturalproducts.net/download) and add the COCONUT_DB.sdf file to src\test\resources
      * @param anIsSchuffenhauerScaffoldCalculated Generate SchuffenhauerScaffolds
@@ -1898,10 +1857,10 @@ public class ScaffoldGeneratorTest {
      * @param anIsApplySchuffenhauerCalculated Creates all molecule fragments generated by the schuffenhauer rules
      * @param anIsPictureCreated Show control pictures from one molecule.
      * @param aPictureNumber Number of the molecule from which control images are to be taken(from 0 to 406000)
-     * @throws FileNotFoundException if file not found
+     * @throws Exception if anything goes wrong
      */
     private void ScaffoldGeneratorSpeedTest(boolean anIsSchuffenhauerScaffoldCalculated, boolean anIsRingCalculated, boolean anIsRemoveRingCalculated,
-                                            boolean anIsApplySchuffenhauerCalculated, boolean anIsPictureCreated, int aPictureNumber) throws IOException, CDKException {
+                                            boolean anIsApplySchuffenhauerCalculated, boolean anIsPictureCreated, int aPictureNumber) throws Exception {
         /*Counter*/
         int tmpExceptionCounter = 0;
         int tmpNumberCounter = 0;
@@ -2044,7 +2003,7 @@ public class ScaffoldGeneratorTest {
                     /*Detect and save conspicuous molecules*/
                     boolean tmpIsConspicuous = false;
                     /*
-                    IAtomContainer tmpSchuff =tmpScaffoldGenerator.getSchuffenhauerScaffold(tmpMolecule, false, null);
+                    IAtomContainer tmpSchuff =tmpScaffoldGenerator.getScaffold(tmpMolecule, false, null);
                     int tmpRingNumber = tmpScaffoldGenerator.getRings(tmpSchuff, false).size();
                     float tmpRingAtomRatio = (float) tmpSchuff.getAtomCount() / tmpRingNumber;
                     if(tmpRingAtomRatio < 1.0 ) {
@@ -2154,16 +2113,17 @@ public class ScaffoldGeneratorTest {
         System.out.println("Number of fused molecules" + tmpFusedRingCounter);
     }
     //</editor-fold>
+    //</editor-fold>
 
+    //<editor-fold desc="Protected methods">
     /**
      * Loads a mol file of a specific path and returns it as IAtomContainer.
      * Supports V2000 and V3000 mol files.
      * @param aFilePath Path of the molecule to be loaded
      * @return IAtomContainer of the charged molecule
-     * @throws IOException if file format can not be detected
-     * @throws CDKException if file can not be read
+     * @throws Exception if anything goes wrong
      */
-    private IAtomContainer loadMolFile(String aFilePath) throws IOException, CDKException {
+    protected IAtomContainer loadMolFile(String aFilePath) throws Exception {
         /*Get molecule path*/
         File tmpResourcesDirectory = new File(aFilePath);
         BufferedInputStream tmpInputStream = new BufferedInputStream(new FileInputStream(tmpResourcesDirectory));
@@ -2185,10 +2145,16 @@ public class ScaffoldGeneratorTest {
         return tmpMolecule;
     }
 
-    protected ScaffoldGenerator getScaffoldGeneratorTestSettings() throws IllegalAccessException {
+    /**
+     * Returns a ScaffoldGenerator Object with test settings corresponding to the default settings
+     * @return a ScaffoldGenerator object with test settings
+     * @throws Exception if anything goes wrong
+     */
+    protected ScaffoldGenerator getScaffoldGeneratorTestSettings() throws Exception {
         ScaffoldGenerator tmpScaffoldGenerator = new ScaffoldGenerator();
         tmpScaffoldGenerator.setDetermineAromaticitySetting(true);
         tmpScaffoldGenerator.setAromaticityModelSetting(new Aromaticity(ElectronDonation.cdk(), Cycles.or(Cycles.all(), Cycles.cdkAromaticSet())));
         return tmpScaffoldGenerator;
     }
+    //</editor-fold>
 }
