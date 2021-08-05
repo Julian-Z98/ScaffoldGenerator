@@ -43,19 +43,40 @@ import java.util.*;
 
 
 public class ScaffoldGenerator {
+
+    /**
+     * Enum with which the type of scaffolds to be generated can be set. These scaffolds are then used for the rest of the processing.
+     */
+    public static enum ScaffoldModeOption {
+
+        /**
+         * Schuffenhauer scaffolds are generated. Based on the "The Scaffold Tree" Paper by Schuffenhauer et al. 2006.
+         * The terminal side chains of the molecule are removed, but any atoms doubly bonded to linkers or rings are retained.
+         */
+        SCHUFFENHAUER(),
+
+        /**
+         * Murcko scaffolds are generated. Based on the "The Properties of Known Drugs. 1. Molecular Frameworks" Paper by Bemis and Murcko 1996.
+         * Then all terminal side chains are removed and only linkers and rings are retained.
+         */
+        MURCKO();
+    }
     //<editor-fold desc="Public Static Final Constants">
     /**
      * Property of the atoms according to which they are counted and identified
      */
     public static final String SCAFFOLD_ATOM_COUNTER_PROPERTY = "SCAFFOLD_ATOM_COUNTER_PROPERTY";
+
     /**
      * Cycle finder used to detect rings and to determine aromaticity
      */
     public static final CycleFinder CYCLE_FINDER = Cycles.relevant();
+
     /**
      * Property is true if the backup cycle finder is to be used instead of the normal cycle finder.
      */
     public static final String CYCLE_FINDER_BACKUP_PROPERTY = "CYCLE_FINDER_BACKUP_PROPERTY";
+
     /**
      * Backup cycle finder used to detect rings and to determine aromaticity.
      * The relevant cycle finder has problems with a few molecules and also finds too many rings in some molecules.
@@ -64,28 +85,152 @@ public class ScaffoldGenerator {
     public static final CycleFinder CYCLE_FINDER_BACKUP = Cycles.mcb();
     //</editor-fold>
 
+    //<editor-fold desc="Private variables">
+    /**
+     * Specifies whether the aromaticity is to be taken into account.
+     */
+    private boolean determineAromaticitySetting;
+
+    /**
+     * Aromaticity model used to determine the aromaticity of the molecules.
+     * Can be null if this.areAromaticitiesDetermined() == false.
+     */
+    private Aromaticity aromaticityModelSetting;
+
+    /**
+     * Indicates whether rule 7 is executed.
+     * It can be useful to turn off rule 7 explicitly,
+     * as it is only relevant for a relatively small number of molecules, but it increases the computing time.
+     */
+    private boolean ruleSevenAppliedSetting;
+
+    /**
+     * Currently used ScaffoldMode.
+     */
+    private ScaffoldModeOption scaffoldModeSetting;
+    //</editor-fold>
+
+    //<editor-fold desc="Constructors">
+    /**
+     * The only constructor of this class. Sets all settings to their default values.
+     */
+    public ScaffoldGenerator() throws IllegalAccessException {
+        this.restoreDefaultSettings();
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="Public properties">
+    //<editor-fold desc="get/are/is">
+    /**
+     * Specifies whether the aromaticity is to be taken into account.
+     * @return true if the aromaticity is determined
+     */
+    public boolean areAromaticitiesDetermined() {
+        return this.determineAromaticitySetting;
+    }
+
+    /**
+     * Returns the currently applied Aromaticity model.
+     * This consists of the CycleFinder and the ElectronDonation Model.
+     * @return the Aromaticity model
+     */
+    public Aromaticity getAromaticityModelSetting() {
+        return this.aromaticityModelSetting;
+    }
+
+    /**
+     * Indicates whether rule 7 is executed.
+     * It can be useful to turn off rule 7 explicitly,
+     * as it is only relevant for a relatively small number of molecules, but it increases the computing time.
+     * @return true if Rule 7 is applied
+     */
+    public boolean isRuleSevenApplied() {
+        return this.ruleSevenAppliedSetting;
+    }
+
+    /**
+     * Returns the currently applied scaffold mode.
+     * @return the now used scaffold mode
+     */
+    public ScaffoldModeOption getScaffoldModeSetting() {
+        return this.scaffoldModeSetting;
+    }
+
+    //</editor-fold>
+
+    //<editor-fold desc="set">
+    /**
+     * Sets the option to not determine the aromaticity.
+     * @param anIsAromaticitySet if true the aromaticity is determined
+     */
+    public void setDetermineAromaticitySetting(boolean anIsAromaticitySet) {
+        this.determineAromaticitySetting = anIsAromaticitySet;
+    }
+
+    /**
+     * Sets the applied aromaticity model. This consists of the CycleFinder and the ElectronDonation Model.
+     * Can be null if this.determineAromaticitySetting == false
+     * @param anAromaticity the new Aromaticity model
+     */
+    public void setAromaticityModelSetting(Aromaticity anAromaticity) {
+        this.aromaticityModelSetting = anAromaticity;
+    }
+
+    /**
+     * Sets the option to skip rule 7.
+     * It can be useful to turn off rule 7 explicitly,
+     * as it is only relevant for a relatively small number of molecules, but it increases the computing time.
+     * @param anIsRuleSevenApplied true if rule 7 is applied
+     */
+    public void setRuleSevenAppliedSetting(boolean anIsRuleSevenApplied) {
+        this.ruleSevenAppliedSetting = anIsRuleSevenApplied;
+    }
+
+    /**
+     * Sets the now used scaffold mode.
+     * @param anScaffoldMode the new scaffold mode
+     */
+    public void setScaffoldModeSetting(ScaffoldModeOption anScaffoldMode) {
+        Objects.requireNonNull(anScaffoldMode, "Given scaffold mode is null");
+        this.scaffoldModeSetting = anScaffoldMode;
+
+    }
+
+    //</editor-fold>
+
+    /**
+     * All settings are set to their default values. Automatically executed by the constructor.
+     */
+    public void restoreDefaultSettings() {
+    this.setDetermineAromaticitySetting(true);
+    this.setAromaticityModelSetting(null);
+    this.setRuleSevenAppliedSetting(true);
+    this.setScaffoldModeSetting(ScaffoldModeOption.SCHUFFENHAUER);
+    }
+
+    //</editor-fold>
+
     //<editor-fold desc="Public Methods">
     //<editor-fold desc="Fundamental Methods">
     /**
-     * Generates the Schuffenhauer scaffold for the entered molecule and returns it. All stereochemistry information is deleted.
+     * Generates the Schuffenhauer or Murcko scaffold for the entered molecule and returns it. All stereochemistry information is deleted.
      * The aromaticity can be set with a selected electron-donation model and a CycleFinder. Setting the aromaticity is essential for many of the following methods.
      * @param aMolecule molecule whose Schuffenhauer scaffold is produced.
-     * @param anIsAromaticitySet Indicates whether the aromaticity is to be set.
-     * @param anAromaticity anAromaticity Model to be used to determine aromaticity. Can be null if anIsAromaticitySet == false.
      * @return Schuffenhauer scaffold of the inserted molecule. It can be an empty molecule if the original molecule does not contain a Schuffenhauer scaffold.
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present or problem with aromaticity.apply()
      * @throws CloneNotSupportedException if cloning is not possible.
      */
-    public IAtomContainer getSchuffenhauerScaffold(IAtomContainer aMolecule, boolean anIsAromaticitySet, Aromaticity anAromaticity) throws CDKException, CloneNotSupportedException {
+    public IAtomContainer getScaffold(IAtomContainer aMolecule) throws CDKException, CloneNotSupportedException {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
         /*Set aromaticity if necessary*/
-        if(anIsAromaticitySet) {
+        if(this.areAromaticitiesDetermined()) {
             /*Preprocessing*/
             AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpClonedMolecule);
             CDKHydrogenAdder.getInstance(tmpClonedMolecule.getBuilder()).addImplicitHydrogens(tmpClonedMolecule);
-            Objects.requireNonNull(anAromaticity, "If anIsAromaticitySet == true, anAromaticity must be non null");
+            Objects.requireNonNull(this.aromaticityModelSetting, "If (this.areAromaticitiesDetermined() == true, this.aromaticityModelSetting must be non null");
             //Set aromaticity
-            anAromaticity.apply(tmpClonedMolecule);
+            //this.aromaticityModelSetting to be used to determine aromaticity. Can be null if this.areAromaticitiesDetermined() == false.
+            this.aromaticityModelSetting.apply(tmpClonedMolecule);
         }
         /*Clear the stereo chemistry of the molecule*/
         List<IStereoElement> tmpStereo = new ArrayList<>();
@@ -100,62 +245,75 @@ public class ScaffoldGenerator {
         MurckoFragmenter tmpMurckoFragmenter = new MurckoFragmenter(true,1);
         tmpMurckoFragmenter.setComputeRingFragments(false);
         IAtomContainer tmpMurckoFragment = tmpMurckoFragmenter.scaffold(tmpClonedMolecule);
-        /*Store the number of each Atom of the murckoFragment*/
-        HashSet<Integer> tmpMurckoAtomNumbers = new HashSet(tmpClonedMolecule.getAtomCount(), 1);
-        for(IAtom tmpMurckoAtom : tmpMurckoFragment.atoms()) {
-            tmpMurckoAtomNumbers.add(tmpMurckoAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
-        }
-        /*Store the number of each Atom that is not single bonded and the respective bond*/
-        //HashMap cannot be larger than the total number of atoms. Key = Atom and Val = Bond
-        HashSet<IBond> tmpAddBondSet = new HashSet((tmpClonedMolecule.getAtomCount()/2), 1);
-        for(IBond tmpBond: tmpClonedMolecule.bonds()) {
-            if(tmpBond.getOrder() != IBond.Order.SINGLE && tmpBond.getOrder() != IBond.Order.UNSET) {//Consider non single bonds
-                //If both atoms of the bond are in the Murcko fragment, they are taken over anyway
-                if(tmpMurckoAtomNumbers.contains(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))
-                        && tmpMurckoAtomNumbers.contains(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
-                    continue;
+        switch (this.scaffoldModeSetting) {
+            /*Generate the Murcko scaffold*/
+            case MURCKO:
+                break;
+            /*Generate the Schuffenhauer scaffold*/
+            case SCHUFFENHAUER:
+                /*Store the number of each Atom of the murckoFragment*/
+                HashSet<Integer> tmpMurckoAtomNumbers = new HashSet(tmpClonedMolecule.getAtomCount(), 1);
+                for (IAtom tmpMurckoAtom : tmpMurckoFragment.atoms()) {
+                    tmpMurckoAtomNumbers.add(tmpMurckoAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
                 }
-                //The binding has not yet been added to the list
-                if(!tmpAddBondSet.contains(tmpBond)) {
-                    /*Add the bond*/
-                    tmpAddBondSet.add(tmpBond);
+                /*Store the number of each Atom that is not single bonded and the respective bond*/
+                //HashMap cannot be larger than the total number of atoms. Key = Atom and Val = Bond
+                HashSet<IBond> tmpAddBondSet = new HashSet((tmpClonedMolecule.getAtomCount() / 2), 1);
+                for (IBond tmpBond : tmpClonedMolecule.bonds()) {
+                    if (tmpBond.getOrder() != IBond.Order.SINGLE && tmpBond.getOrder() != IBond.Order.UNSET) {//Consider non single bonds
+                        //If both atoms of the bond are in the Murcko fragment, they are taken over anyway
+                        if (tmpMurckoAtomNumbers.contains(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))
+                                && tmpMurckoAtomNumbers.contains(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                            continue;
+                        }
+                        //The binding has not yet been added to the list
+                        if (!tmpAddBondSet.contains(tmpBond)) {
+                            /*Add the bond*/
+                            tmpAddBondSet.add(tmpBond);
+                        }
+                    }
                 }
-            }
+                /*Add the missing atom and the respective bond*/
+                HashMap<Integer, IAtom> tmpMurckoAtomMap = new HashMap(tmpMurckoFragment.getAtomCount(), 1);
+                for (IAtom tmpAtom : tmpMurckoFragment.atoms()) {
+                    /*Save the properties of the murcko fragment*/
+                    int tmpAtomProperty = tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY);
+                    tmpMurckoAtomMap.put(tmpAtomProperty, tmpAtom);
+                }
+                for (IBond tmpBond : tmpAddBondSet) { //Go though all saved bonds
+                    /*If both atoms of the bond are contained in the murcko fragment, this bond does not need to be added any more*/
+                    if (tmpMurckoAtomMap.containsKey(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)) &&
+                            tmpMurckoAtomMap.containsKey(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                        continue; //Skip this bond
+                    }
+                    /*Atom 1 of the bond is in the Murcko fragment*/
+                    if (tmpMurckoAtomMap.containsKey(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                        IAtom tmpClonedAtom = tmpBond.getAtom(0).clone();
+                        tmpMurckoFragment.addAtom(tmpClonedAtom); //Add the atom that is not yet in the murcko fragment
+                        IBond tmpNewBond = tmpBond.clone();
+                        //Set the first atom
+                        tmpNewBond.setAtom(tmpMurckoAtomMap.get(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)), 1);
+                        tmpNewBond.setAtom(tmpClonedAtom, 0); //Set the second atom
+                        tmpMurckoFragment.addBond(tmpNewBond); //Add the whole bond
+                        continue; //Next bond
+                    }
+                    /*Atom 0 of the bond is in the Murcko fragment*/
+                    if (tmpMurckoAtomMap.containsKey(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                        IAtom tmpClonedAtom = tmpBond.getAtom(1).clone();
+                        tmpMurckoFragment.addAtom(tmpClonedAtom); //Add the atom that is not yet in the murcko fragment
+                        IBond tmpNewBond = tmpBond.clone();
+                        //Set the first atom
+                        tmpNewBond.setAtom(tmpMurckoAtomMap.get(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)), 0);
+                        tmpNewBond.setAtom(tmpClonedAtom, 1); //Set the second atom
+                        tmpMurckoFragment.addBond(tmpNewBond); //Add the whole bond
+                    }
+                }
+                break;
         }
-        /*Add the missing atom and the respective bond*/
-        HashMap<Integer, IAtom> tmpMurckoAtomMap = new HashMap(tmpMurckoFragment.getAtomCount(), 1);
+        /*The Murcko fragmenter does not adjust the hybridisation when the atoms are removed.
+        Therefore, this is deleted and determined again.*/
         for(IAtom tmpAtom : tmpMurckoFragment.atoms()) {
-            /*Save the properties of the murcko fragment*/
-            int tmpAtomProperty = tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY);
-            tmpMurckoAtomMap.put(tmpAtomProperty, tmpAtom);
-        }
-        for(IBond tmpBond : tmpAddBondSet) { //Go though all saved bonds
-            /*If both atoms of the bond are contained in the murcko fragment, this bond does not need to be added any more*/
-            if(tmpMurckoAtomMap.containsKey(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)) &&
-                    tmpMurckoAtomMap.containsKey(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
-                continue; //Skip this bond
-            }
-            /*Atom 1 of the bond is in the Murcko fragment*/
-            if(tmpMurckoAtomMap.containsKey(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
-                IAtom tmpClonedAtom = tmpBond.getAtom(0).clone();
-                tmpMurckoFragment.addAtom(tmpClonedAtom); //Add the atom that is not yet in the murcko fragment
-                IBond tmpNewBond = tmpBond.clone();
-                //Set the first atom
-                tmpNewBond.setAtom(tmpMurckoAtomMap.get(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)), 1);
-                tmpNewBond.setAtom(tmpClonedAtom, 0); //Set the second atom
-                tmpMurckoFragment.addBond(tmpNewBond); //Add the whole bond
-                continue; //Next bond
-            }
-            /*Atom 0 of the bond is in the Murcko fragment*/
-            if(tmpMurckoAtomMap.containsKey(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
-                IAtom tmpClonedAtom = tmpBond.getAtom(1).clone();
-                tmpMurckoFragment.addAtom(tmpClonedAtom); //Add the atom that is not yet in the murcko fragment
-                IBond tmpNewBond = tmpBond.clone();
-                //Set the first atom
-                tmpNewBond.setAtom(tmpMurckoAtomMap.get(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)), 0);
-                tmpNewBond.setAtom(tmpClonedAtom, 1); //Set the second atom
-                tmpMurckoFragment.addBond(tmpNewBond); //Add the whole bond
-            }
+            tmpAtom.setHybridization((IAtomType.Hybridization) CDKConstants.UNSET);
         }
         /*Add back hydrogens removed by the MurckoFragmenter*/
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpMurckoFragment);
@@ -627,14 +785,13 @@ public class ScaffoldGenerator {
      * Iteratively removes the terminal rings. All resulting Schuffenhauer scaffolds are returned. Duplicates are not permitted.
      * The Schuffenhauer scaffold of the entire entered molecule is stored first in the list.
      * @param aMolecule Molecule to be disassembled.
-     * @param anAromaticity anAromaticity Model to be used to determine aromaticity.
      * @return List with all resulting Schuffenhauer scaffolds.
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
      * @throws CloneNotSupportedException if cloning is not possible.
      */
-    public List<IAtomContainer> getIterativeRemoval(IAtomContainer aMolecule,Aromaticity anAromaticity) throws CDKException, CloneNotSupportedException {
+    public List<IAtomContainer> getIterativeRemoval(IAtomContainer aMolecule) throws CDKException, CloneNotSupportedException {
         SmilesGenerator tmpGenerator = new SmilesGenerator(SmiFlavor.Unique);
-        IAtomContainer tmpSchuffenhauerOriginal = this.getSchuffenhauerScaffold(aMolecule, true, anAromaticity);
+        IAtomContainer tmpSchuffenhauerOriginal = this.getScaffoldProtected(aMolecule, true, this.aromaticityModelSetting);
         int tmpRingCount = this.getRings(tmpSchuffenhauerOriginal, true).size();
         List<String> tmpAddedSMILESList = new ArrayList<>(tmpRingCount * 45);
         //List of all fragments already created and size estimated on the basis of an empirical value
@@ -651,7 +808,7 @@ public class ScaffoldGenerator {
                 }
                 if(this.isRingTerminal(tmpIterMol, tmpRing) && this.isRingRemovable(tmpRing, tmpAllRingsList, tmpIterMol)) { //Consider all terminal rings
                     boolean tmpIsInList = false;
-                    IAtomContainer tmpRingRemoved = this.getSchuffenhauerScaffold(this.removeRing(tmpIterMol, tmpRing), false, null); //Remove next ring
+                    IAtomContainer tmpRingRemoved = this.getScaffoldProtected(this.removeRing(tmpIterMol, tmpRing), false, null); //Remove next ring
                     String tmpRingRemovedSMILES = tmpGenerator.create(tmpRingRemoved); //Generate unique SMILES
                     if(tmpAddedSMILESList.contains(tmpRingRemovedSMILES)) { //Check if the molecule has already been added to the list
                         tmpIsInList = true;
@@ -671,13 +828,12 @@ public class ScaffoldGenerator {
      * A new level is created with each removal step. Duplicates are permitted.
      * The Schuffenhauer scaffold of the entire entered molecule is the root of the tree.
      * @param aMolecule Molecule to be disassembled.
-     * @param anAromaticity anAromaticity Model to be used to determine aromaticity.
      * @return List with all resulting Schuffenhauer scaffolds.
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
      * @throws CloneNotSupportedException if cloning is not possible.
      */
-    public TreeNode<IAtomContainer> getRemovalTree(IAtomContainer aMolecule, Aromaticity anAromaticity) throws CDKException, CloneNotSupportedException {
-        IAtomContainer tmpSchuffenhauerOriginal = this.getSchuffenhauerScaffold(aMolecule, true, anAromaticity);
+    public TreeNode<IAtomContainer> getRemovalTree(IAtomContainer aMolecule) throws CDKException, CloneNotSupportedException {
+        IAtomContainer tmpSchuffenhauerOriginal = this.getScaffoldProtected(aMolecule, true, this.aromaticityModelSetting);
         int tmpRingCount = this.getRings(tmpSchuffenhauerOriginal, true).size();
         //List of all fragments already created and size estimated on the basis of an empirical value
         List<IAtomContainer> tmpIterativeRemovalList = new ArrayList<>(tmpRingCount * 45);
@@ -695,7 +851,7 @@ public class ScaffoldGenerator {
                     continue;
                 }
                 if(this.isRingTerminal(tmpIterMol, tmpRing) && this.isRingRemovable(tmpRing, tmpRings, tmpIterMol)) { //Consider all terminal rings
-                    IAtomContainer tmpRingRemoved = this.getSchuffenhauerScaffold(this.removeRing(tmpIterMol, tmpRing), false, null); //Remove next ring
+                    IAtomContainer tmpRingRemoved = this.getScaffoldProtected(this.removeRing(tmpIterMol, tmpRing), false, null); //Remove next ring
                     tmpAllNodesList.add(tmpAllNodesList.get(tmpLevelCounter).addChild(tmpRingRemoved)); //Add next node to current Level
                     tmpIterativeRemovalList.add(tmpRingRemoved); // The molecule added to the tree is added to the list
                 }
@@ -710,16 +866,13 @@ public class ScaffoldGenerator {
      * Iteratively removes the rings of the molecule according to specific rules that are queried hierarchically.
      * Based on the rules from the "The Scaffold Tree" Paper by Schuffenhauer et al.
      * @param aMolecule Molecule that is to be broken down into its fragments
-     * @param anIsAromaticitySet Indicates whether the aromaticity is to be set.
-     * @param @param anAromaticity anAromaticity Model to be used to determine aromaticity. Can be null if anIsAromaticitySet == false.
-     * @param anIsRuleSevenUsed Indicates whether rule seven is applied.
      * @return Fragments of the molecule according to the Schuffenhauer rules
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
      * @throws CloneNotSupportedException if cloning is not possible.
      */
-    public List<IAtomContainer> applySchuffenhauerRules(IAtomContainer aMolecule, boolean anIsAromaticitySet, Aromaticity anAromaticity, boolean anIsRuleSevenUsed) throws CloneNotSupportedException, CDKException {
+    public List<IAtomContainer> applySchuffenhauerRules(IAtomContainer aMolecule) throws CloneNotSupportedException, CDKException {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
-        IAtomContainer tmpSchuffenhauer = this.getSchuffenhauerScaffold(tmpClonedMolecule,anIsAromaticitySet , anAromaticity);
+        IAtomContainer tmpSchuffenhauer = this.getScaffoldProtected(tmpClonedMolecule, this.determineAromaticitySetting ,this.aromaticityModelSetting);
         /*All molecules with an atom-to-ring ratio of less than 1.0 are assigned the CYCLE_FINDER_BACKUP_PROPERTY = true property,
          since too many rings were probably detected. The fact that a molecule has more rings than atoms seems concerning. That is why this value was chosen.*/
         int tmpRingNumber = this.getRings(tmpSchuffenhauer, false).size();
@@ -731,7 +884,7 @@ public class ScaffoldGenerator {
             }
             /*Apply the new Cyclefinder to the molecules*/
             tmpRingNumber = this.getRings(tmpSchuffenhauer, false).size();
-            tmpSchuffenhauer = this.getSchuffenhauerScaffold(tmpClonedMolecule,anIsAromaticitySet , anAromaticity);
+            tmpSchuffenhauer = this.getScaffoldProtected(tmpClonedMolecule, false ,null);
         }
         //List of all generated fragments
         List<IAtomContainer> tmpSchuffenhauerFragments = new ArrayList<>(tmpRingNumber);
@@ -791,14 +944,14 @@ public class ScaffoldGenerator {
                 continue;
             }
             //Rule seven is only useful when aromaticity is redetermined
-            if(anIsRuleSevenUsed) {
+            if(this.ruleSevenAppliedSetting) {
                 int tmpRuleSevenRingNumber = tmpRemovableRings.size();
                 /*Apply rule number seven*/
-                tmpRemovableRings = this.applySchuffenhauerRuleSeven(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings, anAromaticity);
+                tmpRemovableRings = this.applySchuffenhauerRuleSeven(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings);
 
                 /*Store molecules in which the number of rings to be examined is reduced*/
-                if(tmpRemovableRings.size() < tmpRuleSevenRingNumber) {
-                //if(false) {
+                //if(tmpRemovableRings.size() < tmpRuleSevenRingNumber) {
+                if(false) {
                     System.out.println("COCONUT ID: " + aMolecule.getProperty("coconut_id"));
                     /*Generate control pictures*/
                     DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
@@ -859,22 +1012,6 @@ public class ScaffoldGenerator {
             tmpSchuffenhauerFragments.add(this.applySchuffenhauerRuleThirteen(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings));
         }
         return tmpSchuffenhauerFragments;
-    }
-
-    /**
-     * Removes the selected ring from the last fragment in the list and adds the resulting fragment to this list.
-     * @param aRing Ring to be removed
-     * @param aFragmentList List of all fragments created so far
-     * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
-     * @throws CloneNotSupportedException if cloning is not possible.
-     */
-    public void removeRingForSchuffenhauerRule(IAtomContainer aRing, List<IAtomContainer> aFragmentList) throws CDKException, CloneNotSupportedException {
-        //Remove the ring from from the fragment currently being treated
-        IAtomContainer tmpRingRemoved = this.removeRing(aFragmentList.get(aFragmentList.size() - 1), aRing);
-        //Remove the linkers
-        IAtomContainer tmpSchuffRingRemoved = this.getSchuffenhauerScaffold(tmpRingRemoved, false, null);
-        //Add the fragment to the list of fragments
-        aFragmentList.add(tmpSchuffRingRemoved);
     }
 
     /**
@@ -998,6 +1135,8 @@ public class ScaffoldGenerator {
      * nrrb: number of bonds being a member in more than one ring
      * nR: number of rings
      * The rings with the highest absolute delta are returned
+     * The artificial creation of spiro ring systems (see scheme 10 and rule 5) is not possible in our implementation,
+     * because such a ring would not be detected as terminal (and only terminal rings are considered for removal)
      * The fifth rule says: Bridged Ring Systems Are Retained with Preference over Spiro Ring Systems.
      * Therefore, the rings with the positive maximum delta are preferred over the rings with the negative one.
      * Through the isRingTerminal() method, a removal that leads to spiro ring systems is not available for selection anyway.
@@ -1122,12 +1261,11 @@ public class ScaffoldGenerator {
      * It was changed to: The number of aromatic rings should be reduced by a maximum of one, when a ring is removed. Therefore, no additional aromatic rings should be deleted by removing a ring.
      * @param aRings Removable rings of the molecule to which the rule is applied
      * @param aMolecule Molecule from which a ring is to be removed
-     *  @param anAromaticity anAromaticity Model to be used to determine aromaticity.
      * @return List of rings to be removed first according to the rule. Returns the unchanged list if the rule cannot be applied to the rings.
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
      * @throws CloneNotSupportedException if cloning is not possible.
      */
-    public List<IAtomContainer> applySchuffenhauerRuleSeven(IAtomContainer aMolecule, List<IAtomContainer> aRings, Aromaticity anAromaticity) throws CDKException, CloneNotSupportedException {
+    public List<IAtomContainer> applySchuffenhauerRuleSeven(IAtomContainer aMolecule, List<IAtomContainer> aRings) throws CDKException, CloneNotSupportedException {
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
         List<IAtomContainer> tmpReturnRings = new ArrayList<>(aRings.size());
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
@@ -1159,8 +1297,8 @@ public class ScaffoldGenerator {
             tmpSmiles.replace("[N]", "N");
             SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
             tmpRemovedRing = tmpParser.parseSmiles(tmpSmiles);
-            tmpRemovedRing = this.getSchuffenhauerScaffold(tmpRemovedRing, false, null);
-            anAromaticity.apply(tmpRemovedRing);
+            tmpRemovedRing = this.getScaffoldProtected(tmpRemovedRing, false, null);
+            this.aromaticityModelSetting.apply(tmpRemovedRing);
             /*Check the number of aromatic rings*/
             int tmpRemovedAromaticRingCounter = 0;
             //-----Eliminate Cycle Error-----
@@ -1170,7 +1308,7 @@ public class ScaffoldGenerator {
             try {
                 tmpRemovedCycles = this.getCycleFinder(tmpRemovedRing).find(tmpRemovedRing);
                 tmpCycleIterable = tmpRemovedCycles.toRingSet().atomContainers();
-            } catch (NegativeArraySizeException e) {
+            } catch (Exception e) {
                 /*Save as a property of the atoms that from now on the CYCLE_FINDER_BACKUP is to be used*/
                 for(IAtomContainer tmpOriginalRing : aRings) {
                     for(IAtom tmpAtom : tmpOriginalRing.atoms()) {
@@ -1490,7 +1628,7 @@ public class ScaffoldGenerator {
         for (IAtomContainer tmpRing : aRings) {
             IAtomContainer tmpRingRemoved = this.removeRing(tmpClonedMolecule, tmpRing);
             //Remove linker
-            IAtomContainer tmpSchuff = this.getSchuffenhauerScaffold(tmpRingRemoved, false, null);
+            IAtomContainer tmpSchuff = this.getScaffoldProtected(tmpRingRemoved, false, null);
             //A few structures do not produce a truly unique SMILES. These are overwritten and are therefore not considered for further selection.
             tmpRingRemovedMap.put(tmpGenerator.create(tmpSchuff), tmpSchuff);
         }
@@ -1501,7 +1639,135 @@ public class ScaffoldGenerator {
     //</editor-fold>
     //</editor-fold>
 
+    //<editor-fold desc="Protected methods">
     /**
+     * Generates the Schuffenhauer or Murcko scaffold for the entered molecule and returns it. All stereochemistry information is deleted.
+     * The aromaticity can be set with a selected electron-donation model and a CycleFinder. Setting the aromaticity is essential for many of the following methods.
+     * @param aMolecule molecule whose Schuffenhauer scaffold is produced.
+     * @param anIsAromaticitySet Indicates whether the aromaticity is to be set.
+     * @param anAromaticity anAromaticity Model to be used to determine aromaticity. Can be null if anIsAromaticitySet == false.
+     * @return Schuffenhauer scaffold of the inserted molecule. It can be an empty molecule if the original molecule does not contain a Schuffenhauer scaffold.
+     * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present or problem with aromaticity.apply()
+     * @throws CloneNotSupportedException if cloning is not possible.
+     */
+    protected IAtomContainer getScaffoldProtected(IAtomContainer aMolecule, boolean anIsAromaticitySet, Aromaticity anAromaticity) throws CDKException, CloneNotSupportedException {
+        IAtomContainer tmpClonedMolecule = aMolecule.clone();
+        /*Set aromaticity if necessary*/
+        if (anIsAromaticitySet) {
+            /*Preprocessing*/
+            AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpClonedMolecule);
+            CDKHydrogenAdder.getInstance(tmpClonedMolecule.getBuilder()).addImplicitHydrogens(tmpClonedMolecule);
+            Objects.requireNonNull(anAromaticity, "If anIsAromaticitySet == true, anAromaticity must be non null");
+            //Set aromaticity
+            anAromaticity.apply(tmpClonedMolecule);
+        }
+        /*Clear the stereo chemistry of the molecule*/
+        List<IStereoElement> tmpStereo = new ArrayList<>();
+        tmpClonedMolecule.setStereoElements(tmpStereo);
+        /*Mark each atom with ascending number*/
+        Integer tmpCounter = 0;
+        for (IAtom tmpAtom : tmpClonedMolecule.atoms()) {
+            tmpAtom.setProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY, tmpCounter);
+            tmpCounter++;
+        }
+        /*Generate the murckoFragment*/
+        MurckoFragmenter tmpMurckoFragmenter = new MurckoFragmenter(true, 1);
+        tmpMurckoFragmenter.setComputeRingFragments(false);
+        IAtomContainer tmpMurckoFragment = tmpMurckoFragmenter.scaffold(tmpClonedMolecule);
+        switch (this.scaffoldModeSetting) {
+            /*Generate the Murcko scaffold*/
+            case MURCKO:
+                break;
+            /*Generate the Schuffenhauer scaffold*/
+            case SCHUFFENHAUER:
+                /*Store the number of each Atom of the murckoFragment*/
+                HashSet<Integer> tmpMurckoAtomNumbers = new HashSet(tmpClonedMolecule.getAtomCount(), 1);
+                for (IAtom tmpMurckoAtom : tmpMurckoFragment.atoms()) {
+                    tmpMurckoAtomNumbers.add(tmpMurckoAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
+                }
+                /*Store the number of each Atom that is not single bonded and the respective bond*/
+                //HashMap cannot be larger than the total number of atoms. Key = Atom and Val = Bond
+                HashSet<IBond> tmpAddBondSet = new HashSet((tmpClonedMolecule.getAtomCount() / 2), 1);
+                for (IBond tmpBond : tmpClonedMolecule.bonds()) {
+                    if (tmpBond.getOrder() != IBond.Order.SINGLE && tmpBond.getOrder() != IBond.Order.UNSET) {//Consider non single bonds
+                        //If both atoms of the bond are in the Murcko fragment, they are taken over anyway
+                        if (tmpMurckoAtomNumbers.contains(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))
+                                && tmpMurckoAtomNumbers.contains(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                            continue;
+                        }
+                        //The binding has not yet been added to the list
+                        if (!tmpAddBondSet.contains(tmpBond)) {
+                            /*Add the bond*/
+                            tmpAddBondSet.add(tmpBond);
+                        }
+                    }
+                }
+                /*Add the missing atom and the respective bond*/
+                HashMap<Integer, IAtom> tmpMurckoAtomMap = new HashMap(tmpMurckoFragment.getAtomCount(), 1);
+                for (IAtom tmpAtom : tmpMurckoFragment.atoms()) {
+                    /*Save the properties of the murcko fragment*/
+                    int tmpAtomProperty = tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY);
+                    tmpMurckoAtomMap.put(tmpAtomProperty, tmpAtom);
+                }
+                for (IBond tmpBond : tmpAddBondSet) { //Go though all saved bonds
+                    /*If both atoms of the bond are contained in the murcko fragment, this bond does not need to be added any more*/
+                    if (tmpMurckoAtomMap.containsKey(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)) &&
+                            tmpMurckoAtomMap.containsKey(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                        continue; //Skip this bond
+                    }
+                    /*Atom 1 of the bond is in the Murcko fragment*/
+                    if (tmpMurckoAtomMap.containsKey(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                        IAtom tmpClonedAtom = tmpBond.getAtom(0).clone();
+                        tmpMurckoFragment.addAtom(tmpClonedAtom); //Add the atom that is not yet in the murcko fragment
+                        IBond tmpNewBond = tmpBond.clone();
+                        //Set the first atom
+                        tmpNewBond.setAtom(tmpMurckoAtomMap.get(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)), 1);
+                        tmpNewBond.setAtom(tmpClonedAtom, 0); //Set the second atom
+                        tmpMurckoFragment.addBond(tmpNewBond); //Add the whole bond
+                        continue; //Next bond
+                    }
+                    /*Atom 0 of the bond is in the Murcko fragment*/
+                    if (tmpMurckoAtomMap.containsKey(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                        IAtom tmpClonedAtom = tmpBond.getAtom(1).clone();
+                        tmpMurckoFragment.addAtom(tmpClonedAtom); //Add the atom that is not yet in the murcko fragment
+                        IBond tmpNewBond = tmpBond.clone();
+                        //Set the first atom
+                        tmpNewBond.setAtom(tmpMurckoAtomMap.get(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)), 0);
+                        tmpNewBond.setAtom(tmpClonedAtom, 1); //Set the second atom
+                        tmpMurckoFragment.addBond(tmpNewBond); //Add the whole bond
+                    }
+                }
+                break;
+            }
+        /*The Murcko fragmenter does not adjust the hybridisation when the atoms are removed.
+        Therefore, this is deleted and determined again.*/
+        for(IAtom tmpAtom : tmpMurckoFragment.atoms()) {
+            tmpAtom.setHybridization((IAtomType.Hybridization) CDKConstants.UNSET);
+        }
+        /*Add back hydrogens removed by the MurckoFragmenter*/
+        AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpMurckoFragment);
+        CDKHydrogenAdder.getInstance(tmpMurckoFragment.getBuilder()).addImplicitHydrogens(tmpMurckoFragment);
+        return tmpMurckoFragment;
+    }
+
+    /**
+     * Removes the selected ring from the last fragment in the list and adds the resulting fragment to this list.
+     * @param aRing Ring to be removed
+     * @param aFragmentList List of all fragments created so far
+     * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
+     * @throws CloneNotSupportedException if cloning is not possible.
+     */
+    protected void removeRingForSchuffenhauerRule(IAtomContainer aRing, List<IAtomContainer> aFragmentList) throws CDKException, CloneNotSupportedException {
+        //Remove the ring from from the fragment currently being treated
+        IAtomContainer tmpRingRemoved = this.removeRing(aFragmentList.get(aFragmentList.size() - 1), aRing);
+        //Remove the linkers
+        IAtomContainer tmpSchuffRingRemoved = this.getScaffoldProtected(tmpRingRemoved, false, null);
+        //Add the fragment to the list of fragments
+        aFragmentList.add(tmpSchuffRingRemoved);
+    }
+
+    /**
+     *
      * The ring to be examined is checked to determine whether it is attached to a linker that has a heteroatom at at least one end.
      *
      * Two cases are treated differently.
@@ -1521,7 +1787,7 @@ public class ScaffoldGenerator {
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
      * @throws CloneNotSupportedException if cloning is not possible.
      */
-    private boolean isRingAttachedToHeteroatomLinker(IAtomContainer aMolecule, IAtomContainer aRing, MurckoFragmenter aMurckoFragmenter) throws CDKException, CloneNotSupportedException {
+    protected boolean isRingAttachedToHeteroatomLinker(IAtomContainer aMolecule, IAtomContainer aRing, MurckoFragmenter aMurckoFragmenter) throws CDKException, CloneNotSupportedException {
         HashSet<Integer> tmpRingPropertyNumbers = new HashSet(aRing.getAtomCount(), 1);
         HashSet<Integer> tmpRemovedMurckoAtomNumbers = new HashSet(aMolecule.getAtomCount(), 1);
         /*Save all numbers of the ring atoms*/
@@ -1605,7 +1871,7 @@ public class ScaffoldGenerator {
      * @param aMolecule Molecule for which a CycleFinder is to be generated
      * @return CycleFinder that matches the properties of the molecule
      */
-    private CycleFinder getCycleFinder(IAtomContainer aMolecule) {
+    protected CycleFinder getCycleFinder(IAtomContainer aMolecule) {
         boolean tmpIsBackupFinderUsed = false;
         /*Check whether the backup Cycle finder should be used*/
         for(IAtom tmpAtom : aMolecule.atoms()) {
@@ -1628,4 +1894,5 @@ public class ScaffoldGenerator {
             return ScaffoldGenerator.CYCLE_FINDER;
         }
     }
+    //</editor-fold>
 }
