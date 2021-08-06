@@ -58,9 +58,17 @@ public class ScaffoldGenerator {
 
         /**
          * Murcko scaffolds are generated. Based on the "The Properties of Known Drugs. 1. Molecular Frameworks" Paper by Bemis and Murcko 1996.
-         * Then all terminal side chains are removed and only linkers and rings are retained.
+         * All terminal side chains are removed and only linkers and rings are retained.
          */
-        MURCKO();
+        MURCKO(),
+
+        /**
+         * Basic wire frames are generatedd Based on the "“Molecular Anatomy”: a new multi‑dimensional hierarchical scaffold analysis tool"
+         * Paper by Beccari et al 2021.
+         * It is a very abstract form of representation.
+         * All side chains are removed, all bonds are converted into single bonds and all atoms are converted into carbons.
+         */
+        BASIC_WIRE_FRAME();
     }
     //</editor-fold>
 
@@ -111,6 +119,11 @@ public class ScaffoldGenerator {
      * Currently used ScaffoldMode.
      */
     private ScaffoldModeOption scaffoldModeSetting;
+
+    /**
+     * This setting also preserves DBs that are not aromatic during ring removal.
+     */
+    private boolean NonAromaticDBObtainedSetting;
     //</editor-fold>
 
     //<editor-fold desc="Constructors">
@@ -137,7 +150,7 @@ public class ScaffoldGenerator {
      * This consists of the CycleFinder and the ElectronDonation Model.
      * @return the Aromaticity model
      */
-    public Aromaticity getAromaticityModelSetting() {
+    public Aromaticity getAromaticityModel() {
         return this.aromaticityModelSetting;
     }
 
@@ -157,6 +170,14 @@ public class ScaffoldGenerator {
      */
     public ScaffoldModeOption getScaffoldModeSetting() {
         return this.scaffoldModeSetting;
+    }
+
+    /**
+     * Indicates whether non-aromatic DB are obtained during ring removal.
+     * @return true if non-aromatic DB are obtained during ring removal
+     */
+    public boolean isNonAromaticDBObtained() {
+        return this.NonAromaticDBObtainedSetting;
     }
 
     //</editor-fold>
@@ -183,7 +204,7 @@ public class ScaffoldGenerator {
      * Sets the option to skip rule 7.
      * It can be useful to turn off rule 7 explicitly,
      * as it is only relevant for a relatively small number of molecules, but it increases the computing time.
-     * @param anIsRuleSevenApplied true if rule 7 is applied
+     * @param anIsRuleSevenApplied if true rule 7 is applied
      */
     public void setRuleSevenAppliedSetting(boolean anIsRuleSevenApplied) {
         this.ruleSevenAppliedSetting = anIsRuleSevenApplied;
@@ -198,6 +219,14 @@ public class ScaffoldGenerator {
         this.scaffoldModeSetting = anScaffoldMode;
 
     }
+
+    /**
+     * Sets the option whether non-aromatic DBs are preserved during ring removal.
+     * @param anIsNonAromaticDBObtained true if non-aromatic DBs are preserved
+     */
+    public void setNonAromaticDBObtainedSetting(boolean anIsNonAromaticDBObtained) {
+        this.NonAromaticDBObtainedSetting = anIsNonAromaticDBObtained;
+    }
     /**
      * All settings are set to their default values. Automatically executed by the constructor.
      */
@@ -205,6 +234,7 @@ public class ScaffoldGenerator {
         this.setDetermineAromaticitySetting(true);
         this.setAromaticityModelSetting(null);
         this.setRuleSevenAppliedSetting(true);
+        this.setNonAromaticDBObtainedSetting(false);
         this.setScaffoldModeSetting(ScaffoldModeOption.SCHUFFENHAUER);
     }
     //</editor-fold>
@@ -235,11 +265,14 @@ public class ScaffoldGenerator {
         /*Clear the stereo chemistry of the molecule*/
         List<IStereoElement> tmpStereo = new ArrayList<>();
         tmpClonedMolecule.setStereoElements(tmpStereo);
-        /*Mark each atom with ascending number*/
-        Integer tmpCounter = 0;
-        for(IAtom tmpAtom : tmpClonedMolecule.atoms()) {
-            tmpAtom.setProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY, tmpCounter);
-            tmpCounter++;
+        /*Basic wire frames will be numbered later, as their number will be deleted immediately by anonymisation*/
+        if(ScaffoldModeOption.BASIC_WIRE_FRAME != this.getScaffoldModeSetting()) {
+            /*Mark each atom with ascending number*/
+            Integer tmpCounter = 0;
+            for(IAtom tmpAtom : tmpClonedMolecule.atoms()) {
+                tmpAtom.setProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY, tmpCounter);
+                tmpCounter++;
+            }
         }
         /*Generate the murckoFragment*/
         MurckoFragmenter tmpMurckoFragmenter = new MurckoFragmenter(true,1);
@@ -248,6 +281,16 @@ public class ScaffoldGenerator {
         switch (this.scaffoldModeSetting) {
             /*Generate the Murcko scaffold*/
             case MURCKO:
+                break;
+            /*Generate the basic wire frame*/
+            case BASIC_WIRE_FRAME:
+                tmpMurckoFragment = AtomContainerManipulator.anonymise(tmpMurckoFragment);
+                /*Mark each atom with ascending number after anonymization because all properties are removed*/
+                Integer tmpCounterBWF = 0;
+                for(IAtom tmpAtom : tmpMurckoFragment.atoms()) {
+                    tmpAtom.setProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY, tmpCounterBWF);
+                    tmpCounterBWF++;
+                }
                 break;
             /*Generate the Schuffenhauer scaffold*/
             case SCHUFFENHAUER:
@@ -550,7 +593,8 @@ public class ScaffoldGenerator {
             }
             /*Store the number of all atoms from which an aromatic ring has been removed.
             * In these atoms, a double bond was removed without changing the hybridisation from sp2 to sp3.*/
-            if(tmpIsRingAromatic) { //Perform calculation only if the ring to be removed is aromatic
+            //Perform calculation only if the ring to be removed is aromatic or if non-aromatic DB should also be preserved
+            if(tmpIsRingAromatic || this.NonAromaticDBObtainedSetting) {
                 for (IAtom tmpMolAtom : tmpMoleculeClone.atoms()) {
                     //All Atoms that are sp2 hybridised and in the ring to be removed
                     if (tmpMolAtom.getHybridization() == IAtomType.Hybridization.SP2
@@ -568,7 +612,8 @@ public class ScaffoldGenerator {
                 }
             }
         }
-        if(tmpIsRingAromatic) { //Perform calculation only if the ring to be removed is aromatic
+        //Perform calculation only if the ring to be removed is aromatic or if non-aromatic DB should also be preserved
+        if(tmpIsRingAromatic || this.NonAromaticDBObtainedSetting) {
             for(IBond tmpBond : tmpMoleculeClone.bonds()) {
                 /*If both atoms of a bond were previously part of an aromatic ring, insert a double bond*/
                 if(tmpEdgeAtomNumbers.contains(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))
@@ -875,8 +920,8 @@ public class ScaffoldGenerator {
                 tmpRemovableRings = this.applySchuffenhauerRuleSeven(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings);
 
                 /*Store molecules in which the number of rings to be examined is reduced*/
-                if(tmpRemovableRings.size() < tmpRuleSevenRingNumber) {
-                //if(false) {
+                //if(tmpRemovableRings.size() < tmpRuleSevenRingNumber) {
+                if(false) {
                     System.out.println("COCONUT ID: " + aMolecule.getProperty("coconut_id"));
                     /*Generate control pictures*/
                     DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
@@ -964,14 +1009,18 @@ public class ScaffoldGenerator {
             //Set aromaticity
             anAromaticity.apply(tmpClonedMolecule);
         }
+
         /*Clear the stereo chemistry of the molecule*/
         List<IStereoElement> tmpStereo = new ArrayList<>();
         tmpClonedMolecule.setStereoElements(tmpStereo);
-        /*Mark each atom with ascending number*/
-        Integer tmpCounter = 0;
-        for (IAtom tmpAtom : tmpClonedMolecule.atoms()) {
-            tmpAtom.setProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY, tmpCounter);
-            tmpCounter++;
+        /*Basic wire frames will be numbered later, as their number will be deleted immediately by anonymisation*/
+        if(ScaffoldModeOption.BASIC_WIRE_FRAME != this.getScaffoldModeSetting()) {
+            /*Mark each atom with ascending number*/
+            Integer tmpCounter = 0;
+            for(IAtom tmpAtom : tmpClonedMolecule.atoms()) {
+                tmpAtom.setProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY, tmpCounter);
+                tmpCounter++;
+            }
         }
         /*Generate the murckoFragment*/
         MurckoFragmenter tmpMurckoFragmenter = new MurckoFragmenter(true, 1);
@@ -980,6 +1029,16 @@ public class ScaffoldGenerator {
         switch (this.scaffoldModeSetting) {
             /*Generate the Murcko scaffold*/
             case MURCKO:
+                break;
+            /*Generate the basic wire frame*/
+            case BASIC_WIRE_FRAME:
+                tmpMurckoFragment = AtomContainerManipulator.anonymise(tmpMurckoFragment);
+                /*Mark each atom with ascending number after anonymization because all properties are removed*/
+                Integer tmpCounterBWF = 0;
+                for(IAtom tmpAtom : tmpMurckoFragment.atoms()) {
+                    tmpAtom.setProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY, tmpCounterBWF);
+                    tmpCounterBWF++;
+                }
                 break;
             /*Generate the Schuffenhauer scaffold*/
             case SCHUFFENHAUER:
