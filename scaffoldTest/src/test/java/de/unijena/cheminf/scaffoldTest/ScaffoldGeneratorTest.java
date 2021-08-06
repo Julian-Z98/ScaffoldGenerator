@@ -29,6 +29,7 @@ import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.aromaticity.ElectronDonation;
 import org.openscience.cdk.depict.DepictionGenerator;
+import org.openscience.cdk.fragment.MurckoFragmenter;
 import org.openscience.cdk.graph.CycleFinder;
 import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.IAtom;
@@ -82,8 +83,8 @@ public class ScaffoldGeneratorTest {
             DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
             BufferedImage tmpImgOriginal = tmpGenerator.depict(tmpMolecule).toImg();
             /*Save the original picture*/
-            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Original.png").mkdirs();
-            File tmpOutputOriginal = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Original.png");
+            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Original.png").mkdirs();
+            File tmpOutputOriginal = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Original.png");
             ImageIO.write(tmpImgOriginal, "png" ,tmpOutputOriginal);
             //Generate SchuffenhauerScaffold
             ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
@@ -91,8 +92,8 @@ public class ScaffoldGeneratorTest {
             //Generate picture of the SchuffenhauerScaffold
             BufferedImage tmpImgSchuff = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
             /*Save the picture*/
-            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/SchuffenhauerScaffold.png").mkdirs();
-            File tmpOutputSchuff = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/SchuffenhauerScaffold.png");
+            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/SchuffenhauerScaffold.png").mkdirs();
+            File tmpOutputSchuff = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/SchuffenhauerScaffold.png");
             ImageIO.write(tmpImgSchuff, "png" ,tmpOutputSchuff);
         }
     }
@@ -114,16 +115,16 @@ public class ScaffoldGeneratorTest {
         tmpMolecule = AtomContainerManipulator.removeHydrogens(tmpMolecule);
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpMolecule).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCDoubleBond/Original.png").mkdirs();
-        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCDoubleBond/Original.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Miscellaneous/NonCDoubleBond/Original.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Miscellaneous/NonCDoubleBond/Original.png");
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         /*Generate picture of the SchuffenhauerScaffold*/
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
         IAtomContainer tmpSchuff = tmpScaffoldGenerator.getScaffold(tmpMolecule);
         BufferedImage tmpImgSchuff = tmpGenerator.depict(tmpSchuff).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCDoubleBond/Schuffenhauer.png").mkdirs();
-        File tmpOutputSchuff = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCDoubleBond/Schuffenhauer.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Miscellaneous/NonCDoubleBond/Schuffenhauer.png").mkdirs();
+        File tmpOutputSchuff = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Miscellaneous/NonCDoubleBond/Schuffenhauer.png");
         ImageIO.write(tmpImgSchuff, "png" ,tmpOutputSchuff);
         //Generate rings
         List<IAtomContainer> tmpRings = tmpScaffoldGenerator.getRings(tmpScaffoldGenerator.getScaffold(tmpMolecule),true);
@@ -132,8 +133,8 @@ public class ScaffoldGeneratorTest {
         for (IAtomContainer tmpRing : tmpRings) {
             BufferedImage tmpImgRing = tmpGenerator.depict(tmpRing).toImg();
             /*Save the picture*/
-            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCDoubleBond/Ring" + tmpCounter + ".png").mkdirs();
-            File tmpOutputRing = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCDoubleBond/Ring" + tmpCounter + ".png");
+            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Miscellaneous/NonCDoubleBond/Ring" + tmpCounter + ".png").mkdirs();
+            File tmpOutputRing = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Miscellaneous/NonCDoubleBond/Ring" + tmpCounter + ".png");
             ImageIO.write(tmpImgRing, "png", tmpOutputRing);
             tmpCounter++;
         }
@@ -159,8 +160,8 @@ public class ScaffoldGeneratorTest {
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpMolecule).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCRemove/Original.png").mkdirs();
-        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCRemove/Original.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Miscellaneous/NonCRemove/Original.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Miscellaneous/NonCRemove/Original.png");
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         /*Generate picture of the SchuffenhauerScaffold*/
         ScaffoldGenerator tmpScaffoldGenerator = null;
@@ -172,8 +173,8 @@ public class ScaffoldGeneratorTest {
         IAtomContainer tmpSchuff = tmpScaffoldGenerator.getScaffold(tmpMolecule);
         BufferedImage tmpImgSchuff = tmpGenerator.depict(tmpSchuff).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCRemove/Schuffenhauer.png").mkdirs();
-        File tmpOutputSchuff = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCRemove/Schuffenhauer.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Miscellaneous/NonCRemove/Schuffenhauer.png").mkdirs();
+        File tmpOutputSchuff = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Miscellaneous/NonCRemove/Schuffenhauer.png");
         ImageIO.write(tmpImgSchuff, "png" ,tmpOutputSchuff);
         //Generate rings
         List<IAtomContainer> tmpRings = tmpScaffoldGenerator.getRings(tmpScaffoldGenerator.getScaffold(tmpMolecule),true);
@@ -184,11 +185,11 @@ public class ScaffoldGeneratorTest {
             BufferedImage tmpImgRingRemoved = tmpGenerator.depict(tmpRingRemoved).toImg();
             BufferedImage tmpImgRing = tmpGenerator.depict(tmpRing).toImg();
             /*Save the picture*/
-            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCRemove/Ring" + tmpCounter + "Removed.png").mkdirs();
-            File tmpOutputRingRemoved = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCRemove/Ring" + tmpCounter + "Removed.png");
+            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Miscellaneous/NonCRemove/Ring" + tmpCounter + "Removed.png").mkdirs();
+            File tmpOutputRingRemoved = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Miscellaneous/NonCRemove/Ring" + tmpCounter + "Removed.png");
             ImageIO.write(tmpImgRingRemoved, "png", tmpOutputRingRemoved);
-            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCRemove/Ring" + tmpCounter + ".png").mkdirs();
-            File tmpOutputRing = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/NonCRemove/Ring" + tmpCounter + ".png");
+            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Miscellaneous/NonCRemove/Ring" + tmpCounter + ".png").mkdirs();
+            File tmpOutputRing = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Miscellaneous/NonCRemove/Ring" + tmpCounter + ".png");
             ImageIO.write(tmpImgRing, "png", tmpOutputRing);
             tmpCounter++;
         }
@@ -217,8 +218,8 @@ public class ScaffoldGeneratorTest {
             for (IAtomContainer tmpRing : tmpRings) {
                 BufferedImage tmpImgRing = tmpGenerator.depict(tmpRing).toImg();
                 /*Save the picture*/
-                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/GeneratedRing" + tmpCounter + ".png").mkdirs();
-                File tmpOutputRing = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/GeneratedRing" + tmpCounter + ".png");
+                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/GeneratedRing" + tmpCounter + ".png").mkdirs();
+                File tmpOutputRing = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/GeneratedRing" + tmpCounter + ".png");
                 ImageIO.write(tmpImgRing, "png", tmpOutputRing);
                 tmpCounter++;
             }
@@ -251,8 +252,8 @@ public class ScaffoldGeneratorTest {
                 DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
                 BufferedImage tmpImgRemove = tmpGenerator.depict(tmpRemovedSchuff).toImg();
                 /*Save the picture*/
-                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/RingRemove" + tmpCounter + ".png").mkdirs();
-                File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/RingRemove" + tmpCounter + ".png");
+                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/RingRemove" + tmpCounter + ".png").mkdirs();
+                File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/RingRemove" + tmpCounter + ".png");
                 ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
                 tmpCounter++;
             }
@@ -323,8 +324,8 @@ public class ScaffoldGeneratorTest {
                     DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
                     BufferedImage tmpImgRemove = tmpGenerator.depict(tmpRemovedSchuff).toImg();
                     /*Save the picture*/
-                    new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/TerminalRingRemove" + tmpCounter + ".png").mkdirs();
-                    File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/TerminalRingRemove" + tmpCounter + ".png");
+                    new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/TerminalRingRemove" + tmpCounter + ".png").mkdirs();
+                    File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/TerminalRingRemove" + tmpCounter + ".png");
                     ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
                 }
                 tmpCounter++;
@@ -333,7 +334,7 @@ public class ScaffoldGeneratorTest {
     }
     //</editor-fold>
 
-    //<editor-fold desc="Fundamental method test">
+    //<editor-fold desc="Advanced method test">
     /**
      * Test of getIterativeRemoval() with V2000 and V3000 mol files.
      * Loads the 12 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and iteratively removes the terminal rings.
@@ -356,8 +357,8 @@ public class ScaffoldGeneratorTest {
                 DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
                 BufferedImage tmpImgRemove = tmpGenerator.depict(tmpIterative).toImg();
                 /*Save the picture*/
-                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Iterative" + tmpCounter + ".png").mkdirs();
-                File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Iterative" + tmpCounter + ".png");
+                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Iterative" + tmpCounter + ".png").mkdirs();
+                File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Iterative" + tmpCounter + ".png");
                 ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
                 tmpCounter++;
             }
@@ -386,46 +387,12 @@ public class ScaffoldGeneratorTest {
                 /*Save the picture*/
                 DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
                 BufferedImage tmpSecImgRemove = tmpGenerator.depict(tmpMoleculeNode.getMolecule()).toImg();
-                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/TreeTest" + tmpCounter  + "Level" + tmpMoleculeNode.getLevel() + ".png").mkdirs();
-                File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/TreeTest" + tmpCounter +  "Level" + tmpMoleculeNode.getLevel() + ".png");
+                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Tree" + "/TreeTest" + tmpCounter  + "Level" + tmpMoleculeNode.getLevel() + ".png").mkdirs();
+                File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Tree" + "/TreeTest" + tmpCounter +  "Level" + tmpMoleculeNode.getLevel() + ".png");
                 ImageIO.write(tmpSecImgRemove, "png", tmpSecOutputRemove);
                 tmpCounter++;
             }
         }
-    }
-
-    /**
-     * Test of ScaffoldGenerator.getScaffold() with SMILES.
-     * Loads Scheme 1 from the "The Scaffold Tree" Paper by Schuffenhauer et al as SMILES and generates the MurckoFragment.
-     * Flucloxacillin is generated from the SMILES and all terminal side chains are removed. Rings and linkers are obtained.
-     * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
-     * @throws Exception if anything goes wrong
-     */
-    @Test
-    public void getMurckoScaffoldTest() throws Exception {
-        //SMILES to IAtomContainer
-        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
-        IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1=C(C(=NO1)C2=C(C=CC=C2Cl)F)C(=O)NC3C4N(C3=O)C(C(S4)(C)C)C(=O)O");
-        /*Generate picture of the Original molecule*/
-        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
-        BufferedImage tmpImgOriginal = tmpGenerator.depict(tmpMolecule).toImg();
-        /*Save the picture of the original*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/MurckoScaffoldTest/Original.png").mkdirs();
-        File tmpOutputOriginal = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/MurckoScaffoldTest/Original.png");
-        ImageIO.write(tmpImgOriginal, "png" ,tmpOutputOriginal);
-        //Generate SchuffenhauerScaffold
-        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
-        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.MURCKO);
-        IAtomContainer tmpSchuffenhauerSMILES = tmpScaffoldGenerator.getScaffold(tmpMolecule);
-        /*Generate picture of the SchuffenhauerScaffold*/
-        BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerSMILES).toImg();
-        /*Save the picture of the schuffenhauer scaffold*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/MurckoScaffoldTest/Murcko.png").mkdirs();
-        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/MurckoScaffoldTest/Murcko.png");
-        ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
-        /*Generate and check SMILES*/
-        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
-        assertEquals(tmpSmilesGenerator.create(tmpSchuffenhauerSMILES), "N=1OC=C(C1C=2C=CC=CC2)CNC3CN4CCSC43");
     }
 
     /**
@@ -452,21 +419,21 @@ public class ScaffoldGeneratorTest {
                 /*Save the picture of the test Node*/
                 DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
                 BufferedImage tmpNodeImg = tmpGenerator.depict(tmpMoleculeNode.getMolecule()).toImg();
-                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/TestNode.png").mkdirs();
-                File tmpNodeFile = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/TestNode.png");
+                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Tree" + "/TestNode.png").mkdirs();
+                File tmpNodeFile = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Tree" + "/TestNode.png");
                 ImageIO.write(tmpNodeImg, "png", tmpNodeFile);
                 /*Save the picture of the parent*/
                 BufferedImage tmpParentImg = tmpGenerator.depict(tmpMoleculeNode.getParent().getMolecule()).toImg();
-                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/ParentNode.png").mkdirs();
-                File tmpParentFile = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/ParentNode.png");
+                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Tree" + "/ParentNode.png").mkdirs();
+                File tmpParentFile = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Tree" + "/ParentNode.png");
                 ImageIO.write(tmpParentImg, "png", tmpParentFile);
                 /*Save pictures of the children*/
                 int tmpChildCounter = 0;
                 for(TreeNode<IAtomContainer> tmpNode : tmpMoleculeNode.getChildren()) {
                     tmpChildCounter++;
                     BufferedImage tmpChildImg = tmpGenerator.depict(tmpNode.getMolecule()).toImg();
-                    new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/ChildNode" + tmpChildCounter + ".png").mkdirs();
-                    File tmpChildFile = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/Tree" + "/ChildNode" + tmpChildCounter + ".png");
+                    new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Tree" + "/ChildNode" + tmpChildCounter + ".png").mkdirs();
+                    File tmpChildFile = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Tree" + "/ChildNode" + tmpChildCounter + ".png");
                     ImageIO.write(tmpChildImg, "png", tmpChildFile);
                 }
                 break;
@@ -543,8 +510,8 @@ public class ScaffoldGeneratorTest {
             /*Save the picture*/
             DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
             BufferedImage tmpSecImgRemove = tmpGenerator.depict(tmpNodeMolecule).toImg();
-            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/MatrixTest" + "/MatrixTest" + tmpTreeCounter  + ".png").mkdirs();
-            File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/MatrixTest" + "/MatrixTest" + tmpTreeCounter  + ".png");
+            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/MatrixTest" + "/MatrixTest" + tmpTreeCounter  + ".png").mkdirs();
+            File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/MatrixTest" + "/MatrixTest" + tmpTreeCounter  + ".png");
             ImageIO.write(tmpSecImgRemove, "png", tmpSecOutputRemove);
             tmpTreeCounter++;
         }
@@ -664,8 +631,8 @@ public class ScaffoldGeneratorTest {
                 /*Generate picture*/
                 BufferedImage tmpImgFragment = tmpGenerator.depict(tmpFragment).toImg();
                 /*Save the picture*/
-                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/SchuffenhauerRules/Fragment"+  tmpCounter + ".png").mkdirs();
-                File tmpOutputFragment = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/" + tmpFileName + "/SchuffenhauerRules/Fragment"+  tmpCounter + ".png");
+                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/SchuffenhauerRules/Fragment"+  tmpCounter + ".png").mkdirs();
+                File tmpOutputFragment = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/SchuffenhauerRules/Fragment"+  tmpCounter + ".png");
                 ImageIO.write(tmpImgFragment, "png", tmpOutputFragment);
             }
         }
@@ -717,18 +684,25 @@ public class ScaffoldGeneratorTest {
         //tmpMolecule = tmpParser.parseSmiles("[H]C1([H])C2=C(SS=3SC(SC([H])([H])[H])=C(C23)C([H])([H])C1([H])[H])SC([H])([H])[H]");
         tmpMolecule = tmpParser.parseSmiles("O=CC(OC(=O)C1=CC(O)=C(O)C(O)=C1OC=2C=C3C(=O)[O+]=C4C(O)=C(O)C=C5C(=O)[O+]=C(C2O)C3=C45)C(OC(=O)C6=CC(O)=C(O)C(O)=C6)C7OC(=O)C8=CC(O)=C(O)C(O)=C8C=9C(O)=C(O)C(O)=CC9C(=O)OCC7O");
         tmpMolecule = tmpParser.parseSmiles("[H]OC=1C([H])=C2C(C=3C([H])=C(C([H])=C([H])C3[H])C([H])([H])N([H])C([H])([H])C([H])([H])C=4C([H])=C(C([H])=C(C4[H])C([H])([H])N([H])C([H])([H])C([H])([H])C([H])([H])[H])C5([H])N([H])C([H])([H])C(O[H])(C([H])([H])C#CC([H])(C([H])([H])O[H])C([H])([H])C6([H])C5([H])C7([H])C(C8([H])C([H])(C([H])([H])N([H])C([H])(N([H])C([H])([H])[H])C8([H])[H])C([H])([H])C7([H])[H])(C([H])([H])C([H])=C9OC(=O)C%10=C9C([H])([H])C([H])([H])C%11([H])C%10([H])C%12%13C(C(=O)OC%12=C([H])C([H])(C([H])([H])C=%14C([H])=C([H])C([H])=C([H])C%14[H])C([H])([H])C([H])([H])[H])=C2C%11([H])C([H])([H])C%13([H])[H])C6([H])[H])C([H])([H])[H])=C([H])C1[H]");
+        tmpMolecule = tmpParser.parseSmiles("CC1(C(=O)C(=C(O1)C2=CC=C(C=C2)S(=O)(=O)N)C3=CC(=CC=C3)F)C");
         /*Generate picture of molecule*/
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
         List<IAtomContainer> tmpSchuffenhauerFragments = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         int tmpCounter = 0;
         for(IAtomContainer tmpFragment : tmpSchuffenhauerFragments) {
+            MurckoFragmenter tmpMurckoFragmenter = new MurckoFragmenter(true,1);
+            tmpMurckoFragmenter.setComputeRingFragments(false);
+            tmpFragment = tmpMurckoFragmenter.scaffold(tmpFragment);
+            tmpFragment = AtomContainerManipulator.anonymise(tmpFragment);
+            AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpFragment);
+            CDKHydrogenAdder.getInstance(tmpFragment.getBuilder()).addImplicitHydrogens(tmpFragment);
             tmpCounter++;
             /*Generate picture*/
             BufferedImage tmpImgFragment = tmpGenerator.depict(tmpFragment).toImg();
             /*Save the picture*/
-            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/RulesSMILESTest/Fragment" + tmpCounter + ".png").mkdirs();
-            File tmpOutputFragment = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/RulesSMILESTest/Fragment" + tmpCounter + ".png");
+            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/RulesSMILESTest/Fragment" + tmpCounter + ".png").mkdirs();
+            File tmpOutputFragment = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/RulesSMILESTest/Fragment" + tmpCounter + ".png");
             ImageIO.write(tmpImgFragment, "png", tmpOutputFragment);
         }
     }
@@ -749,8 +723,8 @@ public class ScaffoldGeneratorTest {
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
         BufferedImage tmpImgOriginal = tmpGenerator.depict(tmpMolecule).toImg();
         /*Save the picture of the original*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme1/Original.png").mkdirs();
-        File tmpOutputOriginal = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme1/Original.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme1/Original.png").mkdirs();
+        File tmpOutputOriginal = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme1/Original.png");
         ImageIO.write(tmpImgOriginal, "png" ,tmpOutputOriginal);
         //Generate SchuffenhauerScaffold
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
@@ -758,8 +732,8 @@ public class ScaffoldGeneratorTest {
         /*Generate picture of the SchuffenhauerScaffold*/
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerSMILES).toImg();
         /*Save the picture of the schuffenhauer scaffold*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme1/Schuffenhauer.png").mkdirs();
-        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme1/Schuffenhauer.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme1/Schuffenhauer.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme1/Schuffenhauer.png");
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
@@ -781,8 +755,8 @@ public class ScaffoldGeneratorTest {
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpMolecule).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme2b/Schuffenhauer.png").mkdirs();
-        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme2b/Schuffenhauer.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme2b/Schuffenhauer.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme2b/Schuffenhauer.png");
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         /*Generate picture of the SchuffenhauerScaffold with removed ring*/
         //Generate SchuffenhauerScaffold
@@ -798,8 +772,8 @@ public class ScaffoldGeneratorTest {
             /*Generate picture*/
             BufferedImage tmpImgRemove = tmpGenerator.depict(tmpRemovedSchuff).toImg();
             /*Save the picture*/
-            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme2b/RingRemovable" + tmpIsRingRemovable + tmpCounter + ".png").mkdirs();
-            File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme2b/RingRemovable" + tmpIsRingRemovable + tmpCounter + ".png");
+            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme2b/RingRemovable" + tmpIsRingRemovable + tmpCounter + ".png").mkdirs();
+            File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme2b/RingRemovable" + tmpIsRingRemovable + tmpCounter + ".png");
             ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
             tmpCounter++;
             /*Check boolean*/
@@ -826,8 +800,8 @@ public class ScaffoldGeneratorTest {
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpMolecule).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme3a/Schuffenhauer.png").mkdirs();
-        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme3a/Schuffenhauer.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme3a/Schuffenhauer.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme3a/Schuffenhauer.png");
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         /*Generate picture of the SchuffenhauerScaffold with removed ring*/
         //Generate SchuffenhauerScaffold
@@ -840,8 +814,8 @@ public class ScaffoldGeneratorTest {
         /*Generate picture*/
         BufferedImage tmpImgRemove = tmpGenerator.depict(tmpRemovedSchuff).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme3a/RemovedRing.png").mkdirs();
-        File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme3a/RemovedRing.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme3a/RemovedRing.png").mkdirs();
+        File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme3a/RemovedRing.png");
         ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
@@ -864,8 +838,8 @@ public class ScaffoldGeneratorTest {
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpMolecule).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme3b/Schuffenhauer.png").mkdirs();
-        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme3b/Schuffenhauer.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme3b/Schuffenhauer.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme3b/Schuffenhauer.png");
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         /*Generate picture of the SchuffenhauerScaffold with removed ring*/
         //Generate SchuffenhauerScaffold
@@ -881,8 +855,8 @@ public class ScaffoldGeneratorTest {
             /*Generate picture*/
             BufferedImage tmpImgRemove = tmpGenerator.depict(tmpRemovedSchuff).toImg();
             /*Save the picture*/
-            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme3b/IsRingRemovable_" + tmpIsRemovable + tmpCounter + ".png").mkdirs();
-            File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme3b/IsRingRemovable_" + tmpIsRemovable + tmpCounter + ".png");
+            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme3b/IsRingRemovable_" + tmpIsRemovable + tmpCounter + ".png").mkdirs();
+            File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme3b/IsRingRemovable_" + tmpIsRemovable + tmpCounter + ".png");
             ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
             tmpCounter++;
         }
@@ -924,8 +898,8 @@ public class ScaffoldGeneratorTest {
         IAtomContainer tmpSchuffenhauerScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule);
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme4/Original.png").mkdirs();
-        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme4/Original.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme4/Original.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme4/Original.png");
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         //Get rings
         List<IAtomContainer> tmpRings =tmpScaffoldGenerator.getRings(tmpSchuffenhauerScaffold, true);
@@ -936,8 +910,8 @@ public class ScaffoldGeneratorTest {
             /*Generate picture*/
             BufferedImage tmpImgRemove = tmpGenerator.depict(tmpRemovedSchuff).toImg();
             /*Save the picture*/
-            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme4/RemovedRing" + tmpCounter + ".png").mkdirs();
-            File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme4/RemovedRing" + tmpCounter + ".png");
+            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme4/RemovedRing" + tmpCounter + ".png").mkdirs();
+            File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme4/RemovedRing" + tmpCounter + ".png");
             ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
             tmpCounter++;
         }
@@ -945,8 +919,8 @@ public class ScaffoldGeneratorTest {
         List<IAtomContainer> tmpRuleOne = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         BufferedImage tmpImgRuleOne = tmpGenerator.depict(tmpRuleOne.get(1)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme4/RuleOne.png").mkdirs();
-        File tmpOutputRuleOne = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme4/RuleOne.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme4/RuleOne.png").mkdirs();
+        File tmpOutputRuleOne = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme4/RuleOne.png");
         ImageIO.write(tmpImgRuleOne, "png" ,tmpOutputRuleOne);
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
@@ -974,8 +948,8 @@ public class ScaffoldGeneratorTest {
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpMolecule).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme5/Original.png").mkdirs();
-        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme5/Original.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme5/Original.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme5/Original.png");
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         /*Generate picture of the SchuffenhauerScaffold with removed ring*/
         //Generate SchuffenhauerScaffold
@@ -988,15 +962,15 @@ public class ScaffoldGeneratorTest {
         /*Generate picture*/
         BufferedImage tmpImgRemove = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme5/ModifiedMolecule" + ".png").mkdirs();
-        File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme5/ModifiedMolecule" + ".png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme5/ModifiedMolecule" + ".png").mkdirs();
+        File tmpOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme5/ModifiedMolecule" + ".png");
         ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
         /*Generate picture of the SchuffenhauerRule*/
         List<IAtomContainer> tmpRule = tmpScaffoldGenerator.applySchuffenhauerRules(tmpSchuffenhauerScaffold);
         BufferedImage tmpImgRule = tmpGenerator.depict(tmpRule.get(1)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme5/RuleTwo.png").mkdirs();
-        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme5/RuleTwo.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme5/RuleTwo.png").mkdirs();
+        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme5/RuleTwo.png");
         ImageIO.write(tmpImgRule, "png" ,tmpOutputRule);
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
@@ -1022,15 +996,15 @@ public class ScaffoldGeneratorTest {
         IAtomContainer tmpSchuffenhauerScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule);
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme6/Original.png").mkdirs();
-        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme6/Original.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme6/Original.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme6/Original.png");
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         /*Generate picture of the SchuffenhauerRule*/
         List<IAtomContainer> tmpRule = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         BufferedImage tmpImgRule = tmpGenerator.depict(tmpRule.get(1)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme6/RuleThree.png").mkdirs();
-        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme6/RuleThree.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme6/RuleThree.png").mkdirs();
+        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme6/RuleThree.png");
         ImageIO.write(tmpImgRule, "png" ,tmpOutputRule);
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
@@ -1056,15 +1030,15 @@ public class ScaffoldGeneratorTest {
         IAtomContainer tmpSchuffenhauerScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule);
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme7/Original.png").mkdirs();
-        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme7/Original.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme7/Original.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme7/Original.png");
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         /*Generate picture of the SchuffenhauerRule*/
         List<IAtomContainer> tmpRule = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         BufferedImage tmpImgRule = tmpGenerator.depict(tmpRule.get(1)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme7/RuleFour.png").mkdirs();
-        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme7/RuleFour.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme7/RuleFour.png").mkdirs();
+        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme7/RuleFour.png");
         ImageIO.write(tmpImgRule, "png" ,tmpOutputRule);
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
@@ -1089,15 +1063,15 @@ public class ScaffoldGeneratorTest {
         IAtomContainer tmpSchuffenhauerScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule);
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme8/Original.png").mkdirs();
-        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme8/Original.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme8/Original.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme8/Original.png");
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         /*Generate picture of the SchuffenhauerRule*/
         List<IAtomContainer> tmpRule = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         BufferedImage tmpImgRule = tmpGenerator.depict(tmpRule.get(1)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme8/RuleFour.png").mkdirs();
-        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme8/RuleFour.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme8/RuleFour.png").mkdirs();
+        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme8/RuleFour.png");
         ImageIO.write(tmpImgRule, "png" ,tmpOutputRule);
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
@@ -1123,22 +1097,22 @@ public class ScaffoldGeneratorTest {
         IAtomContainer tmpSchuffenhauerScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule);
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme9/Original.png").mkdirs();
-        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme9/Original.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme9/Original.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme9/Original.png");
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         /*Generate picture of the modified molecule*/
         List<IAtomContainer> tmpMod = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         BufferedImage tmpImgMod = tmpGenerator.depict(tmpMod.get(1)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme9/Modified.png").mkdirs();
-        File tmpOutputMod = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme9/Modified.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme9/Modified.png").mkdirs();
+        File tmpOutputMod = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme9/Modified.png");
         ImageIO.write(tmpImgMod, "png" ,tmpOutputMod);
         /*Generate picture of the SchuffenhauerRule*/
         List<IAtomContainer> tmpRule = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         BufferedImage tmpImgRule = tmpGenerator.depict(tmpRule.get(2)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme9/RuleFour.png").mkdirs();
-        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme9/RuleFour.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme9/RuleFour.png").mkdirs();
+        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme9/RuleFour.png");
         ImageIO.write(tmpImgRule, "png" ,tmpOutputRule);
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
@@ -1165,22 +1139,22 @@ public class ScaffoldGeneratorTest {
         IAtomContainer tmpSchuffenhauerScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule);
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme10/Original.png").mkdirs();
-        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme10/Original.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme10/Original.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme10/Original.png");
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         /*Generate picture of the modified molecule*/
         List<IAtomContainer> tmpMod = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         BufferedImage tmpImgMod = tmpGenerator.depict(tmpMod.get(2)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme10/Modified.png").mkdirs();
-        File tmpOutputMod = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme10/Modified.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme10/Modified.png").mkdirs();
+        File tmpOutputMod = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme10/Modified.png");
         ImageIO.write(tmpImgMod, "png" ,tmpOutputMod);
         /*Generate picture of the SchuffenhauerRule*/
         List<IAtomContainer> tmpRule = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         BufferedImage tmpImgRule = tmpGenerator.depict(tmpRule.get(3)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme10/RuleFive.png").mkdirs();
-        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme10/RuleFive.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme10/RuleFive.png").mkdirs();
+        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme10/RuleFive.png");
         ImageIO.write(tmpImgRule, "png" ,tmpOutputRule);
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
@@ -1206,22 +1180,22 @@ public class ScaffoldGeneratorTest {
         IAtomContainer tmpSchuffenhauerScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule);
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme11a/Original.png").mkdirs();
-        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme11a/Original.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme11a/Original.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme11a/Original.png");
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         /*Generate picture of the modified molecule*/
         List<IAtomContainer> tmpMod = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         BufferedImage tmpImgMod = tmpGenerator.depict(tmpMod.get(2)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme11a/Modified.png").mkdirs();
-        File tmpOutputMod = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme11a/Modified.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme11a/Modified.png").mkdirs();
+        File tmpOutputMod = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme11a/Modified.png");
         ImageIO.write(tmpImgMod, "png" ,tmpOutputMod);
         /*Generate picture of the SchuffenhauerRule*/
         List<IAtomContainer> tmpRule = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         BufferedImage tmpImgRule = tmpGenerator.depict(tmpRule.get(3)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme11a/RuleSix.png").mkdirs();
-        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme11a/RuleSix.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme11a/RuleSix.png").mkdirs();
+        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme11a/RuleSix.png");
         ImageIO.write(tmpImgRule, "png" ,tmpOutputRule);
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
@@ -1248,22 +1222,22 @@ public class ScaffoldGeneratorTest {
         IAtomContainer tmpSchuffenhauerScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule);
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme11b/Original.png").mkdirs();
-        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme11b/Original.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme11b/Original.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme11b/Original.png");
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         /*Generate picture of the modified molecule*/
         List<IAtomContainer> tmpMod = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         BufferedImage tmpImgMod = tmpGenerator.depict(tmpMod.get(2)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme11b/Modified.png").mkdirs();
-        File tmpOutputMod = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme11b/Modified.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme11b/Modified.png").mkdirs();
+        File tmpOutputMod = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme11b/Modified.png");
         ImageIO.write(tmpImgMod, "png" ,tmpOutputMod);
         /*Generate picture of the SchuffenhauerRule*/
         List<IAtomContainer> tmpRule = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         BufferedImage tmpImgRule = tmpGenerator.depict(tmpRule.get(3)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme11b/RuleSix.png").mkdirs();
-        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme11b/RuleSix.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme11b/RuleSix.png").mkdirs();
+        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme11b/RuleSix.png");
         ImageIO.write(tmpImgRule, "png" ,tmpOutputRule);
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
@@ -1290,38 +1264,26 @@ public class ScaffoldGeneratorTest {
         IAtomContainer tmpSchuffenhauerScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule);
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme12/Original.png").mkdirs();
-        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme12/Original.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme12/Original.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme12/Original.png");
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         /*Generate picture of the modified molecule*/
         List<IAtomContainer> tmpMod = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         BufferedImage tmpImgMod = tmpGenerator.depict(tmpMod.get(1)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme12/Modified.png").mkdirs();
-        File tmpOutputMod = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme12/Modified.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme12/Modified.png").mkdirs();
+        File tmpOutputMod = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme12/Modified.png");
         ImageIO.write(tmpImgMod, "png" ,tmpOutputMod);
         /*Generate picture of the SchuffenhauerRule*/
         List<IAtomContainer> tmpRule = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         BufferedImage tmpImgRule = tmpGenerator.depict(tmpRule.get(2)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme12/RuleSeven.png").mkdirs();
-        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme12/RuleSeven.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme12/RuleSeven.png").mkdirs();
+        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme12/RuleSeven.png");
         ImageIO.write(tmpImgRule, "png" ,tmpOutputRule);
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
         assertEquals(tmpSmilesGenerator.create(tmpRule.get(2)), "N=1[N]C=CC1");
-
-        /*Generate picture of the SchuffenhauerRule without Rule 7*/
-        tmpScaffoldGenerator.setRuleSevenAppliedSetting(false);
-        List<IAtomContainer> tmpRuleFalse = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
-        BufferedImage tmpImgRuleFalse = tmpGenerator.depict(tmpRuleFalse.get(2)).toImg();
-        /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme12/RuleSevenFalse.png").mkdirs();
-        File tmpOutputRuleFalse = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme12/RuleSevenFalse.png");
-        ImageIO.write(tmpImgRuleFalse, "png" ,tmpOutputRuleFalse);
-        /*Generate and check SMILES*/
-        SmilesGenerator tmpSmilesGeneratorFalse = new SmilesGenerator((SmiFlavor.Unique));
-        assertEquals(tmpSmilesGenerator.create(tmpRuleFalse.get(2)), "N=1[CH][N]C=CC1");
     }
 
     /**
@@ -1384,15 +1346,15 @@ public class ScaffoldGeneratorTest {
         IAtomContainer tmpSchuffenhauerScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule);
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme13/Original.png").mkdirs();
-        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme13/Original.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme13/Original.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme13/Original.png");
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         /*Generate picture of the SchuffenhauerRule*/
         List<IAtomContainer> tmpRule = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         BufferedImage tmpImgRule = tmpGenerator.depict(tmpRule.get(1)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme13/RuleEight.png").mkdirs();
-        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme13/RuleEight.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme13/RuleEight.png").mkdirs();
+        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme13/RuleEight.png");
         ImageIO.write(tmpImgRule, "png" ,tmpOutputRule);
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
@@ -1421,22 +1383,22 @@ public class ScaffoldGeneratorTest {
         IAtomContainer tmpSchuffenhauerScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule);
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme14/Original.png").mkdirs();
-        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme14/Original.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme14/Original.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme14/Original.png");
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         /*Generate picture of the modified molecule*/
         List<IAtomContainer> tmpMod = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         BufferedImage tmpImgMod = tmpGenerator.depict(tmpMod.get(1)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme14/Modified.png").mkdirs();
-        File tmpOutputMod = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme14/Modified.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme14/Modified.png").mkdirs();
+        File tmpOutputMod = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme14/Modified.png");
         ImageIO.write(tmpImgMod, "png" ,tmpOutputMod);
         /*Generate picture of the SchuffenhauerRule*/
         List<IAtomContainer> tmpRule = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         BufferedImage tmpImgRule = tmpGenerator.depict(tmpRule.get(2)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme14/RuleNine.png").mkdirs();
-        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme14/RuleNine.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme14/RuleNine.png").mkdirs();
+        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme14/RuleNine.png");
         ImageIO.write(tmpImgRule, "png" ,tmpOutputRule);
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
@@ -1461,22 +1423,22 @@ public class ScaffoldGeneratorTest {
         IAtomContainer tmpSchuffenhauerScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule);
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Rule10/Original.png").mkdirs();
-        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Rule10/Original.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Rule10/Original.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Rule10/Original.png");
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         /*Generate picture of the modified molecule*/
         List<IAtomContainer> tmpMod = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         BufferedImage tmpImgMod = tmpGenerator.depict(tmpMod.get(1)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Rule10/Modified.png").mkdirs();
-        File tmpOutputMod = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Rule10/Modified.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Rule10/Modified.png").mkdirs();
+        File tmpOutputMod = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Rule10/Modified.png");
         ImageIO.write(tmpImgMod, "png" ,tmpOutputMod);
         /*Generate picture of the SchuffenhauerRule*/
         List<IAtomContainer> tmpRule = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         BufferedImage tmpImgRule = tmpGenerator.depict(tmpRule.get(2)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Rule10/RuleTen.png").mkdirs();
-        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Rule10/RuleTen.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Rule10/RuleTen.png").mkdirs();
+        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Rule10/RuleTen.png");
         ImageIO.write(tmpImgRule, "png" ,tmpOutputRule);
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
@@ -1502,22 +1464,22 @@ public class ScaffoldGeneratorTest {
         IAtomContainer tmpSchuffenhauerScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule);
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme15/Original.png").mkdirs();
-        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme15/Original.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme15/Original.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme15/Original.png");
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         /*Generate picture of the modified molecule*/
         List<IAtomContainer> tmpMod = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         BufferedImage tmpImgMod = tmpGenerator.depict(tmpMod.get(1)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme15/Modified.png").mkdirs();
-        File tmpOutputMod = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme15/Modified.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme15/Modified.png").mkdirs();
+        File tmpOutputMod = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme15/Modified.png");
         ImageIO.write(tmpImgMod, "png" ,tmpOutputMod);
         /*Generate picture of the SchuffenhauerRule*/
         List<IAtomContainer> tmpRule = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         BufferedImage tmpImgRule = tmpGenerator.depict(tmpRule.get(2)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme15/RuleEleven.png").mkdirs();
-        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme15/RuleEleven.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme15/RuleEleven.png").mkdirs();
+        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme15/RuleEleven.png");
         ImageIO.write(tmpImgRule, "png" ,tmpOutputRule);
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
@@ -1543,15 +1505,15 @@ public class ScaffoldGeneratorTest {
         IAtomContainer tmpSchuffenhauerScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule);
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme16/Original.png").mkdirs();
-        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme16/Original.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme16/Original.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme16/Original.png");
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         /*Generate picture of the SchuffenhauerRule*/
         List<IAtomContainer> tmpRule = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         BufferedImage tmpImgRule = tmpGenerator.depict(tmpRule.get(1)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme16/RuleTwelve.png").mkdirs();
-        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme16/RuleTwelve.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme16/RuleTwelve.png").mkdirs();
+        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme16/RuleTwelve.png");
         ImageIO.write(tmpImgRule, "png" ,tmpOutputRule);
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
@@ -1578,29 +1540,29 @@ public class ScaffoldGeneratorTest {
         IAtomContainer tmpSchuffenhauerScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule);
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme17/Original.png").mkdirs();
-        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme17/Original.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme17/Original.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme17/Original.png");
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         /*Generate picture of the modified molecule*/
         List<IAtomContainer> tmpMod = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         BufferedImage tmpImgMod = tmpGenerator.depict(tmpMod.get(1)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme17/Modified.png").mkdirs();
-        File tmpOutputMod = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme17/Modified.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme17/Modified.png").mkdirs();
+        File tmpOutputMod = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme17/Modified.png");
         ImageIO.write(tmpImgMod, "png" ,tmpOutputMod);
         /*Generate picture of the SchuffenhauerRule*/
         List<IAtomContainer> tmpRule = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         BufferedImage tmpImgRule = tmpGenerator.depict(tmpRule.get(2)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme17/Thirteen.png").mkdirs();
-        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme17/Thirteen.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme17/Thirteen.png").mkdirs();
+        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme17/Thirteen.png");
         ImageIO.write(tmpImgRule, "png" ,tmpOutputRule);
         /*Generate picture of the last step*/
         List<IAtomContainer> tmpLast = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         BufferedImage tmpImgLast = tmpGenerator.depict(tmpLast.get(3)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme17/LastStep.png").mkdirs();
-        File tmpOutputLast = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme17/LastStep.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme17/LastStep.png").mkdirs();
+        File tmpOutputLast = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme17/LastStep.png");
         ImageIO.write(tmpImgLast, "png" ,tmpOutputLast);
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
@@ -1627,22 +1589,22 @@ public class ScaffoldGeneratorTest {
         IAtomContainer tmpSchuffenhauerScaffoldDiazepam =tmpScaffoldGenerator.getScaffold(tmpMoleculeDiazepam);
         BufferedImage tmpImgSMILESDiazepam = tmpGenerator.depict(tmpSchuffenhauerScaffoldDiazepam).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme18/DiazepamOriginal.png").mkdirs();
-        File tmpOutputSMILESDiazepam = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme18/DiazepamOriginal.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme18/DiazepamOriginal.png").mkdirs();
+        File tmpOutputSMILESDiazepam = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme18/DiazepamOriginal.png");
         ImageIO.write(tmpImgSMILESDiazepam, "png" ,tmpOutputSMILESDiazepam);
         /*Generate picture of the modified molecule*/
         List<IAtomContainer> tmpStep1MolDiazepam = tmpScaffoldGenerator.applySchuffenhauerRules(tmpSchuffenhauerScaffoldDiazepam);
         BufferedImage tmpImgStep1Diazepam = tmpGenerator.depict(tmpStep1MolDiazepam.get(1)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme18/DiazepamStep1.png").mkdirs();
-        File tmpOutputStep1Diazepam = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme18/DiazepamStep1.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme18/DiazepamStep1.png").mkdirs();
+        File tmpOutputStep1Diazepam = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme18/DiazepamStep1.png");
         ImageIO.write(tmpImgStep1Diazepam, "png" ,tmpOutputStep1Diazepam);
         /*Generate picture of the SchuffenhauerRule*/
         List<IAtomContainer> tmpStep2MolDiazepam = tmpScaffoldGenerator.applySchuffenhauerRules(tmpSchuffenhauerScaffoldDiazepam);
         BufferedImage tmpImgStep2Diazepam = tmpGenerator.depict(tmpStep2MolDiazepam.get(2)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme18/DiazepamStep2.png").mkdirs();
-        File tmpOutputStep2Diazepam = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme18/DiazepamStep2.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme18/DiazepamStep2.png").mkdirs();
+        File tmpOutputStep2Diazepam = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme18/DiazepamStep2.png");
         ImageIO.write(tmpImgStep2Diazepam, "png" ,tmpOutputStep2Diazepam);
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
@@ -1657,22 +1619,22 @@ public class ScaffoldGeneratorTest {
         IAtomContainer tmpSchuffenhauerScaffoldBromazepam =tmpScaffoldGenerator.getScaffold(tmpMoleculeBromazepam);
         BufferedImage tmpImgSMILESBromazepam = tmpGenerator.depict(tmpSchuffenhauerScaffoldBromazepam).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme18/BromazepamOriginal.png").mkdirs();
-        File tmpOutputSMILESBromazepam = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme18/BromazepamOriginal.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme18/BromazepamOriginal.png").mkdirs();
+        File tmpOutputSMILESBromazepam = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme18/BromazepamOriginal.png");
         ImageIO.write(tmpImgSMILESBromazepam, "png" ,tmpOutputSMILESBromazepam);
         /*Generate picture of the modified molecule*/
         List<IAtomContainer> tmpStep1MolBromazepam = tmpScaffoldGenerator.applySchuffenhauerRules(tmpSchuffenhauerScaffoldBromazepam);
         BufferedImage tmpImgStep1Bromazepam = tmpGenerator.depict(tmpStep1MolBromazepam.get(1)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme18/BromazepamStep1.png").mkdirs();
-        File tmpOutputStep1Bromazepam = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme18/BromazepamStep1.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme18/BromazepamStep1.png").mkdirs();
+        File tmpOutputStep1Bromazepam = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme18/BromazepamStep1.png");
         ImageIO.write(tmpImgStep1Bromazepam, "png" ,tmpOutputStep1Bromazepam);
         /*Generate picture of the SchuffenhauerRule*/
         List<IAtomContainer> tmpStep2MolBromazepam = tmpScaffoldGenerator.applySchuffenhauerRules(tmpSchuffenhauerScaffoldBromazepam);
         BufferedImage tmpImgStep2Bromazepam = tmpGenerator.depict(tmpStep2MolBromazepam.get(2)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme18/BromazepamStep2.png").mkdirs();
-        File tmpOutputStep2Bromazepam = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme18/BromazepamStep2.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme18/BromazepamStep2.png").mkdirs();
+        File tmpOutputStep2Bromazepam = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme18/BromazepamStep2.png");
         ImageIO.write(tmpImgStep2Bromazepam, "png" ,tmpOutputStep2Bromazepam);
         /*Generate and check SMILES*/
         assertEquals(tmpSmilesGenerator.create(tmpStep2MolBromazepam.get(1)), "O=C1NC=2C=CC=CC2C=NC1");
@@ -1686,22 +1648,22 @@ public class ScaffoldGeneratorTest {
         IAtomContainer tmpSchuffenhauerScaffoldZolazepam =tmpScaffoldGenerator.getScaffold(tmpMoleculeZolazepam);
         BufferedImage tmpImgSMILESZolazepam = tmpGenerator.depict(tmpSchuffenhauerScaffoldZolazepam).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme18/ZolazepamOriginal.png").mkdirs();
-        File tmpOutputSMILESZolazepam = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme18/ZolazepamOriginal.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme18/ZolazepamOriginal.png").mkdirs();
+        File tmpOutputSMILESZolazepam = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme18/ZolazepamOriginal.png");
         ImageIO.write(tmpImgSMILESZolazepam, "png" ,tmpOutputSMILESZolazepam);
         /*Generate picture of the modified molecule*/
         List<IAtomContainer> tmpStep1MolZolazepam = tmpScaffoldGenerator.applySchuffenhauerRules(tmpSchuffenhauerScaffoldZolazepam);
         BufferedImage tmpImgStep1Zolazepam = tmpGenerator.depict(tmpStep1MolZolazepam.get(1)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme18/ZolazepamStep1.png").mkdirs();
-        File tmpOutputStep1Zolazepam = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme18/ZolazepamStep1.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme18/ZolazepamStep1.png").mkdirs();
+        File tmpOutputStep1Zolazepam = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme18/ZolazepamStep1.png");
         ImageIO.write(tmpImgStep1Zolazepam, "png" ,tmpOutputStep1Zolazepam);
         /*Generate picture of the SchuffenhauerRule*/
         List<IAtomContainer> tmpStep2MolZolazepam = tmpScaffoldGenerator.applySchuffenhauerRules(tmpSchuffenhauerScaffoldZolazepam);
         BufferedImage tmpImgStep2Zolazepam = tmpGenerator.depict(tmpStep2MolZolazepam.get(2)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme18/ZolazepamStep2.png").mkdirs();
-        File tmpOutputStep2Zolazepam = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme18/ZolazepamStep2.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme18/ZolazepamStep2.png").mkdirs();
+        File tmpOutputStep2Zolazepam = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme18/ZolazepamStep2.png");
         ImageIO.write(tmpImgStep2Zolazepam, "png" ,tmpOutputStep2Zolazepam);
         /*Generate and check SMILES*/
         assertEquals(tmpSmilesGenerator.create(tmpStep2MolZolazepam.get(1)), "O=C1NC=2NN=CC2C=NC1");
@@ -1715,22 +1677,22 @@ public class ScaffoldGeneratorTest {
         IAtomContainer tmpSchuffenhauerScaffoldClotiazepam =tmpScaffoldGenerator.getScaffold(tmpMoleculeClotiazepam);
         BufferedImage tmpImgSMILESClotiazepam = tmpGenerator.depict(tmpSchuffenhauerScaffoldClotiazepam).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme18/ClotiazepamOriginal.png").mkdirs();
-        File tmpOutputSMILESClotiazepam = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme18/ClotiazepamOriginal.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme18/ClotiazepamOriginal.png").mkdirs();
+        File tmpOutputSMILESClotiazepam = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme18/ClotiazepamOriginal.png");
         ImageIO.write(tmpImgSMILESClotiazepam, "png" ,tmpOutputSMILESClotiazepam);
         /*Generate picture of the modified molecule*/
         List<IAtomContainer> tmpStep1MolClotiazepam = tmpScaffoldGenerator.applySchuffenhauerRules(tmpSchuffenhauerScaffoldClotiazepam);
         BufferedImage tmpImgStep1Clotiazepam = tmpGenerator.depict(tmpStep1MolClotiazepam.get(1)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme18/ClotiazepamStep1.png").mkdirs();
-        File tmpOutputStep1Clotiazepam = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme18/ClotiazepamStep1.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme18/ClotiazepamStep1.png").mkdirs();
+        File tmpOutputStep1Clotiazepam = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme18/ClotiazepamStep1.png");
         ImageIO.write(tmpImgStep1Clotiazepam, "png" ,tmpOutputStep1Clotiazepam);
         /*Generate picture of the SchuffenhauerRule*/
         List<IAtomContainer> tmpStep2MolClotiazepam = tmpScaffoldGenerator.applySchuffenhauerRules(tmpSchuffenhauerScaffoldClotiazepam);
         BufferedImage tmpImgStep2Clotiazepam = tmpGenerator.depict(tmpStep2MolClotiazepam.get(2)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme18/ClotiazepamStep2.png").mkdirs();
-        File tmpOutputStep2Clotiazepam = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme18/ClotiazepamStep2.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme18/ClotiazepamStep2.png").mkdirs();
+        File tmpOutputStep2Clotiazepam = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme18/ClotiazepamStep2.png");
         ImageIO.write(tmpImgStep2Clotiazepam, "png" ,tmpOutputStep2Clotiazepam);
         /*Generate and check SMILES*/
         assertEquals(tmpSmilesGenerator.create(tmpStep2MolClotiazepam.get(1)), "O=C1NC=2SC=CC2C=NC1");
@@ -1759,34 +1721,34 @@ public class ScaffoldGeneratorTest {
         IAtomContainer tmpSchuffenhauerScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule);
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme19/Original.png").mkdirs();
-        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme19/Original.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme19/Original.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme19/Original.png");
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         /*Generate the scaffolds*/
         List<IAtomContainer> tmpScaffolds = tmpScaffoldGenerator.applySchuffenhauerRules(tmpSchuffenhauerScaffold);
         /*Generate picture of the modified molecule*/
         BufferedImage tmpImgStep1 = tmpGenerator.depict(tmpScaffolds.get(1)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme19/Step1.png").mkdirs();
-        File tmpOutputStep1 = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme19/Step1.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme19/Step1.png").mkdirs();
+        File tmpOutputStep1 = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme19/Step1.png");
         ImageIO.write(tmpImgStep1, "png" ,tmpOutputStep1);
         /*Generate picture of the modified molecule*/
         BufferedImage tmpImgStep2 = tmpGenerator.depict(tmpScaffolds.get(2)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme19/Step2.png").mkdirs();
-        File tmpOutputStep2 = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme19/Step2.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme19/Step2.png").mkdirs();
+        File tmpOutputStep2 = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme19/Step2.png");
         ImageIO.write(tmpImgStep2, "png" ,tmpOutputStep2);
         /*Generate picture of the modified molecule*/
         BufferedImage tmpImgStep3 = tmpGenerator.depict(tmpScaffolds.get(3)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme19/Step3.png").mkdirs();
-        File tmpOutputStep3 = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme19/Step3.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme19/Step3.png").mkdirs();
+        File tmpOutputStep3 = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme19/Step3.png");
         ImageIO.write(tmpImgStep3, "png" ,tmpOutputStep3);
         /*Generate picture of the modified molecule*/
         BufferedImage tmpImgStep4 = tmpGenerator.depict(tmpScaffolds.get(4)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme19/Step4.png").mkdirs();
-        File tmpOutputStep4 = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Scheme19/Step4.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme19/Step4.png").mkdirs();
+        File tmpOutputStep4 = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme19/Step4.png");
         ImageIO.write(tmpImgStep4, "png" ,tmpOutputStep4);
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
@@ -1794,6 +1756,150 @@ public class ScaffoldGeneratorTest {
         assertEquals(tmpSmilesGenerator.create(tmpScaffolds.get(2)), "O=C1CC2=CCCC(C2)CC3CCCCC13");
         assertEquals(tmpSmilesGenerator.create(tmpScaffolds.get(3)), "O=C1CC2=CCCC(C2)CCC1");
         assertEquals(tmpSmilesGenerator.create(tmpScaffolds.get(4)), "O=C1CCCCCCC1");
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="Settings">
+    /**
+     * Test of ScaffoldGenerator.setRuleSevenAppliedSetting() with SMILES of Scheme 12.
+     * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
+     * @throws Exception if anything goes wrong
+     */
+    @Test
+    public void setRuleSevenAppliedSettingTest() throws Exception {
+        //SMILES to IAtomContainer
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        IAtomContainer tmpMolecule = tmpParser.parseSmiles("CCN(C1=CC=CC(=C1)C2=CC=NC3=C(C=NN23)C#N)C(=O)C"); //Scheme12
+        /*Generate picture of the SchuffenhauerScaffold*/
+        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+        //Generate SchuffenhauerScaffold
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        IAtomContainer tmpSchuffenhauerScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule);
+        BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
+        /*Save the picture*/
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/isRule7Applied/Original.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/isRule7Applied/Original.png");
+        ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
+        /*Generate picture of the SchuffenhauerRule*/
+        List<IAtomContainer> tmpRule = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
+        BufferedImage tmpImgRule = tmpGenerator.depict(tmpRule.get(2)).toImg();
+        /*Save the picture*/
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/isRule7Applied/RuleSevenTrue.png").mkdirs();
+        File tmpOutputRule = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/isRule7Applied/RuleSevenTrue.png");
+        ImageIO.write(tmpImgRule, "png" ,tmpOutputRule);
+        /*Generate and check SMILES*/
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
+        assertEquals(tmpSmilesGenerator.create(tmpRule.get(2)), "N=1[N]C=CC1");
+        /*Generate picture of the SchuffenhauerRule without Rule 7*/
+        tmpScaffoldGenerator.setRuleSevenAppliedSetting(false);
+        List<IAtomContainer> tmpRuleFalse = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
+        BufferedImage tmpImgRuleFalse = tmpGenerator.depict(tmpRuleFalse.get(2)).toImg();
+        /*Save the picture*/
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/isRule7Applied/RuleSevenFalse.png").mkdirs();
+        File tmpOutputRuleFalse = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/isRule7Applied/RuleSevenFalse.png");
+        ImageIO.write(tmpImgRuleFalse, "png" ,tmpOutputRuleFalse);
+        /*Generate and check SMILES*/
+        assertEquals(tmpSmilesGenerator.create(tmpRuleFalse.get(2)), "N=1[CH][N]C=CC1");
+    }
+
+    /**
+     * Test of ScaffoldGenerator.setScaffoldModeSetting() with SMILES.
+     * Loads Scheme 1 from the "The Scaffold Tree" Paper by Schuffenhauer et al as SMILES and generates the MurckoFragment.
+     * Flucloxacillin is generated from the SMILES and all terminal side chains are removed. Rings and linkers are obtained.
+     * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
+     * @throws Exception if anything goes wrong
+     */
+    @Test
+    public void setScaffoldModeSettingTest() throws Exception {
+        //SMILES to IAtomContainer
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1=C(C(=NO1)C2=C(C=CC=C2Cl)F)C(=O)NC3C4N(C3=O)C(C(S4)(C)C)C(=O)O");
+        /*Generate picture of the Original molecule*/
+        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+        BufferedImage tmpImgOriginal = tmpGenerator.depict(tmpMolecule).toImg();
+        /*Save the picture of the original*/
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/ScaffoldTypeTest/Original.png").mkdirs();
+        File tmpOutputOriginal = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/ScaffoldTypeTest/Original.png");
+        ImageIO.write(tmpImgOriginal, "png" ,tmpOutputOriginal);
+        //Generate SchuffenhauerScaffold
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.SCHUFFENHAUER);
+        IAtomContainer tmpSchuffenhauerSMILES = tmpScaffoldGenerator.getScaffold(tmpMolecule);
+        /*Generate picture of the SchuffenhauerScaffold*/
+        BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerSMILES).toImg();
+        /*Save the picture of the schuffenhauer scaffold*/
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/ScaffoldTypeTest/Schuffenhauer.png").mkdirs();
+        File tmpOutputSMILES = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/ScaffoldTypeTest/Schuffenhauer.png");
+        ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
+        /*Generate and check SMILES*/
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
+        System.out.println(tmpSmilesGenerator.create(tmpSchuffenhauerSMILES));
+        //assertEquals(tmpSmilesGenerator.create(tmpSchuffenhauerSMILES), "N=1OC=C(C1C=2C=CC=CC2)CNC3CN4CCSC43");
+        /*Generate Murcko Scaffold*/
+        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.MURCKO);
+        IAtomContainer tmpMurckoSMILES = tmpScaffoldGenerator.getScaffold(tmpMolecule);
+        /*Generate picture of the SchuffenhauerScaffold*/
+        BufferedImage tmpImgMurcko = tmpGenerator.depict(tmpMurckoSMILES).toImg();
+        /*Save the picture of the schuffenhauer scaffold*/
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/ScaffoldTypeTest/Murcko.png").mkdirs();
+        File tmpOutputMurcko = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/ScaffoldTypeTest/Murcko.png");
+        ImageIO.write(tmpImgMurcko, "png" ,tmpOutputMurcko);
+        /*Generate and check SMILES*/
+        assertEquals(tmpSmilesGenerator.create(tmpMurckoSMILES), "N=1OC=C(C1C=2C=CC=CC2)CNC3CN4CCSC43");
+        /*Generate Basic Wire Frame*/
+        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.BASIC_WIRE_FRAME);
+        IAtomContainer tmpBWFSMILES = tmpScaffoldGenerator.getScaffold(tmpMolecule);
+        /*Generate picture of the SchuffenhauerScaffold*/
+        BufferedImage tmpImgBWF = tmpGenerator.depict(tmpBWFSMILES).toImg();
+        /*Save the picture of the schuffenhauer scaffold*/
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/ScaffoldTypeTest/BasicWireFrame.png").mkdirs();
+        File tmpOutputBWF = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/ScaffoldTypeTest/BasicWireFrame.png");
+        ImageIO.write(tmpImgBWF, "png" ,tmpOutputBWF);
+        /*Generate and check SMILES*/
+        System.out.println(tmpSmilesGenerator.create(tmpBWFSMILES));
+        //assertEquals(tmpSmilesGenerator.create(tmpBWFSMILES), "N=1OC=C(C1C=2C=CC=CC2)CNC3CN4CCSC43");
+    }
+
+    /**
+     * Test of ScaffoldGenerator.setNonAromaticDBObtainedSetting() with SMILES.
+     * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
+     * @throws Exception if anything goes wrong
+     */
+    @Test
+    public void setNonAromaticDBObtainedSettingTest() throws Exception {
+        //SMILES to IAtomContainer
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        IAtomContainer tmpMolecule = tmpParser.parseSmiles("C2=C1CCNCC1=CCC2");
+        /*Generate picture of molecule*/
+        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        tmpScaffoldGenerator.setNonAromaticDBObtainedSetting(false);
+        List<IAtomContainer> tmpSchuffenhauerFragments = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
+        /*Generate picture of the Original*/
+        BufferedImage tmpImgFragment = tmpGenerator.depict(tmpSchuffenhauerFragments.get(0)).toImg();
+        /*Save the picture*/
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/NonAromaticDBObtained/Original.png").mkdirs();
+        File tmpOutputFragment = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/NonAromaticDBObtained/Original.png");
+        ImageIO.write(tmpImgFragment, "png", tmpOutputFragment);
+        /*Generate picture with NonAromaticDBObtainedSetting turned off*/
+        BufferedImage tmpImgFragmentFalse = tmpGenerator.depict(tmpSchuffenhauerFragments.get(1)).toImg();
+        /*Save the picture*/
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/NonAromaticDBObtained/DoNotKeepNonAromaticDB.png").mkdirs();
+        File tmpOutputFragmentFalse = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/NonAromaticDBObtained/DoNotKeepNonAromaticDB.png");
+        ImageIO.write(tmpImgFragmentFalse, "png", tmpOutputFragmentFalse);
+        /*Generate and check SMILES*/
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
+        assertEquals(tmpSmilesGenerator.create(tmpSchuffenhauerFragments.get(1)), "N1CCCCC1");
+        /*Generate picture with NonAromaticDBObtainedSetting turned on*/
+        tmpScaffoldGenerator.setNonAromaticDBObtainedSetting(true);
+        tmpSchuffenhauerFragments = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
+        BufferedImage tmpImgFragmentTrue = tmpGenerator.depict(tmpSchuffenhauerFragments.get(1)).toImg();
+        /*Save the picture*/
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/NonAromaticDBObtained/KeepNonAromaticDB.png").mkdirs();
+        File tmpOutputFragmentTrue = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/NonAromaticDBObtained/KeepNonAromaticDB.png");
+        ImageIO.write(tmpImgFragmentTrue, "png", tmpOutputFragmentTrue);
+        /*Generate and check SMILES*/
+        assertEquals(tmpSmilesGenerator.create(tmpSchuffenhauerFragments.get(1)), "C1=CCCNC1");
     }
     //</editor-fold>
 
