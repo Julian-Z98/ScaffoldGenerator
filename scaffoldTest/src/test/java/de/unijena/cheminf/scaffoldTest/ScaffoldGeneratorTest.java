@@ -1804,8 +1804,8 @@ public class ScaffoldGeneratorTest {
 
     /**
      * Test of ScaffoldGenerator.setScaffoldModeSetting() with SMILES.
-     * Loads Scheme 1 from the "The Scaffold Tree" Paper by Schuffenhauer et al as SMILES and generates the MurckoFragment.
-     * Flucloxacillin is generated from the SMILES and all terminal side chains are removed. Rings and linkers are obtained.
+     * Loads Scheme 1 (Flucloxacillin) from the "The Scaffold Tree" Paper by Schuffenhauer et al. as SMILES and
+     * generates the Schuffenhauer Scaffold, the Murcko Scaffold and the Basic Wire Frame.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
      * @throws Exception if anything goes wrong
      */
@@ -1833,8 +1833,7 @@ public class ScaffoldGeneratorTest {
         ImageIO.write(tmpImgSMILES, "png" ,tmpOutputSMILES);
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
-        System.out.println(tmpSmilesGenerator.create(tmpSchuffenhauerSMILES));
-        //assertEquals(tmpSmilesGenerator.create(tmpSchuffenhauerSMILES), "N=1OC=C(C1C=2C=CC=CC2)CNC3CN4CCSC43");
+        assertEquals(tmpSmilesGenerator.create(tmpSchuffenhauerSMILES), "O=C(NC1C(=O)N2CCSC21)C3=CON=C3C=4C=CC=CC4");
         /*Generate Murcko Scaffold*/
         tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.MURCKO);
         IAtomContainer tmpMurckoSMILES = tmpScaffoldGenerator.getScaffold(tmpMolecule);
@@ -1856,8 +1855,7 @@ public class ScaffoldGeneratorTest {
         File tmpOutputBWF = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/ScaffoldTypeTest/BasicWireFrame.png");
         ImageIO.write(tmpImgBWF, "png" ,tmpOutputBWF);
         /*Generate and check SMILES*/
-        System.out.println(tmpSmilesGenerator.create(tmpBWFSMILES));
-        //assertEquals(tmpSmilesGenerator.create(tmpBWFSMILES), "N=1OC=C(C1C=2C=CC=CC2)CNC3CN4CCSC43");
+        assertEquals(tmpSmilesGenerator.create(tmpBWFSMILES), "C1CCC(CC1)C2CCCC2CCC3CC4CCCC43");
     }
 
     /**
