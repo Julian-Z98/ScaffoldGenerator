@@ -21,6 +21,7 @@ package de.unijena.cheminf.scaffoldTest;
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.aromaticity.Aromaticity;
+import org.openscience.cdk.aromaticity.ElectronDonation;
 import org.openscience.cdk.depict.DepictionGenerator;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.exception.Intractable;
@@ -52,35 +53,35 @@ public class ScaffoldGenerator {
 
         /**
          * Schuffenhauer scaffolds are generated. Based on the "The Scaffold Tree" Paper by Schuffenhauer et al. 2006.
-         * The terminal side chains of the molecule are removed, but any atoms double bonded to linkers or rings are retained.
+         * The terminal side chains of the molecule are removed, but any atoms non-single bonded to linkers or rings are retained.
          */
-        SCHUFFENHAUER(),
+        SCHUFFENHAUER_FRAMEWORK(),
 
         /**
          * Murcko scaffolds are generated. Based on the "The Properties of Known Drugs. 1. Molecular Frameworks" Paper by Bemis and Murcko 1996.
          * All terminal side chains are removed and only linkers and rings are retained.
          */
-        MURCKO(),
-
+        MURCKO_FRAGMENT(),
+        
         /**
          * Basic wire frames are generated based on the "Molecular Anatomy: a new multi‑dimensional hierarchical scaffold analysis tool"
          * Paper by Beccari et al. 2021.
          * It is a very abstract form of representation.
          * All side chains are removed, all bonds are converted into single bonds and all atoms are converted into carbons.
          */
-        BASIC_WIRE_FRAME(),
+        BECCARI_BASIC_WIRE_FRAME(),
 
         /**
          * All side chains are removed and multiple bonds are converted to single bonds, but the atomic elements remain.
          */
-        ELEMENT_WIRE_FRAME(),
+        ELEMENTAL_WIRE_FRAME(),
 
         /**
          * Basic Frameworks are generated based on the "Molecular Anatomy: a new multi‑dimensional hierarchical scaffold analysis tool"
          * Paper by Beccari et al. 2021.
          * All side chains are removed and all atoms are converted into carbons. The order of the remaining bonds is not changed.
          */
-        BASIC_FRAMEWORK();
+        BECCARI_BASIC_FRAMEWORK();
     }
     //</editor-fold>
 
@@ -91,7 +92,7 @@ public class ScaffoldGenerator {
     public static final String SCAFFOLD_ATOM_COUNTER_PROPERTY = "SCAFFOLD_ATOM_COUNTER_PROPERTY";
 
     /**
-     * Cycle finder used to detect rings and to determine aromaticity.
+     * Cycle finder used to detect rings.
      */
     public static final CycleFinder CYCLE_FINDER = Cycles.relevant();
 
@@ -101,11 +102,40 @@ public class ScaffoldGenerator {
     public static final String CYCLE_FINDER_BACKUP_PROPERTY = "CYCLE_FINDER_BACKUP_PROPERTY";
 
     /**
-     * Backup cycle finder used to detect rings and to determine aromaticity.
+     * Backup cycle finder used to detect rings.
      * The relevant cycle finder has problems with a few molecules and also finds too many rings in some molecules.
      * Therefore, the mcb is used in these cases.
      */
     public static final CycleFinder CYCLE_FINDER_BACKUP = Cycles.mcb();
+
+    /**
+     * Default setting for whether the aromaticity should be determined.
+     * By default, the aromaticity is determined.
+     */
+    public static final boolean DETERMINE_AROMATICITY_SETTING_DEFAULT = true;
+
+    /**
+     * Default setting for which aromaticity model should be used.
+     * By default, Aromaticity(ElectronDonation.cdk(), Cycles.cdkAromaticSet()) is used.
+     */
+    public static final Aromaticity AROMATICITY_MODEL_SETTING_DEFAULT = new Aromaticity(ElectronDonation.cdk(), Cycles.cdkAromaticSet());
+
+    /**
+     * Default setting for whether rule 7 should be applied. By default, rule 7 is applied.
+     */
+    public static final boolean RULE_SEVEN_APPLIED_SETTING_DEFAULT = true;
+
+    /**
+     * Default setting for whether hybridisation should only be retained for aromatic bonds.
+     * By default the hybridisation of all bonds is retained.
+     */
+    public static final boolean RETAIN_ONLY_HYBRIDISATIONS_AT_AROMATIC_BONDS_SETTING_DEFAULT = true;
+
+    /**
+     * Defualt setting for wicht scaffold mode should be used.
+     * By default, ScaffoldModeOption.SCHUFFENHAUER_FRAMEWORK is used.
+     */
+    public static final ScaffoldModeOption SCAFFOLD_MODE_OPTION_DEFAULT = ScaffoldModeOption.SCHUFFENHAUER_FRAMEWORK;
     //</editor-fold>
 
     //<editor-fold desc="Private variables">
@@ -116,7 +146,7 @@ public class ScaffoldGenerator {
 
     /**
      * Aromaticity model used to determine the aromaticity of the molecules.
-     * Can be null if this.areAromaticityDetermined() == false.
+     * Can be null if this.isAromaticityDetermined() == false.
      */
     private Aromaticity aromaticityModelSetting;
 
@@ -135,7 +165,7 @@ public class ScaffoldGenerator {
     /**
      * This setting also preserves DBs that are not aromatic during ring removal.
      */
-    private boolean NonAromaticDBObtainedSetting;
+    private boolean retainOnlyHybridisationsAtAromaticBondsSetting;
     //</editor-fold>
 
     //<editor-fold desc="Constructors">
@@ -153,7 +183,7 @@ public class ScaffoldGenerator {
      * Specifies whether the aromaticity is to be taken into account.
      * @return true if the aromaticity is determined
      */
-    public boolean areAromaticityDetermined() {
+    public boolean isAromaticityDetermined() {
         return this.determineAromaticitySetting;
     }
 
@@ -188,8 +218,8 @@ public class ScaffoldGenerator {
      * Indicates whether non-aromatic DB are obtained during ring removal.
      * @return true if non-aromatic DB are obtained during ring removal
      */
-    public boolean isNonAromaticDBObtained() {
-        return this.NonAromaticDBObtainedSetting;
+    public boolean areOnlyHybridisationsAtAromaticBondsRetained() {
+        return this.retainOnlyHybridisationsAtAromaticBondsSetting;
     }
 
     //</editor-fold>
@@ -236,18 +266,18 @@ public class ScaffoldGenerator {
      * Sets the option whether non-aromatic DBs are preserved during ring removal.
      * @param anIsNonAromaticDBObtained true if non-aromatic DBs are preserved
      */
-    public void setNonAromaticDBObtainedSetting(boolean anIsNonAromaticDBObtained) {
-        this.NonAromaticDBObtainedSetting = anIsNonAromaticDBObtained;
+    public void setRetainOnlyHybridisationsAtAromaticBondsSetting(boolean anIsNonAromaticDBObtained) {
+        this.retainOnlyHybridisationsAtAromaticBondsSetting = anIsNonAromaticDBObtained;
     }
     /**
      * All settings are set to their default values. Automatically executed by the constructor.
      */
     public void restoreDefaultSettings() {
-        this.setDetermineAromaticitySetting(true);
-        this.setAromaticityModelSetting(null);
-        this.setRuleSevenAppliedSetting(true);
-        this.setNonAromaticDBObtainedSetting(false);
-        this.setScaffoldModeSetting(ScaffoldModeOption.SCHUFFENHAUER);
+        this.setDetermineAromaticitySetting(this.DETERMINE_AROMATICITY_SETTING_DEFAULT);
+        this.setAromaticityModelSetting(this.AROMATICITY_MODEL_SETTING_DEFAULT);
+        this.setRuleSevenAppliedSetting(this.RULE_SEVEN_APPLIED_SETTING_DEFAULT);
+        this.setRetainOnlyHybridisationsAtAromaticBondsSetting(this.RETAIN_ONLY_HYBRIDISATIONS_AT_AROMATIC_BONDS_SETTING_DEFAULT);
+        this.setScaffoldModeSetting(this.SCAFFOLD_MODE_OPTION_DEFAULT);
     }
     //</editor-fold>
     //</editor-fold>
@@ -268,7 +298,7 @@ public class ScaffoldGenerator {
         List<IStereoElement> tmpStereo = new ArrayList<>();
         tmpClonedMolecule.setStereoElements(tmpStereo);
         /*Basic wire frames and element wire frames will be numbered later, as their number will be deleted immediately by anonymization and skeleton*/
-        if(ScaffoldModeOption.BASIC_WIRE_FRAME != this.getScaffoldModeSetting() && ScaffoldModeOption.ELEMENT_WIRE_FRAME != this.getScaffoldModeSetting()) {
+        if(ScaffoldModeOption.BECCARI_BASIC_WIRE_FRAME != this.getScaffoldModeSetting() && ScaffoldModeOption.ELEMENTAL_WIRE_FRAME != this.getScaffoldModeSetting()) {
             /*Mark each atom with ascending number*/
             Integer tmpCounter = 0;
             for(IAtom tmpAtom : tmpClonedMolecule.atoms()) {
@@ -282,10 +312,10 @@ public class ScaffoldGenerator {
         IAtomContainer tmpMurckoFragment = tmpMurckoFragmenter.scaffold(tmpClonedMolecule);
         switch (this.scaffoldModeSetting) {
             /*Generate the Murcko scaffold*/
-            case MURCKO:
+            case MURCKO_FRAGMENT:
                 break;
             /*Generate the basic wire frame*/
-            case BASIC_WIRE_FRAME:
+            case BECCARI_BASIC_WIRE_FRAME:
                 tmpMurckoFragment = AtomContainerManipulator.anonymise(tmpMurckoFragment);
                 /*Mark each atom with ascending number after anonymization because all properties are removed*/
                 Integer tmpCounterBWF = 0;
@@ -295,7 +325,7 @@ public class ScaffoldGenerator {
                 }
                 break;
             /*Generate the Schuffenhauer scaffold*/
-            case SCHUFFENHAUER:
+            case SCHUFFENHAUER_FRAMEWORK:
                 /*Store the number of each Atom of the murckoFragment*/
                 HashSet<Integer> tmpMurckoAtomNumbers = new HashSet<>(tmpClonedMolecule.getAtomCount(), 1);
                 for (IAtom tmpMurckoAtom : tmpMurckoFragment.atoms()) {
@@ -355,7 +385,7 @@ public class ScaffoldGenerator {
                 }
                 break;
             /*Generate the element wire frame*/
-            case ELEMENT_WIRE_FRAME:
+            case ELEMENTAL_WIRE_FRAME:
                 tmpMurckoFragment = AtomContainerManipulator.skeleton(tmpMurckoFragment);
                 /*Mark each atom with ascending number after anonymization because all properties are removed*/
                 Integer tmpCounterEWF = 0;
@@ -365,7 +395,7 @@ public class ScaffoldGenerator {
                 }
                 break;
             /*Generate the basic framework*/
-            case BASIC_FRAMEWORK:
+            case BECCARI_BASIC_FRAMEWORK:
                 for(IAtom tmpAtom : tmpMurckoFragment.atoms()) {
                     if(tmpAtom.getSymbol() != "C") {
                         tmpAtom.setSymbol("C");
@@ -382,16 +412,18 @@ public class ScaffoldGenerator {
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpMurckoFragment);
         CDKHydrogenAdder.getInstance(tmpMurckoFragment.getBuilder()).addImplicitHydrogens(tmpMurckoFragment);
         /*Set aromaticity if necessary*/
-        if(this.areAromaticityDetermined()) {
-            Objects.requireNonNull(this.aromaticityModelSetting, "If (this.areAromaticityDetermined() == true, this.aromaticityModelSetting must be non null");
-            //this.aromaticityModelSetting to be used to determine aromaticity. Can be null if this.areAromaticityDetermined() == false.
+        if(this.isAromaticityDetermined()) {
+            Objects.requireNonNull(this.aromaticityModelSetting, "If (this.isAromaticityDetermined() == true, this.aromaticityModelSetting must be non null");
+            //this.aromaticityModelSetting to be used to determine aromaticity. Can be null if this.isAromaticityDetermined() == false.
             this.aromaticityModelSetting.apply(tmpMurckoFragment);
         }
         return tmpMurckoFragment;
     }
 
     /**
-     * Generates the smallest set of the smallest rings(SSSR) with Cycles.relevant() for the entered molecule, adds double bounded atoms and returns it.
+     * Generates a set of rings depending on the CycleFinder selected by {@link ScaffoldGenerator#getCycleFinder(IAtomContainer)}.
+     * Adds non-single bounded atoms to the rings and returns them.
+     * Important: Property (ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY) must be set for aMolecule.
      * @param aMolecule molecule whose rings are produced.
      * @param anIsKeepingNonSingleBonds if true, double bonded atoms are retained on the ring.
      * @return rings of the inserted molecule.
@@ -477,303 +509,6 @@ public class ScaffoldGenerator {
             tmpCycles.add(tmpCycle); //Add rings to list
         }
         return tmpCycles;
-    }
-
-
-    /**
-     * Removes the given ring from the total molecule and returns it.
-     * Preserves the sp2 hybridisation of a border atom when an aromatic ring is removed.
-     * With the removal of heterocycles of size 3 a double bond is inserted if it is directly adjacent to another ring.
-     * Important: Property (ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY) must be set for tmpMolecule/tmpRing and match.
-     * @param aMolecule Molecule whose ring is to be removed.
-     * @param aRing Ring to be removed.
-     * @return Molecule whose ring has been removed.
-     * @throws CloneNotSupportedException if cloning is not possible.
-     * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
-     */
-    public IAtomContainer removeRing(IAtomContainer aMolecule, IAtomContainer aRing) throws CloneNotSupportedException, CDKException {
-        /*Clone original molecules*/
-        IAtomContainer tmpMoleculeClone = aMolecule.clone();
-        IAtomContainer tmpRingClone = aRing.clone();
-        boolean tmpIsRingAromatic = true;
-        HashSet<Integer> tmpIsNotRing = new HashSet<>(aMolecule.getAtomCount(), 1);
-        HashSet<Integer> tmpDoNotRemove = new HashSet<>(aMolecule.getAtomCount(), 1);
-        int tmpBoundNumber = 0;
-        /*Preparation for insertion of double bonds with removal of aromatic rings*/
-        HashSet<Integer> tmpEdgeAtomNumbers = new HashSet<>(tmpMoleculeClone.getAtomCount(), 1);
-        /*Store the number of each atom in the molecule*/
-        for(IAtom tmpMolAtom : tmpMoleculeClone.atoms()) {
-            tmpIsNotRing.add(tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
-        }
-        /*Remove all numbers of the ring that is to be removed*/
-        for(IAtom tmpRingAtom : tmpRingClone.atoms()) {
-            tmpIsNotRing.remove(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
-        }
-        /*Get the number of bonds of the ring to other atoms*/
-        for(IAtom tmpRingAtom : tmpRingClone.atoms()) {
-            for(IAtom tmpMolAtom : tmpMoleculeClone.atoms()) {
-                //All atoms of the ring in the original molecule
-                if(tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)) {
-                    for(IBond tmpBond : tmpMolAtom.bonds()){
-                        //Bond between ring and non ring atom
-                        if(tmpIsNotRing.contains(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)) ||
-                                tmpIsNotRing.contains(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
-                            tmpBoundNumber++;
-                        }
-                    }
-                }
-            }
-        }
-        /*Add all atoms of rings that are not to be removed to tmpDoNotRemove*/
-        //Get all cycles of the molecule
-        Cycles tmpCycles = this.getCycleFinder(tmpMoleculeClone).find(tmpMoleculeClone);
-        HashSet<Integer> tmpRingPropertyCounter = new HashSet<>(tmpRingClone.getAtomCount(), 1);
-        //Save the properties of the ring
-        for(IAtom tmpRingAtom : tmpRingClone.atoms()) {
-            tmpRingPropertyCounter.add(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
-        }
-        for(IAtomContainer tmpCycle : tmpCycles.toRingSet().atomContainers()) {
-            boolean tmpIsRingToRemove = true;
-            /*Check if it is the ring to be removed*/
-            for(IAtom tmpCycleAtom : tmpCycle.atoms()) {
-                //If one of the atoms of the ring to be removed is not included, it is not this ring
-                if(!tmpRingPropertyCounter.contains(tmpCycleAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
-                    tmpIsRingToRemove = false;
-                }
-            }
-            /*If it is not the ring you want to remove, add its atoms to the tmpDoNotRemove list*/
-            if(tmpIsRingToRemove == false) {
-                for(IAtom tmpCycleAtom : tmpCycle.atoms()) {
-                    Integer tmpPropertyNumber = tmpCycleAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY);
-                    if(!tmpDoNotRemove.contains(tmpPropertyNumber)) {
-                        tmpDoNotRemove.add(tmpPropertyNumber);
-                    }
-                }
-            }
-        }
-        if(tmpBoundNumber < 2) { //Remove all ring atoms, as there are less than two bonds to other atoms
-            for(IAtom tmpRingAtom : tmpRingClone.atoms()) {
-                for (IAtom tmpMolAtom : tmpMoleculeClone.atoms()) {
-                    //All atoms of the ring in the original molecule
-                    if (tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)) {
-                        tmpMoleculeClone.removeAtom(tmpMolAtom); //Remove atoms. tmpMoleculeCone.remove() not possible
-                    }
-                }
-            }
-        } else { //Remove only the ring atoms that are not bound to the rest of the molecule
-            if(tmpRingClone.getAtomCount() == 3) {
-                /* Rings consisting of 3 atoms are specially treated*/
-                int tmpNonCCounter = 0;
-                IAtom tmpNonCAtom = null;
-                /*Count the heteroatoms*/
-                for(IAtom tmpRingAtom : tmpRingClone.atoms()) {
-                    if(tmpRingAtom.getSymbol() != "C") {
-                        tmpNonCCounter++;
-                        tmpNonCAtom = tmpRingAtom;
-                    }
-                }
-                /*If the ring contains one heteroatom, it is treated specially.*/
-                if (tmpNonCCounter == 1) {
-                    tmpRingClone.removeAtom(tmpNonCAtom); //remove the heteroatom from the ring
-                    IAtom tmpBondAtom1 = null;
-                    IAtom tmpRemoveAtom = null;
-                    for(IAtom tmpMolAtom : tmpMoleculeClone.atoms()) { //go through the whole molecule
-                        /* Find the second atom to which the heteroatom was bonded if it was sp3 hybridised*/
-                        if((tmpMolAtom.getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpRingClone.getAtom(0).getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY) ||
-                                tmpMolAtom.getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpRingClone.getAtom(1).getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY)) && tmpBondAtom1 != null
-                                && tmpMolAtom.getHybridization() == IAtomType.Hybridization.SP3) {
-                            //insert a double bond between the two atoms
-                            tmpMoleculeClone.getBond(tmpBondAtom1 , tmpMolAtom).setOrder(IBond.Order.DOUBLE);
-                        }
-                        /*Find the first atom to which the heteroatom was bonded if it was sp3 hybridised*/
-                        if((tmpMolAtom.getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpRingClone.getAtom(0).getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY) ||
-                                tmpMolAtom.getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpRingClone.getAtom(1).getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY)) && tmpBondAtom1 == null
-                                && tmpMolAtom.getHybridization() == IAtomType.Hybridization.SP3) {
-                            //Save this atom
-                            tmpBondAtom1 = tmpMolAtom;
-                        }
-                        /*The heteroatom is to be removed*/
-                        if(tmpNonCAtom.getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpMolAtom.getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY)) {
-                            tmpRemoveAtom = tmpMolAtom;
-                        }
-                    }
-                    //remove the heteroatom
-                    tmpMoleculeClone.removeAtom(tmpRemoveAtom);
-                }
-            }
-            /*To test whether the ring is aromatic, exocyclic atoms should not be included*/
-            IAtomContainer tmpExocyclicRemovedRing = this.getRings(aRing.clone(), false).get(0);
-            for(IAtom tmpNonExoAtom : tmpExocyclicRemovedRing.atoms()) {
-                if(!tmpNonExoAtom.isAromatic()) {
-                    tmpIsRingAromatic = false; //If one atom is non-aromatic the whole ring is not aromatic
-                }
-            }
-            for(IAtom tmpRingAtom : tmpRingClone.atoms()) {
-                for (IAtom tmpMolAtom : tmpMoleculeClone.atoms()) {
-                    /*All atoms of the ring in the original molecule that are not bound to the rest of the molecule*/
-                    if ((tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)
-                            == tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)) && !tmpDoNotRemove.contains(tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
-                        tmpMoleculeClone.removeAtom(tmpMolAtom); //Remove atoms
-                    }
-                }
-            }
-            /*Store the number of all atoms from which an aromatic ring has been removed.
-            * In these atoms, a double bond was removed without changing the hybridisation from sp2 to sp3.*/
-            //Perform calculation only if the ring to be removed is aromatic or if non-aromatic DB should also be preserved
-            if(tmpIsRingAromatic || this.NonAromaticDBObtainedSetting) {
-                for (IAtom tmpMolAtom : tmpMoleculeClone.atoms()) {
-                    //All Atoms that are sp2 hybridised and in the ring to be removed
-                    if (tmpMolAtom.getHybridization() == IAtomType.Hybridization.SP2
-                            && tmpRingPropertyCounter.contains(tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
-                        boolean tmpIsSp3 = true;
-                        for (IBond tmpBond : tmpMolAtom.bonds()) { //All bonds of the Atom
-                            if (tmpBond.getOrder() != IBond.Order.SINGLE) { //If it contains a non-single bond it cannot be sp3
-                                tmpIsSp3 = false;
-                            }
-                        }
-                        if (tmpIsSp3) { //If the Atom contains only single bonds, it must be a wanted atom
-                            tmpEdgeAtomNumbers.add(tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
-                        }
-                    }
-                }
-            }
-        }
-        //Perform calculation only if the ring to be removed is aromatic or if non-aromatic DB should also be preserved
-        if(tmpIsRingAromatic || this.NonAromaticDBObtainedSetting) {
-            for(IBond tmpBond : tmpMoleculeClone.bonds()) {
-                /*If both atoms of a bond were previously part of an aromatic ring, insert a double bond*/
-                if(tmpEdgeAtomNumbers.contains(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))
-                    && tmpEdgeAtomNumbers.contains(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
-                    tmpBond.setOrder(IBond.Order.DOUBLE);
-                }
-            }
-        }
-        /*Clear hybridisation. The hybridisation must be reset later by percieveAtomTypesAndConfigureAtoms, as the hybridisation is not changed on its own when the atoms are removed.
-        sp2 atoms whose double bonds have been removed must be declared as sp3.*/
-        for(IAtom tmpAtom : tmpMoleculeClone.atoms()) {
-            tmpAtom.setHybridization((IAtomType.Hybridization) CDKConstants.UNSET);
-        }
-        /*Add back hydrogens removed by the MurckoFragmenter*/
-        AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpMoleculeClone);
-        CDKHydrogenAdder.getInstance(tmpMoleculeClone.getBuilder()).addImplicitHydrogens(tmpMoleculeClone);
-        return tmpMoleculeClone;
-    }
-
-    /**
-     * Checks whether the tmpRing in the tmpMolecule is terminal. This means whether it can be removed without creating several unconnected parts.
-     * Rings that lead to spiro ring systems when removed are also considered non-terminal.
-     * Important: Property (ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY) must be set for tmpMolecule/tmpRing and match.
-     * @param aMolecule Molecule whose ring is to be checked
-     * @param aRing Ring to check
-     * @return true if the tmpRing is terminal
-     * @throws CloneNotSupportedException if cloning is not possible.
-     */
-    public boolean isRingTerminal(IAtomContainer aMolecule, IAtomContainer aRing) throws CloneNotSupportedException {
-        /*Clone molecule and ring*/
-        IAtomContainer tmpClonedMolecule = aMolecule.clone();
-        IAtomContainer tmpClonedRing = aRing.clone();
-        /*Remove ring atoms from original molecule*/
-        HashMap<Integer, IAtom> tmpMoleculeCounterMap = new HashMap<>((aMolecule.getAtomCount()), 1);
-        for(IAtom tmpMolAtom : tmpClonedMolecule.atoms()) { //Save all atoms of the molecule
-            tmpMoleculeCounterMap.put(tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY), tmpMolAtom);
-        }
-        for(IAtom tmpRingAtom : tmpClonedRing.atoms()) { // Go through the ring
-            if(tmpMoleculeCounterMap.containsKey(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) { //Is ring atom in molecule
-                tmpClonedMolecule.removeAtom(tmpMoleculeCounterMap.get(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))); //Remove them
-            }
-        }
-        /*Check if there is more than one molecule in the IAtomContainer*/
-        ConnectivityChecker tmpChecker = new ConnectivityChecker();
-        boolean tmpRingIsTerminal = tmpChecker.isConnected(tmpClonedMolecule);
-        return tmpRingIsTerminal;
-    }
-
-    /**
-     * Checks whether rings may be removed. These are rings in no atom belongs to another ring.
-     * Furthermore, removal is impossible when it is an aromatic ring, that borders two consecutive rings.
-     * getSchuffenhauerScaffold() must have been previously applied to the molecule so that an aromaticity status has been assigned to the atoms.
-     * @param aRing Ring being tested for its removability
-     * @param aRings All Rings of the molecule
-     * @param aMolecule Whole molecule
-     * @return Whether the ring is removable
-     * @throws CloneNotSupportedException if cloning is not possible.
-     * @throws Intractable problem with this.getRings
-     */
-    public boolean isRingRemovable(IAtomContainer aRing, List<IAtomContainer> aRings, IAtomContainer aMolecule) throws CloneNotSupportedException, Intractable {
-        IAtomContainer tmpClonedMolecule = aMolecule.clone();
-        IAtomContainer tmpClonedRing = aRing.clone();
-
-        /*---Recognition of rings in which no atom belongs to another ring---*/
-        List<IAtomContainer> tmpClonedRings = new ArrayList<>(aRings.size());
-        HashSet<Integer> tmpRingsNumbers = new HashSet<>(aRings.size() * tmpClonedRing.getAtomCount(), 1);
-        boolean isAnIndependentRing = false;
-        /*Store all ring atoms of the whole molecule without the tested ring*/
-        for(IAtomContainer tmpRing : aRings) {
-            if(tmpRing == aRing) { //Skip the tested ring
-                continue;
-            }
-            tmpClonedRings.add(tmpRing.clone()); //Store the rings
-            for(IAtom tmpAtom : tmpRing.atoms()) { //Store the atoms of the rings
-                tmpRingsNumbers.add(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
-            }
-        }
-        /*Investigate whether the ring contains atoms that do not occur in any other ring*/
-        for (IAtom tmpSingleRingAtom : aRing.atoms()) {
-            if(!tmpRingsNumbers.contains(tmpSingleRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))){
-                isAnIndependentRing = true;
-            }
-        }
-        /*If the ring does not contain atoms that are not present in any other rings, it is not removable*/
-        if(isAnIndependentRing == false) {
-            return false;
-        }
-        /*---If it is an aromatic ring that borders two consecutive rings, its removal is not possible.---*/
-        /*Is it an aromatic ring at all*/
-        //Remove exocyclic atoms
-        IAtomContainer tmpRemovedRing = this.getRings(tmpClonedRing, false).get(0);
-        for(IAtom tmpAtom : tmpRemovedRing.atoms()) {
-            if(!tmpAtom.isAromatic()) {
-                return true;
-            }
-        }
-        /*Store the number of all ring atoms*/
-        HashSet<Integer> tmpMoleculeNumbers = new HashSet<>(tmpClonedMolecule.getAtomCount(), 1);
-        for(IAtomContainer tmpRing : tmpClonedRings) {
-            for(IAtom tmpRingAtom : tmpRing.atoms()) {
-                int tmpAtomNumber = tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY);
-                if(!tmpMoleculeNumbers.contains(tmpAtomNumber)) {
-                    tmpMoleculeNumbers.add(tmpAtomNumber);
-                }
-            }
-        }
-        /*Store all the atoms of the other rings bordering the aromatic ring*/
-        HashSet<Integer> tmpEdgeAtomNumbers = new HashSet<>(tmpClonedMolecule.getAtomCount(), 1);
-        for(IAtom tmpRingAtom : tmpClonedRing.atoms()) {
-            //Skip the atom if it is already in the HashSet
-            if(tmpMoleculeNumbers.contains(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
-                tmpEdgeAtomNumbers.add(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
-            }
-        }
-        /*At least 3 edge atoms are needed to cause a problem*/
-        if(tmpEdgeAtomNumbers.size() < 3) {
-            return true;
-        }
-        /*If one of the edge atoms occurs in more than one other ring, it is not possible to remove the ring*/
-        for(Integer tmpEdgeAtomNumber : tmpEdgeAtomNumbers) {
-            int tmpRingCounter = 0;
-            for(IAtomContainer tmpRing : aRings) {
-                for(IAtom tmpRingAtom : tmpRing.atoms()) {
-                    //If one of the atoms of the ring to be tested matches one of the edge atoms
-                    if(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpEdgeAtomNumber) {
-                        tmpRingCounter++;
-                        if(tmpRingCounter > 1) { //More than one bordering ring
-                            return false;
-                        }
-                    }
-                }
-            }
-        }
-        return true;
     }
     //</editor-fold>
 
@@ -861,6 +596,7 @@ public class ScaffoldGenerator {
     /**
      * Iteratively removes the rings of the molecule according to specific rules that are queried hierarchically.
      * Based on the rules from the "The Scaffold Tree" Paper by Schuffenhauer et al.
+     * Rule 7 {@link ScaffoldGenerator#applySchuffenhauerRuleSeven(IAtomContainer, List)} is only applied if the aromaticity is also redetermined by {@link ScaffoldGenerator#determineAromaticitySetting}.
      * @param aMolecule Molecule that is to be broken down into its fragments
      * @return Fragments of the molecule according to the Schuffenhauer rules
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
@@ -940,7 +676,7 @@ public class ScaffoldGenerator {
                 continue;
             }
             //Rule seven is only useful when aromaticity is redetermined
-            if(this.ruleSevenAppliedSetting) {
+            if(this.ruleSevenAppliedSetting && this.determineAromaticitySetting) {
                 int tmpRuleSevenRingNumber = tmpRemovableRings.size();
                 /*Apply rule number seven*/
                 tmpRemovableRings = this.applySchuffenhauerRuleSeven(tmpSchuffenhauerFragments.get(tmpSchuffenhauerFragments.size() - 1), tmpRemovableRings);
@@ -1030,7 +766,7 @@ public class ScaffoldGenerator {
         List<IStereoElement> tmpStereo = new ArrayList<>();
         tmpClonedMolecule.setStereoElements(tmpStereo);
         /*Basic wire frames and element wire frames will be numbered later, as their number will be deleted immediately by anonymization and skeleton*/
-        if(ScaffoldModeOption.BASIC_WIRE_FRAME != this.getScaffoldModeSetting() && ScaffoldModeOption.ELEMENT_WIRE_FRAME != this.getScaffoldModeSetting()) {
+        if(ScaffoldModeOption.BECCARI_BASIC_WIRE_FRAME != this.getScaffoldModeSetting() && ScaffoldModeOption.ELEMENTAL_WIRE_FRAME != this.getScaffoldModeSetting()) {
             /*Mark each atom with ascending number*/
             Integer tmpCounter = 0;
             for(IAtom tmpAtom : tmpClonedMolecule.atoms()) {
@@ -1044,10 +780,10 @@ public class ScaffoldGenerator {
         IAtomContainer tmpMurckoFragment = tmpMurckoFragmenter.scaffold(tmpClonedMolecule);
         switch (this.scaffoldModeSetting) {
             /*Generate the Murcko scaffold*/
-            case MURCKO:
+            case MURCKO_FRAGMENT:
                 break;
             /*Generate the basic wire frame*/
-            case BASIC_WIRE_FRAME:
+            case BECCARI_BASIC_WIRE_FRAME:
                 tmpMurckoFragment = AtomContainerManipulator.anonymise(tmpMurckoFragment);
                 /*Mark each atom with ascending number after anonymization because all properties are removed*/
                 Integer tmpCounterBWF = 0;
@@ -1057,7 +793,7 @@ public class ScaffoldGenerator {
                 }
                 break;
             /*Generate the Schuffenhauer scaffold*/
-            case SCHUFFENHAUER:
+            case SCHUFFENHAUER_FRAMEWORK:
                 /*Store the number of each Atom of the murckoFragment*/
                 HashSet<Integer> tmpMurckoAtomNumbers = new HashSet<>(tmpClonedMolecule.getAtomCount(), 1);
                 for (IAtom tmpMurckoAtom : tmpMurckoFragment.atoms()) {
@@ -1117,7 +853,7 @@ public class ScaffoldGenerator {
                 }
                 break;
             /*Generate the element wire frame*/
-            case ELEMENT_WIRE_FRAME:
+            case ELEMENTAL_WIRE_FRAME:
                 tmpMurckoFragment = AtomContainerManipulator.skeleton(tmpMurckoFragment);
                 /*Mark each atom with ascending number after anonymization because all properties are removed*/
                 Integer tmpCounterEWF = 0;
@@ -1127,7 +863,7 @@ public class ScaffoldGenerator {
                 }
                 break;
             /*Generate the basic framework*/
-            case BASIC_FRAMEWORK:
+            case BECCARI_BASIC_FRAMEWORK:
                 for(IAtom tmpAtom : tmpMurckoFragment.atoms()) {
                     if(tmpAtom.getSymbol() != "C") {
                         tmpAtom.setSymbol("C");
@@ -1150,6 +886,296 @@ public class ScaffoldGenerator {
             anAromaticity.apply(tmpMurckoFragment);
         }
         return tmpMurckoFragment;
+    }
+
+    /**
+     * Removes the given ring from the total molecule and returns it.
+     * Preserves the sp2 hybridisation of a border atom when an aromatic ring is removed.
+     * With the removal of heterocycles of size 3 a double bond is inserted if it is directly adjacent to another ring.
+     * Important: Property (ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY) must be set for tmpMolecule/tmpRing and match.
+     * @param aMolecule Molecule whose ring is to be removed.
+     * @param aRing Ring to be removed.
+     * @return Molecule whose ring has been removed.
+     * @throws CloneNotSupportedException if cloning is not possible.
+     * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
+     */
+    protected IAtomContainer removeRing(IAtomContainer aMolecule, IAtomContainer aRing) throws CloneNotSupportedException, CDKException {
+        /*Clone original molecules*/
+        IAtomContainer tmpMoleculeClone = aMolecule.clone();
+        IAtomContainer tmpRingClone = aRing.clone();
+        boolean tmpIsRingAromatic = true;
+        HashSet<Integer> tmpIsNotRing = new HashSet<>(aMolecule.getAtomCount(), 1);
+        HashSet<Integer> tmpDoNotRemove = new HashSet<>(aMolecule.getAtomCount(), 1);
+        int tmpBoundNumber = 0;
+        /*Preparation for insertion of double bonds with removal of aromatic rings*/
+        HashSet<Integer> tmpEdgeAtomNumbers = new HashSet<>(tmpMoleculeClone.getAtomCount(), 1);
+        /*Store the number of each atom in the molecule*/
+        for(IAtom tmpMolAtom : tmpMoleculeClone.atoms()) {
+            tmpIsNotRing.add(tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
+        }
+        /*Remove all numbers of the ring that is to be removed*/
+        for(IAtom tmpRingAtom : tmpRingClone.atoms()) {
+            tmpIsNotRing.remove(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
+        }
+        /*Get the number of bonds of the ring to other atoms*/
+        for(IAtom tmpRingAtom : tmpRingClone.atoms()) {
+            for(IAtom tmpMolAtom : tmpMoleculeClone.atoms()) {
+                //All atoms of the ring in the original molecule
+                if(tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)) {
+                    for(IBond tmpBond : tmpMolAtom.bonds()){
+                        //Bond between ring and non ring atom
+                        if(tmpIsNotRing.contains(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)) ||
+                                tmpIsNotRing.contains(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                            tmpBoundNumber++;
+                        }
+                    }
+                }
+            }
+        }
+        /*Add all atoms of rings that are not to be removed to tmpDoNotRemove*/
+        //Get all cycles of the molecule
+        Cycles tmpCycles = this.getCycleFinder(tmpMoleculeClone).find(tmpMoleculeClone);
+        HashSet<Integer> tmpRingPropertySet = new HashSet<>(tmpRingClone.getAtomCount(), 1);
+        //Save the properties of the ring
+        for(IAtom tmpRingAtom : tmpRingClone.atoms()) {
+            tmpRingPropertySet.add(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
+        }
+        for(IAtomContainer tmpCycle : tmpCycles.toRingSet().atomContainers()) {
+            boolean tmpIsRingToRemove = true;
+            /*Check if it is the ring to be removed*/
+            for(IAtom tmpCycleAtom : tmpCycle.atoms()) {
+                //If one of the atoms of the ring to be removed is not included, it is not this ring
+                if(!tmpRingPropertySet.contains(tmpCycleAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                    tmpIsRingToRemove = false;
+                }
+            }
+            /*If it is not the ring you want to remove, add its atoms to the tmpDoNotRemove list*/
+            if(tmpIsRingToRemove == false) {
+                for(IAtom tmpCycleAtom : tmpCycle.atoms()) {
+                    Integer tmpPropertyNumber = tmpCycleAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY);
+                    if(!tmpDoNotRemove.contains(tmpPropertyNumber)) {
+                        tmpDoNotRemove.add(tmpPropertyNumber);
+                    }
+                }
+            }
+        }
+        if(tmpBoundNumber < 2) { //Remove all ring atoms, as there are less than two bonds to other atoms
+            for(IAtom tmpRingAtom : tmpRingClone.atoms()) {
+                for (IAtom tmpMolAtom : tmpMoleculeClone.atoms()) {
+                    //All atoms of the ring in the original molecule
+                    if (tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)) {
+                        tmpMoleculeClone.removeAtom(tmpMolAtom); //Remove atoms. tmpMoleculeCone.remove() not possible
+                    }
+                }
+            }
+        } else { //Remove only the ring atoms that are not bound to the rest of the molecule
+            if(tmpRingClone.getAtomCount() == 3) {
+                /* Rings consisting of 3 atoms are specially treated*/
+                int tmpNonCCounter = 0;
+                IAtom tmpNonCAtom = null;
+                /*Count the heteroatoms*/
+                for(IAtom tmpRingAtom : tmpRingClone.atoms()) {
+                    if(tmpRingAtom.getSymbol() != "C") {
+                        tmpNonCCounter++;
+                        tmpNonCAtom = tmpRingAtom;
+                    }
+                }
+                /*If the ring contains one heteroatom, it is treated specially.*/
+                if (tmpNonCCounter == 1) {
+                    tmpRingClone.removeAtom(tmpNonCAtom); //remove the heteroatom from the ring
+                    IAtom tmpBondAtom1 = null;
+                    IAtom tmpRemoveAtom = null;
+                    for(IAtom tmpMolAtom : tmpMoleculeClone.atoms()) { //go through the whole molecule
+                        /* Find the second atom to which the heteroatom was bonded if it was sp3 hybridised*/
+                        if((tmpMolAtom.getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpRingClone.getAtom(0).getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY) ||
+                                tmpMolAtom.getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpRingClone.getAtom(1).getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY)) && tmpBondAtom1 != null
+                                && tmpMolAtom.getHybridization() == IAtomType.Hybridization.SP3) {
+                            //insert a double bond between the two atoms
+                            tmpMoleculeClone.getBond(tmpBondAtom1 , tmpMolAtom).setOrder(IBond.Order.DOUBLE);
+                        }
+                        /*Find the first atom to which the heteroatom was bonded if it was sp3 hybridised*/
+                        if((tmpMolAtom.getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpRingClone.getAtom(0).getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY) ||
+                                tmpMolAtom.getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpRingClone.getAtom(1).getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY)) && tmpBondAtom1 == null
+                                && tmpMolAtom.getHybridization() == IAtomType.Hybridization.SP3) {
+                            //Save this atom
+                            tmpBondAtom1 = tmpMolAtom;
+                        }
+                        /*The heteroatom is to be removed*/
+                        if(tmpNonCAtom.getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpMolAtom.getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY)) {
+                            tmpRemoveAtom = tmpMolAtom;
+                        }
+                    }
+                    //remove the heteroatom
+                    tmpMoleculeClone.removeAtom(tmpRemoveAtom);
+                }
+            }
+            /*To test whether the ring is aromatic, exocyclic atoms should not be included*/
+            IAtomContainer tmpExocyclicRemovedRing = this.getRings(aRing.clone(), false).get(0);
+            tmpIsRingAromatic = this.isAtomContainerAromatic(tmpExocyclicRemovedRing);
+            for(IAtom tmpRingAtom : tmpRingClone.atoms()) {
+                for (IAtom tmpMolAtom : tmpMoleculeClone.atoms()) {
+                    /*All atoms of the ring in the original molecule that are not bound to the rest of the molecule*/
+                    if ((tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)
+                            == tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)) && !tmpDoNotRemove.contains(tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                        tmpMoleculeClone.removeAtom(tmpMolAtom); //Remove atoms
+                    }
+                }
+            }
+            /*Store the number of all atoms from which an aromatic ring has been removed.
+             * In these atoms, a double bond was removed without changing the hybridisation from sp2 to sp3.*/
+            //Perform calculation only if the ring to be removed is aromatic or if non-aromatic DB should also be preserved
+            if(tmpIsRingAromatic || !this.retainOnlyHybridisationsAtAromaticBondsSetting) {
+                for (IAtom tmpMolAtom : tmpMoleculeClone.atoms()) {
+                    //All Atoms that are sp2 hybridised and in the ring to be removed
+                    if (tmpMolAtom.getHybridization() == IAtomType.Hybridization.SP2
+                            && tmpRingPropertySet.contains(tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                        boolean tmpIsSp3 = true;
+                        for (IBond tmpBond : tmpMolAtom.bonds()) { //All bonds of the Atom
+                            if (tmpBond.getOrder() != IBond.Order.SINGLE) { //If it contains a non-single bond it cannot be sp3
+                                tmpIsSp3 = false;
+                            }
+                        }
+                        if (tmpIsSp3) { //If the Atom contains only single bonds, it must be a wanted atom
+                            tmpEdgeAtomNumbers.add(tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
+                        }
+                    }
+                }
+            }
+        }
+        //Perform calculation only if the ring to be removed is aromatic or if non-aromatic DB should also be preserved
+        if(tmpIsRingAromatic || !this.retainOnlyHybridisationsAtAromaticBondsSetting) {
+            for(IBond tmpBond : tmpMoleculeClone.bonds()) {
+                /*If both atoms of a bond were previously part of an aromatic ring, insert a double bond*/
+                if(tmpEdgeAtomNumbers.contains(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))
+                        && tmpEdgeAtomNumbers.contains(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                    tmpBond.setOrder(IBond.Order.DOUBLE);
+                }
+            }
+        }
+        /*Clear hybridisation. The hybridisation must be reset later by percieveAtomTypesAndConfigureAtoms, as the hybridisation is not changed on its own when the atoms are removed.
+        sp2 atoms whose double bonds have been removed must be declared as sp3.*/
+        for(IAtom tmpAtom : tmpMoleculeClone.atoms()) {
+            tmpAtom.setHybridization((IAtomType.Hybridization) CDKConstants.UNSET);
+        }
+        /*Add back hydrogens removed by the MurckoFragmenter*/
+        AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpMoleculeClone);
+        CDKHydrogenAdder.getInstance(tmpMoleculeClone.getBuilder()).addImplicitHydrogens(tmpMoleculeClone);
+        return tmpMoleculeClone;
+    }
+
+    /**
+     * Checks whether the tmpRing in the tmpMolecule is terminal. This means whether it can be removed without creating several unconnected parts.
+     * Rings that lead to spiro ring systems when removed are also considered non-terminal.
+     * Important: Property (ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY) must be set for tmpMolecule/tmpRing and match.
+     * @param aMolecule Molecule whose ring is to be checked
+     * @param aRing Ring to check
+     * @return true if the tmpRing is terminal
+     * @throws CloneNotSupportedException if cloning is not possible.
+     */
+    protected boolean isRingTerminal(IAtomContainer aMolecule, IAtomContainer aRing) throws CloneNotSupportedException {
+        /*Clone molecule and ring*/
+        IAtomContainer tmpClonedMolecule = aMolecule.clone();
+        IAtomContainer tmpClonedRing = aRing.clone();
+        /*Remove ring atoms from original molecule*/
+        HashMap<Integer, IAtom> tmpMoleculeCounterMap = new HashMap<>((aMolecule.getAtomCount()), 1);
+        for(IAtom tmpMolAtom : tmpClonedMolecule.atoms()) { //Save all atoms of the molecule
+            tmpMoleculeCounterMap.put(tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY), tmpMolAtom);
+        }
+        for(IAtom tmpRingAtom : tmpClonedRing.atoms()) { // Go through the ring
+            if(tmpMoleculeCounterMap.containsKey(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) { //Is ring atom in molecule
+                tmpClonedMolecule.removeAtom(tmpMoleculeCounterMap.get(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))); //Remove them
+            }
+        }
+        /*Check if there is more than one molecule in the IAtomContainer*/
+        ConnectivityChecker tmpChecker = new ConnectivityChecker();
+        boolean tmpRingIsTerminal = tmpChecker.isConnected(tmpClonedMolecule);
+        return tmpRingIsTerminal;
+    }
+
+    /**
+     * Checks whether rings may be removed. These are rings in no atom belongs to another ring.
+     * Furthermore, removal is impossible when it is an aromatic ring, that borders two consecutive rings.
+     * getSchuffenhauerScaffold() must have been previously applied to the molecule so that an aromaticity status has been assigned to the atoms.
+     * @param aRing Ring being tested for its removability
+     * @param aRings All Rings of the molecule
+     * @param aMolecule Whole molecule
+     * @return Whether the ring is removable
+     * @throws CloneNotSupportedException if cloning is not possible.
+     * @throws Intractable problem with this.getRings
+     */
+    protected boolean isRingRemovable(IAtomContainer aRing, List<IAtomContainer> aRings, IAtomContainer aMolecule) throws CloneNotSupportedException, Intractable {
+        IAtomContainer tmpClonedMolecule = aMolecule.clone();
+        IAtomContainer tmpClonedRing = aRing.clone();
+
+        /*---Recognition of rings in which no atom belongs to another ring---*/
+        List<IAtomContainer> tmpClonedRings = new ArrayList<>(aRings.size());
+        HashSet<Integer> tmpRingsNumbers = new HashSet<>(aRings.size() * tmpClonedRing.getAtomCount(), 1);
+        boolean isAnIndependentRing = false;
+        /*Store all ring atoms of the whole molecule without the tested ring*/
+        for(IAtomContainer tmpRing : aRings) {
+            if(tmpRing == aRing) { //Skip the tested ring
+                continue;
+            }
+            tmpClonedRings.add(tmpRing.clone()); //Store the rings
+            for(IAtom tmpAtom : tmpRing.atoms()) { //Store the atoms of the rings
+                tmpRingsNumbers.add(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
+            }
+        }
+        /*Investigate whether the ring contains atoms that do not occur in any other ring*/
+        for (IAtom tmpSingleRingAtom : aRing.atoms()) {
+            if(!tmpRingsNumbers.contains(tmpSingleRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))){
+                isAnIndependentRing = true;
+            }
+        }
+        /*If the ring does not contain atoms that are not present in any other rings, it is not removable*/
+        if(isAnIndependentRing == false) {
+            return false;
+        }
+        /*---If it is an aromatic ring that borders two consecutive rings, its removal is not possible.---*/
+        /*Is it an aromatic ring at all*/
+        //Remove exocyclic atoms
+        IAtomContainer tmpRemovedRing = this.getRings(tmpClonedRing, false).get(0);
+        if (!this.isAtomContainerAromatic(tmpRemovedRing)) {
+            return true;
+        }
+        /*Store the number of all ring atoms*/
+        HashSet<Integer> tmpMoleculeNumbers = new HashSet<>(tmpClonedMolecule.getAtomCount(), 1);
+        for(IAtomContainer tmpRing : tmpClonedRings) {
+            for(IAtom tmpRingAtom : tmpRing.atoms()) {
+                int tmpAtomNumber = tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY);
+                if(!tmpMoleculeNumbers.contains(tmpAtomNumber)) {
+                    tmpMoleculeNumbers.add(tmpAtomNumber);
+                }
+            }
+        }
+        /*Store all the atoms of the other rings bordering the aromatic ring*/
+        HashSet<Integer> tmpEdgeAtomNumbers = new HashSet<>(tmpClonedMolecule.getAtomCount(), 1);
+        for(IAtom tmpRingAtom : tmpClonedRing.atoms()) {
+            //Skip the atom if it is already in the HashSet
+            if(tmpMoleculeNumbers.contains(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                tmpEdgeAtomNumbers.add(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
+            }
+        }
+        /*At least 3 edge atoms are needed to cause a problem*/
+        if(tmpEdgeAtomNumbers.size() < 3) {
+            return true;
+        }
+        /*If one of the edge atoms occurs in more than one other ring, it is not possible to remove the ring*/
+        for(Integer tmpEdgeAtomNumber : tmpEdgeAtomNumbers) {
+            int tmpRingCounter = 0;
+            for(IAtomContainer tmpRing : aRings) {
+                for(IAtom tmpRingAtom : tmpRing.atoms()) {
+                    //If one of the atoms of the ring to be tested matches one of the edge atoms
+                    if(tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpEdgeAtomNumber) {
+                        tmpRingCounter++;
+                        if(tmpRingCounter > 1) { //More than one bordering ring
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     /**
@@ -1224,14 +1250,7 @@ public class ScaffoldGenerator {
             if(tmpRing == aRing) { //Skip the tested ring
                 continue;
             }
-            boolean tmpIsRingAromatic = true;
-            /*Store the atoms of the aromatic rings*/
-            for(IAtom tmpAtom : tmpRing.atoms()) {
-                if(!tmpAtom.isAromatic()) {
-                    tmpIsRingAromatic = false;
-                }
-            }
-            if(tmpIsRingAromatic == false) { //Skip non aromatic rings
+            if(this.isAtomContainerAromatic(tmpRing)) { //Skip non aromatic rings
                 continue;
             }
             tmpClonedRings.add(tmpRing.clone()); //Store the aromatic rings
@@ -1267,6 +1286,24 @@ public class ScaffoldGenerator {
             }
         }
         return false;
+    }
+
+    /**
+     * Checks the aromaticity of each atom of the input molecule. If one of the atoms is not aromatic, the whole molecule is not aromatic.
+     * @param aMolecule Molecule whose aromaticity is to be determined
+     * @return true if the molecule is completely aromatic
+     * @throws CloneNotSupportedException if cloning is not possible.
+     */
+    protected boolean isAtomContainerAromatic(IAtomContainer aMolecule) throws CloneNotSupportedException {
+        /*Check the aromaticity of each atom*/
+        IAtomContainer tmpClonedMolecule = aMolecule.clone();
+        for(IAtom tmpAtom : tmpClonedMolecule.atoms()) {
+            //The cycle is not aromatic if one atom is not aromatic
+            if(!tmpAtom.isAromatic()) {
+                return false;
+            }
+        }
+        return true;
     }
     //</editor-fold>
 
@@ -1531,18 +1568,8 @@ public class ScaffoldGenerator {
         //Get all cycles without exocyclic atoms
         Cycles tmpOriginalCycles = this.getCycleFinder(tmpClonedMolecule).find(tmpClonedMolecule);
         for(IAtomContainer tmpCycle : tmpOriginalCycles.toRingSet().atomContainers()) {
-            boolean tmpIsRingAromatic = true;
-            /*Check the aromaticity of each atom*/
-            for(IAtom tmpAtom : tmpCycle.atoms()) {
-                tmpAtom = tmpAtom.clone();
-                //The cycle is not aromatic if one atom is not aromatic
-                if(!tmpAtom.isAromatic()) {
-                    tmpIsRingAromatic = false;
-                    break;
-                }
-            }
             /*Count the aromatic rings*/
-            if(tmpIsRingAromatic == true) {
+            if(this.isAtomContainerAromatic(tmpCycle)) {
                 tmpOriginalAromaticRingCounter++;
             }
         }
@@ -1582,18 +1609,8 @@ public class ScaffoldGenerator {
             }
             /*Check the aromaticity of each Cycle*/
             for(IAtomContainer tmpCycle : tmpCycleIterable) {
-                boolean tmpIsRingAromatic = true;
-                /*Check the aromaticity of each atom*/
-                for(IAtom tmpAtom : tmpCycle.atoms()) {
-                    tmpAtom = tmpAtom.clone();
-                    /*The cycle is not aromatic if one atom is not aromatic*/
-                    if(!tmpAtom.isAromatic()) {
-                        tmpIsRingAromatic = false;
-                        break;
-                    }
-                }
                 /*Count the aromatic rings*/
-                if(tmpIsRingAromatic == true) {
+                if(this.isAtomContainerAromatic(tmpCycle)) {
                     tmpRemovedAromaticRingCounter++;
                 }
             }
@@ -1793,23 +1810,18 @@ public class ScaffoldGenerator {
      * @return List of rings to be removed first according to the rule. Returns the unchanged list,
      * if the molecule is not a mixed ring system.
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
+     * @throws CloneNotSupportedException if cloning is not possible.
      */
-    protected List<IAtomContainer> applySchuffenhauerRuleEleven(List<IAtomContainer> aRings) throws CDKException {
+    protected List<IAtomContainer> applySchuffenhauerRuleEleven(List<IAtomContainer> aRings) throws CDKException, CloneNotSupportedException {
         List<IAtomContainer> tmpReturnRingList = new ArrayList<>(aRings.size());
         /*Add all fully aromatic rings to the list*/
         for(IAtomContainer tmpRing  : aRings) {
-            boolean tmpIsAromatic = true;
             //Remove the exocyclic atoms
             Cycles tmpRemovedExocyclic = this.getCycleFinder(tmpRing).find(tmpRing);
             IAtomContainer tmpCycle = tmpRemovedExocyclic.toRingSet().getAtomContainer(0);
             /*The ring is only fully aromatic, if all cyclic atoms are aromatic*/
-            for(IAtom tmpAtom : tmpCycle.atoms()) {
-                if(!tmpAtom.isAromatic()) {
-                    tmpIsAromatic = false;
-                }
-            }
             /*Add aromatic rings to the list*/
-            if(tmpIsAromatic == true) {
+            if(this.isAtomContainerAromatic(tmpCycle)) {
                 tmpReturnRingList.add(tmpRing);
             }
         }

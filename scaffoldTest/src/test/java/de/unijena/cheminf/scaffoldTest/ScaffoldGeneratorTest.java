@@ -60,7 +60,7 @@ import static junit.framework.TestCase.assertEquals;
 /**
  * JUnit test class for the ScaffoldGenerator
  */
-public class ScaffoldGeneratorTest {
+public class ScaffoldGeneratorTest extends ScaffoldGenerator {
 
     //<editor-fold desc="Tests">
     //<editor-fold desc="Fundamental method tests">
@@ -1821,7 +1821,7 @@ public class ScaffoldGeneratorTest {
         ImageIO.write(tmpImgOriginal, "png" ,tmpOutputOriginal);
         //Generate SchuffenhauerScaffold
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
-        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.SCHUFFENHAUER);
+        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.SCHUFFENHAUER_FRAMEWORK);
         IAtomContainer tmpSchuffenhauerSMILES = tmpScaffoldGenerator.getScaffold(tmpMolecule);
         /*Generate picture of the SchuffenhauerScaffold*/
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerSMILES).toImg();
@@ -1833,7 +1833,7 @@ public class ScaffoldGeneratorTest {
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
         assertEquals(tmpSmilesGenerator.create(tmpSchuffenhauerSMILES), "O=C(NC1C(=O)N2CCSC21)C3=CON=C3C=4C=CC=CC4");
         /*Generate Murcko Scaffold*/
-        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.MURCKO);
+        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.MURCKO_FRAGMENT);
         IAtomContainer tmpMurckoSMILES = tmpScaffoldGenerator.getScaffold(tmpMolecule);
         /*Generate picture of the SchuffenhauerScaffold*/
         BufferedImage tmpImgMurcko = tmpGenerator.depict(tmpMurckoSMILES).toImg();
@@ -1844,7 +1844,7 @@ public class ScaffoldGeneratorTest {
         /*Generate and check SMILES*/
         assertEquals(tmpSmilesGenerator.create(tmpMurckoSMILES), "N=1OC=C(C1C=2C=CC=CC2)CNC3CN4CCSC43");
         /*Generate Basic Wire Frame*/
-        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.BASIC_WIRE_FRAME);
+        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.BECCARI_BASIC_WIRE_FRAME);
         IAtomContainer tmpBWFSMILES = tmpScaffoldGenerator.getScaffold(tmpMolecule);
         /*Generate picture of the SchuffenhauerScaffold*/
         BufferedImage tmpImgBWF = tmpGenerator.depict(tmpBWFSMILES).toImg();
@@ -1855,7 +1855,7 @@ public class ScaffoldGeneratorTest {
         /*Generate and check SMILES*/
         assertEquals(tmpSmilesGenerator.create(tmpBWFSMILES), "C1CCC(CC1)C2CCCC2CCC3CC4CCCC43");
         /*Generate Element Wire Frame*/
-        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.ELEMENT_WIRE_FRAME);
+        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.ELEMENTAL_WIRE_FRAME);
         IAtomContainer tmpEWFSMILES = tmpScaffoldGenerator.getScaffold(tmpMolecule);
         /*Generate picture of the SchuffenhauerScaffold*/
         BufferedImage tmpImgEWF = tmpGenerator.depict(tmpEWFSMILES).toImg();
@@ -1866,7 +1866,7 @@ public class ScaffoldGeneratorTest {
         /*Generate and check SMILES*/
         assertEquals(tmpSmilesGenerator.create(tmpEWFSMILES), "O1NC(C(C1)CNC2CN3CCSC32)C4CCCCC4");
         /*Generate Basic Framework*/
-        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.BASIC_FRAMEWORK);
+        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.BECCARI_BASIC_FRAMEWORK);
         IAtomContainer tmpBFSMILES = tmpScaffoldGenerator.getScaffold(tmpMolecule);
         /*Generate picture of the SchuffenhauerScaffold*/
         BufferedImage tmpImgBF = tmpGenerator.depict(tmpBFSMILES).toImg();
@@ -1885,37 +1885,37 @@ public class ScaffoldGeneratorTest {
      * @throws Exception if anything goes wrong
      */
     @Test
-    public void setNonAromaticDBObtainedSettingTest() throws Exception {
+    public void setRetainOnlyHybridisationsAtAromaticBondsSettingTest() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("C2=C1CCNCC1=CCC2");
         /*Generate picture of molecule*/
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
-        tmpScaffoldGenerator.setNonAromaticDBObtainedSetting(false);
+        tmpScaffoldGenerator.setRetainOnlyHybridisationsAtAromaticBondsSetting(true);
         List<IAtomContainer> tmpSchuffenhauerFragments = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         /*Generate picture of the Original*/
         BufferedImage tmpImgFragment = tmpGenerator.depict(tmpSchuffenhauerFragments.get(0)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/NonAromaticDBObtained/Original.png").mkdirs();
-        File tmpOutputFragment = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/NonAromaticDBObtained/Original.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/RetainOnlyHybridisationsAtAromaticBondsSetting/Original.png").mkdirs();
+        File tmpOutputFragment = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/RetainOnlyHybridisationsAtAromaticBondsSetting/Original.png");
         ImageIO.write(tmpImgFragment, "png", tmpOutputFragment);
         /*Generate picture with NonAromaticDBObtainedSetting turned off*/
         BufferedImage tmpImgFragmentFalse = tmpGenerator.depict(tmpSchuffenhauerFragments.get(1)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/NonAromaticDBObtained/DoNotKeepNonAromaticDB.png").mkdirs();
-        File tmpOutputFragmentFalse = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/NonAromaticDBObtained/DoNotKeepNonAromaticDB.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/RetainOnlyHybridisationsAtAromaticBondsSetting/DoNotKeepNonAromaticDB.png").mkdirs();
+        File tmpOutputFragmentFalse = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/RetainOnlyHybridisationsAtAromaticBondsSetting/DoNotKeepNonAromaticDB.png");
         ImageIO.write(tmpImgFragmentFalse, "png", tmpOutputFragmentFalse);
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
         assertEquals(tmpSmilesGenerator.create(tmpSchuffenhauerFragments.get(1)), "N1CCCCC1");
         /*Generate picture with NonAromaticDBObtainedSetting turned on*/
-        tmpScaffoldGenerator.setNonAromaticDBObtainedSetting(true);
+        tmpScaffoldGenerator.setRetainOnlyHybridisationsAtAromaticBondsSetting(false);
         tmpSchuffenhauerFragments = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         BufferedImage tmpImgFragmentTrue = tmpGenerator.depict(tmpSchuffenhauerFragments.get(1)).toImg();
         /*Save the picture*/
-        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/NonAromaticDBObtained/KeepNonAromaticDB.png").mkdirs();
-        File tmpOutputFragmentTrue = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/NonAromaticDBObtained/KeepNonAromaticDB.png");
+        new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/RetainOnlyHybridisationsAtAromaticBondsSetting/KeepNonAromaticDB.png").mkdirs();
+        File tmpOutputFragmentTrue = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/RetainOnlyHybridisationsAtAromaticBondsSetting/KeepNonAromaticDB.png");
         ImageIO.write(tmpImgFragmentTrue, "png", tmpOutputFragmentTrue);
         /*Generate and check SMILES*/
         assertEquals(tmpSmilesGenerator.create(tmpSchuffenhauerFragments.get(1)), "C1=CCCNC1");
@@ -2277,8 +2277,6 @@ public class ScaffoldGeneratorTest {
      */
     protected ScaffoldGenerator getScaffoldGeneratorTestSettings() throws Exception {
         ScaffoldGenerator tmpScaffoldGenerator = new ScaffoldGenerator();
-        tmpScaffoldGenerator.setDetermineAromaticitySetting(true);
-        tmpScaffoldGenerator.setAromaticityModelSetting(new Aromaticity(ElectronDonation.cdk(), Cycles.or(Cycles.all(), Cycles.cdkAromaticSet())));
         return tmpScaffoldGenerator;
     }
     //</editor-fold>
