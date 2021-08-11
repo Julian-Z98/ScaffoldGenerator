@@ -380,15 +380,15 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
             //Generate a tree of molecules with iteratively removed terminal rings
             ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
-            TreeNodeIter<IAtomContainer> tmpNodeIter = new TreeNodeIter<>(tmpScaffoldGenerator.getRemovalTree(tmpMolecule));
+            ScaffoldTree tmpScaffoldTree = tmpScaffoldGenerator.getRemovalTree(tmpMolecule);
             int tmpCounter = 0;
-            while(tmpNodeIter.hasNext()) { // As long as there are still other molecules in the tree
-                TreeNode<IAtomContainer> tmpMoleculeNode = tmpNodeIter.next(); // Next molecule in tree
+            /*Go thought all molecules in the tree*/
+            for(TreeNode<IAtomContainer> tmpNode : tmpScaffoldTree.getAllNodes()) {
                 /*Save the picture*/
                 DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
-                BufferedImage tmpSecImgRemove = tmpGenerator.depict(tmpMoleculeNode.getMolecule()).toImg();
-                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Tree" + "/TreeTest" + tmpCounter  + "Level" + tmpMoleculeNode.getLevel() + ".png").mkdirs();
-                File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Tree" + "/TreeTest" + tmpCounter +  "Level" + tmpMoleculeNode.getLevel() + ".png");
+                BufferedImage tmpSecImgRemove = tmpGenerator.depict(tmpNode.getMolecule()).toImg();
+                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Tree" + "/TreeTest" + tmpCounter  + "Level" + tmpNode.getLevel() + ".png").mkdirs();
+                File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Tree" + "/TreeTest" + tmpCounter +  "Level" + tmpNode.getLevel() + ".png");
                 ImageIO.write(tmpSecImgRemove, "png", tmpSecOutputRemove);
                 tmpCounter++;
             }
@@ -411,27 +411,27 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
         //Generate a tree of molecules with iteratively removed terminal rings
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
-        TreeNodeIter<IAtomContainer> tmpNodeIter = new TreeNodeIter<>(tmpScaffoldGenerator.getRemovalTree(tmpMolecule));
+        ScaffoldTree tmpScaffoldTree = tmpScaffoldGenerator.getRemovalTree(tmpMolecule);
         int tmpCounter = 0;
-        while(tmpNodeIter.hasNext()) { // As long as there are still other molecules in the tree
-            TreeNode<IAtomContainer> tmpMoleculeNode = tmpNodeIter.next(); // Next molecule in tree
+        /*Go thought all molecules in the tree*/
+        for(TreeNode<IAtomContainer> tmpNode : tmpScaffoldTree.getAllNodes()) {
             if(tmpCounter == tmpTestNumber -1){
                 /*Save the picture of the test Node*/
                 DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
-                BufferedImage tmpNodeImg = tmpGenerator.depict(tmpMoleculeNode.getMolecule()).toImg();
+                BufferedImage tmpNodeImg = tmpGenerator.depict(tmpNode.getMolecule()).toImg();
                 new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Tree" + "/TestNode.png").mkdirs();
                 File tmpNodeFile = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Tree" + "/TestNode.png");
                 ImageIO.write(tmpNodeImg, "png", tmpNodeFile);
                 /*Save the picture of the parent*/
-                BufferedImage tmpParentImg = tmpGenerator.depict(tmpMoleculeNode.getParent().getMolecule()).toImg();
+                BufferedImage tmpParentImg = tmpGenerator.depict(tmpNode.getParent().getMolecule()).toImg();
                 new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Tree" + "/ParentNode.png").mkdirs();
                 File tmpParentFile = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Tree" + "/ParentNode.png");
                 ImageIO.write(tmpParentImg, "png", tmpParentFile);
                 /*Save pictures of the children*/
                 int tmpChildCounter = 0;
-                for(TreeNode<IAtomContainer> tmpNode : tmpMoleculeNode.getChildren()) {
+                for(TreeNode<IAtomContainer> tmpChildNode : tmpNode.getChildren()) {
                     tmpChildCounter++;
-                    BufferedImage tmpChildImg = tmpGenerator.depict(tmpNode.getMolecule()).toImg();
+                    BufferedImage tmpChildImg = tmpGenerator.depict(tmpChildNode.getMolecule()).toImg();
                     new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Tree" + "/ChildNode" + tmpChildCounter + ".png").mkdirs();
                     File tmpChildFile = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Tree" + "/ChildNode" + tmpChildCounter + ".png");
                     ImageIO.write(tmpChildImg, "png", tmpChildFile);
@@ -453,16 +453,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
         //Generate a tree of molecules with iteratively removed terminal rings
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
-        TreeNodeIter<IAtomContainer> tmpNodeIter = new TreeNodeIter<>(tmpScaffoldGenerator.getRemovalTree(tmpMolecule));
         /*Build ScaffoldTree*/
-        int tmpCounter = 0;
-        ScaffoldTree tmpScaffoldTree = new ScaffoldTree();
-        while(tmpNodeIter.hasNext()) { // As long as there are still other molecules in the tree
-            tmpCounter++;
-            //Add nodes to tree
-            TreeNode<IAtomContainer> tmpMoleculeNode = tmpNodeIter.next(); // Next molecule in tree
-            tmpScaffoldTree.addNode(tmpMoleculeNode);
-        }
+        ScaffoldTree tmpScaffoldTree = tmpScaffoldGenerator.getRemovalTree(tmpMolecule);
         /*isMoleculeInTree and getMatrixNode checker*/
         System.out.println("---isMoleculeInTree and getMatrixNode check---");
         /*Should be false*/
@@ -549,15 +541,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
         //Generate a tree of molecules with iteratively removed terminal rings
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
-        TreeNodeIter<IAtomContainer> tmpNodeIter = new TreeNodeIter<>(tmpScaffoldGenerator.getRemovalTree(tmpMolecule));
-        int tmpCounter = 0;
-        /*Create ScaffoldTree*/
-        ScaffoldTree tmpScaffoldTree = new ScaffoldTree();
-        while(tmpNodeIter.hasNext()) { //As long as there are still other molecules in the tree
-            tmpCounter++;
-            TreeNode<IAtomContainer> tmpMoleculeNode = tmpNodeIter.next(); // Next molecule in tree
-            tmpScaffoldTree.addNode(tmpMoleculeNode);
-        }
+        ScaffoldTree tmpScaffoldTree = tmpScaffoldGenerator.getRemovalTree(tmpMolecule);
         /*Remove some nodes*/
         //tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(24));
         //tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(22));
@@ -2119,7 +2103,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
                 if(anIsApplySchuffenhauerCalculated == true) {
                     /*Skip molecules with to many rings if needed*/
                     ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
-                    if(tmpScaffoldGenerator.getRings(tmpMolecule,false).size() > 100) {
+                    if(tmpScaffoldGenerator.getRings(tmpScaffoldGenerator.getScaffold(tmpMolecule),false).size() > 100) {
                         tmpSkipCounter++;
                         System.out.println("Molecule skipped: " + tmpCoconutID);
                         continue;
