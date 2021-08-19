@@ -28,14 +28,12 @@ import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.aromaticity.ElectronDonation;
+import org.openscience.cdk.atomtype.CDKAtomTypeMatcher;
 import org.openscience.cdk.depict.DepictionGenerator;
 import org.openscience.cdk.fragment.MurckoFragmenter;
 import org.openscience.cdk.graph.CycleFinder;
 import org.openscience.cdk.graph.Cycles;
-import org.openscience.cdk.interfaces.IAtom;
-import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.cdk.interfaces.IAtomType;
-import org.openscience.cdk.interfaces.IChemObjectBuilder;
+import org.openscience.cdk.interfaces.*;
 import org.openscience.cdk.io.FormatFactory;
 import org.openscience.cdk.io.MDLV2000Reader;
 import org.openscience.cdk.io.MDLV3000Reader;
@@ -45,6 +43,7 @@ import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.tools.CDKHydrogenAdder;
+import org.openscience.cdk.tools.LonePairElectronChecker;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
 import javax.imageio.ImageIO;
@@ -1258,6 +1257,54 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         ImageIO.write(tmpImgMod, "png" ,tmpOutputMod);
         /*Generate picture of the SchuffenhauerRule*/
         List<IAtomContainer> tmpRule = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
+
+
+        IAtomContainer tmpRule7OutputMolecule = tmpRule.get(2);
+        LonePairElectronChecker tmpChecker = new LonePairElectronChecker();
+        tmpChecker.saturate(tmpRule7OutputMolecule);
+        //AtomContainerManipulator.percieveAtomTypesAndConfigureUnsetProperties(tmpRule7OutputMolecule);
+
+        /*System.out.println(tmpChecker.allSaturated(tmpRule7OutputMolecule));
+        System.out.println(tmpChecker.isSaturated(tmpRule7OutputMolecule));
+        System.out.println(tmpRule7OutputMolecule.getSingleElectronCount());*/
+        //CDKHydrogenAdder.getInstance(tmpRule7OutputMolecule.getBuilder()).addImplicitHydrogens(tmpRule7OutputMolecule);
+        for (IAtom tmpAtom : tmpRule7OutputMolecule.atoms()) {
+            /*System.out.println(tmpAtom.getSymbol());
+            System.out.println(tmpAtom.getAtomTypeName());
+            CDKAtomTypeMatcher matcher = CDKAtomTypeMatcher.getInstance(tmpRule7OutputMolecule.getBuilder());
+            IAtomType type = matcher.findMatchingAtomType(tmpRule7OutputMolecule, tmpAtom);
+            System.out.println("Formal neighbor count: " + type.getFormalNeighbourCount());
+            System.out.println("Valency: "+type.getValency());
+            for (IElectronContainer tmpContainer : tmpRule7OutputMolecule.getConnectedElectronContainersList(tmpAtom)) {
+                System.out.println("Electron count: "+tmpContainer.getElectronCount());
+            }
+            System.out.println("Implicit hydrogens: "+tmpAtom.getImplicitHydrogenCount());
+            //tmpChecker.saturate(tmpAtom, tmpRule7OutputMolecule);
+            System.out.println("Saturated: "+tmpChecker.isSaturated(tmpAtom, tmpRule7OutputMolecule));*/
+
+            AtomContainerManipulator.percieveAtomTypesAndConfigureUnsetProperties(tmpRule7OutputMolecule);
+            System.out.println(tmpAtom.getAtomTypeName());
+            int tmpElectronCount = 0;
+            for (IElectronContainer tmpContainer : tmpRule7OutputMolecule.getConnectedElectronContainersList(tmpAtom)) {
+                tmpElectronCount += tmpContainer.getElectronCount();
+            }
+            int tmpMissingElectrons = 8 - tmpElectronCount - tmpAtom.getImplicitHydrogenCount() * 2;
+            //TODO: What about phosphorus and sulfur? Not treated here if the have more than 8 electrons
+            while (tmpMissingElectrons > 0) {
+                if (tmpMissingElectrons == 1) {
+                    tmpRule7OutputMolecule.addSingleElectron(tmpAtom.getIndex());
+                    tmpMissingElectrons -= 1;
+                } else {
+                    tmpAtom.setImplicitHydrogenCount(tmpAtom.getImplicitHydrogenCount() + 1);
+                    tmpMissingElectrons -= 2;
+                }
+            }
+            AtomContainerManipulator.percieveAtomTypesAndConfigureUnsetProperties(tmpRule7OutputMolecule);
+            System.out.println(tmpAtom.getAtomTypeName());
+        }
+
+
+
         BufferedImage tmpImgRule = tmpGenerator.depict(tmpRule.get(2)).toImg();
         /*Save the picture*/
         new File(System.getProperty("user.dir") + "/scaffoldTestOutput/SchuffenhauerRules/Scheme12/RuleSeven.png").mkdirs();
