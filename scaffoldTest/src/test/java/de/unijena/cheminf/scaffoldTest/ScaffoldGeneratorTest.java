@@ -28,7 +28,6 @@ import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.aromaticity.ElectronDonation;
-import org.openscience.cdk.atomtype.CDKAtomTypeMatcher;
 import org.openscience.cdk.depict.DepictionGenerator;
 import org.openscience.cdk.fragment.MurckoFragmenter;
 import org.openscience.cdk.graph.CycleFinder;
@@ -1312,7 +1311,39 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         ImageIO.write(tmpImgRule, "png" ,tmpOutputRule);
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
-        assertEquals(tmpSmilesGenerator.create(tmpRule.get(2)), "N=1[N]C=CC1");
+        assertEquals(tmpSmilesGenerator.create(tmpRule.get(2)), "N1=CC=CN1");
+    }
+
+    @Ignore
+    @Test
+    public void squareBracketProblemTest() throws Exception {
+        //SMILES to IAtomContainer
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        IAtomContainer tmpMolecule = tmpParser.parseSmiles("N1=CC=CN2N=CC=C12");
+
+
+        /*
+        tmpMolecule.removeAtom(0);
+        tmpMolecule.removeAtom(0);
+        tmpMolecule.removeAtom(0);
+        tmpMolecule.removeAtom(0);
+        */
+
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        tmpScaffoldGenerator.setRuleSevenAppliedSetting(true);
+        List<IAtomContainer> tmpMod = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
+        tmpMolecule = tmpMod.get(1);
+        for(IAtom tmpAtom : tmpMolecule.atoms()) {
+            if(tmpAtom.getSymbol() == "N"){
+                System.out.println(tmpAtom.getHybridization());
+            }
+        }
+
+        AtomContainerManipulator.clearAtomConfigurations(tmpMolecule);
+        AtomContainerManipulator.percieveAtomTypesAndConfigureUnsetProperties(tmpMolecule);
+        CDKHydrogenAdder.getInstance(tmpMolecule.getBuilder()).addImplicitHydrogens(tmpMolecule);
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
+        System.out.println(tmpSmilesGenerator.create(tmpMolecule));
     }
 
     /**
@@ -1531,6 +1562,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
         //Generate SchuffenhauerScaffold
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        tmpScaffoldGenerator.setRuleSevenAppliedSetting(true);
         IAtomContainer tmpSchuffenhauerScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule);
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
         /*Save the picture*/
@@ -1546,7 +1578,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         ImageIO.write(tmpImgRule, "png" ,tmpOutputRule);
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
-        assertEquals(tmpSmilesGenerator.create(tmpRule.get(1)), "N=1[N]C(=NC1C=2C=CC=CC2)C=3C=CC=CC3");
+        assertEquals(tmpSmilesGenerator.create(tmpRule.get(1)), "N=1NC(=NC1C=2C=CC=CC2)C=3C=CC=CC3");
     }
 
     /**
@@ -1818,7 +1850,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         ImageIO.write(tmpImgRule, "png" ,tmpOutputRule);
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
-        assertEquals(tmpSmilesGenerator.create(tmpRule.get(2)), "N=1[N]C=CC1");
+        assertEquals(tmpSmilesGenerator.create(tmpRule.get(2)), "N1=CC=CN1");
         /*Generate picture of the SchuffenhauerRule without Rule 7*/
         tmpScaffoldGenerator.setRuleSevenAppliedSetting(false);
         List<IAtomContainer> tmpRuleFalse = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
@@ -1828,7 +1860,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         File tmpOutputRuleFalse = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/isRule7Applied/RuleSevenFalse.png");
         ImageIO.write(tmpImgRuleFalse, "png" ,tmpOutputRuleFalse);
         /*Generate and check SMILES*/
-        assertEquals(tmpSmilesGenerator.create(tmpRuleFalse.get(2)), "N=1[CH][N]C=CC1");
+        assertEquals(tmpSmilesGenerator.create(tmpRuleFalse.get(2)), "N1=CC=CNC1");
     }
 
     /**
