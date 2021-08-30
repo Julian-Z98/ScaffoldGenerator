@@ -308,10 +308,10 @@ public class ScaffoldGenerator {
 
     /**
      * Generates a set of rings depending on the CycleFinder selected by {@link ScaffoldGenerator#getCycleFinder(IAtomContainer)}.
-     * Can add non-single bounded atoms to the rings and returns them.
+     * Can optional add non-single bounded atoms to the rings and returns them.
      * Important: Property (ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY) must be set for aMolecule.
      * @param aMolecule molecule whose rings are produced.
-     * @param anIsKeepingNonSingleBonds if true,non-single bonded atoms are retained on the ring.
+     * @param anIsKeepingNonSingleBonds if true, non-single bonded atoms are retained on the ring.
      * @return rings of the inserted molecule.
      * @throws CloneNotSupportedException if cloning is not possible.
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present or problem with aromaticity.apply()
@@ -495,7 +495,8 @@ public class ScaffoldGenerator {
      * Iteratively removes the rings of the molecule according to specific rules that are queried hierarchically.
      * Based on the rules from the "The Scaffold Tree" Paper by Schuffenhauer et al.
      * Rule 7 {@link ScaffoldGenerator#applySchuffenhauerRuleSeven(IAtomContainer, List)} is only applied
-     * if the aromaticity is also redetermined by {@link ScaffoldGenerator#determineAromaticitySetting}.
+     * if {@link ScaffoldGenerator#ruleSevenAppliedSetting} is true
+     * and the aromaticity is also redetermined by {@link ScaffoldGenerator#determineAromaticitySetting}.
      * @param aMolecule Molecule that is to be broken down into its fragments
      * @return Fragments of the molecule according to the Schuffenhauer rules
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
@@ -1005,7 +1006,7 @@ public class ScaffoldGenerator {
 
     /**
      * Checks whether rings may be removed.
-     * If the ring does not contain atoms that are not present in any other rings, it is not removable
+     * If the ring does not contain atoms that are not present in any other rings, it is not removable.
      * Furthermore, removal is impossible when it is an aromatic ring, that borders two consecutive rings.
      * Important: Property (ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY) must be set for aMolecule/aRings/aRing and match.
      * @param aRing Ring being tested for its removability
@@ -1092,6 +1093,7 @@ public class ScaffoldGenerator {
 
     /**
      * Removes the selected ring from the last fragment in the list and adds the resulting fragment to this list.
+     * Specially designed for {@link ScaffoldGenerator#applySchuffenhauerRules(IAtomContainer)}
      * @param aRing Ring to be removed
      * @param aFragmentList List of all fragments created so far
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
@@ -1794,7 +1796,7 @@ public class ScaffoldGenerator {
      * the atoms of the Murcko fragment in which this ring was removed from the total molecule.
      * The remaining atoms are the linker atoms. Now it is checked whether their atoms are bound to heteroatoms of the rest of the molecule.
      *
-     * Used in the applySchuffenhauerRuleTwelve() method.
+     * Designed for the {@link ScaffoldGenerator#applySchuffenhauerRuleTwelve(IAtomContainer, List)} method.
      * @param aMolecule Molecule from which a ring is to be removed
      * @param aRing rings of the molecule to which the rule is applied
      * @param aMurckoFragmenter MurckoFragmenter with which the molecules are treated
