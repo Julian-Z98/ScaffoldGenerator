@@ -19,12 +19,10 @@
 package de.unijena.cheminf.scaffoldTest;
 
 import org.openscience.cdk.CDKConstants;
-import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.aromaticity.ElectronDonation;
 import org.openscience.cdk.depict.DepictionGenerator;
 import org.openscience.cdk.exception.CDKException;
-import org.openscience.cdk.exception.Intractable;
 import org.openscience.cdk.fragment.MurckoFragmenter;
 import org.openscience.cdk.graph.ConnectivityChecker;
 import org.openscience.cdk.graph.CycleFinder;
@@ -32,7 +30,6 @@ import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.*;
 import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.smiles.SmilesGenerator;
-import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.tools.CDKHydrogenAdder;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
@@ -317,9 +314,9 @@ public class ScaffoldGenerator {
      * @param anIsKeepingNonSingleBonds if true,non-single bonded atoms are retained on the ring.
      * @return rings of the inserted molecule.
      * @throws CloneNotSupportedException if cloning is not possible.
-     * @throws Intractable thrown if problem could not be solved within some predefined bounds.
+     * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present or problem with aromaticity.apply()
      */
-    public List<IAtomContainer> getRings(IAtomContainer aMolecule, boolean anIsKeepingNonSingleBonds) throws CloneNotSupportedException, Intractable {
+    public List<IAtomContainer> getRings(IAtomContainer aMolecule, boolean anIsKeepingNonSingleBonds) throws CloneNotSupportedException, CDKException {
         Objects.requireNonNull(aMolecule, "Input molecule must be non null");
         for(IAtom tmpAtom : aMolecule.atoms()) {
             Objects.requireNonNull(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY),
@@ -867,6 +864,9 @@ public class ScaffoldGenerator {
                     //All atoms of the ring in the original molecule
                     if (tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)) {
                         tmpMoleculeClone.removeAtom(tmpMolAtom); //Remove atoms. tmpMoleculeCone.remove() not possible
+                        /*Saturate the molecule with hydrogens after removal. Important for Scheme 16*/
+                        AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpMoleculeClone);
+                        CDKHydrogenAdder.getInstance(tmpMoleculeClone.getBuilder()).addImplicitHydrogens(tmpMoleculeClone);
                     }
                 }
             }
@@ -920,6 +920,9 @@ public class ScaffoldGenerator {
                     if ((tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)
                             == tmpRingAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)) && !tmpDoNotRemove.contains(tmpMolAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
                         tmpMoleculeClone.removeAtom(tmpMolAtom); //Remove atoms
+                        /*Saturate the molecule with hydrogens after removal*/
+                        AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpMoleculeClone);
+                        CDKHydrogenAdder.getInstance(tmpMoleculeClone.getBuilder()).addImplicitHydrogens(tmpMoleculeClone);
                     }
                 }
             }
@@ -948,6 +951,15 @@ public class ScaffoldGenerator {
                 if(tmpEdgeAtomNumbers.contains(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))
                         && tmpEdgeAtomNumbers.contains(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
                     tmpBond.setOrder(IBond.Order.DOUBLE);
+                    //Remove the atoms that have already been treated from the set
+                    tmpEdgeAtomNumbers.remove(tmpBond.getAtom(0).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
+                    tmpEdgeAtomNumbers.remove(tmpBond.getAtom(1).getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
+                }
+            }
+            /*Increase the number of hydrogens by 1 for all previously untreated edge atoms to compensate for the removed atom.*/
+            for(IAtom tmpAtom : tmpMoleculeClone.atoms()) {
+                if(tmpEdgeAtomNumbers.contains(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
+                    tmpAtom.setImplicitHydrogenCount(tmpAtom.getImplicitHydrogenCount() + 1);
                 }
             }
         }
@@ -1001,9 +1013,9 @@ public class ScaffoldGenerator {
      * @param aMolecule Whole molecule
      * @return Whether the ring is removable
      * @throws CloneNotSupportedException if cloning is not possible.
-     * @throws Intractable problem with this.getRings
+     * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
      */
-    protected boolean isRingRemovable(IAtomContainer aRing, List<IAtomContainer> aRings, IAtomContainer aMolecule) throws CloneNotSupportedException, Intractable {
+    protected boolean isRingRemovable(IAtomContainer aRing, List<IAtomContainer> aRings, IAtomContainer aMolecule) throws CloneNotSupportedException, CDKException {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
         IAtomContainer tmpClonedRing = aRing.clone();
 
@@ -1476,11 +1488,6 @@ public class ScaffoldGenerator {
         /*Remove each ring and count the number of remaining aromatic rings*/
         for(IAtomContainer tmpRing : aRings) {
             IAtomContainer tmpRemovedRing = this.removeRing(aMolecule, tmpRing);
-            String tmpSmiles = tmpSmilesGenerator.create(tmpRemovedRing);
-            /*Conversion to smiles and back again, otherwise aromaticity will not be correctly recognised
-            * For example, contrary to Scheme 12, N=1[CH][N]C=CC1 is then considered aromatic.*/
-            SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
-            tmpRemovedRing = tmpParser.parseSmiles(tmpSmiles);
             tmpRemovedRing = this.getScaffoldInternal(tmpRemovedRing, false, null);
             this.aromaticityModelSetting.apply(tmpRemovedRing);
             /*Check the number of aromatic rings*/
