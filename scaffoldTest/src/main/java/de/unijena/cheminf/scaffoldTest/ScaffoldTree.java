@@ -325,4 +325,72 @@ public class ScaffoldTree {
         }
         throw new IllegalStateException("Tree has no clear root");
     }
+
+    /**
+     * Adds another ScaffoldTree to the existing one if possible.
+     * The new tree is inserted at the node that both trees have in common.
+     * All children of the new tree at this node are taken over if they do not already exist.
+     *
+     * The new tree is simply taken over if the existing tree is empty.
+     * If there is no match between the two trees, false is returned and the old tree is not changed.
+     * @param aScaffoldTree tree to be inserted into the existing ScaffoldTree.
+     * @return false if the new tree cannot be inserted because the two trees have no common nodes.
+     * @throws CDKException In case of a problem with the SmilesGenerator
+     */
+    public boolean mergeTree(ScaffoldTree aScaffoldTree) throws CDKException {
+        /*If the old ScaffoldTree is empty, transfer the new ScaffoldTree to be added.*/
+        if(this.hasOneSingleRootNode() == false) {
+            for(TreeNode tmpNode : aScaffoldTree.getAllNodes()) {
+                this.addNode(tmpNode);
+                /*The new tree was inserted*/
+                return true;
+            }
+        }
+        /*If the old Scaffold tree is not empty*/
+        else {
+            SmilesGenerator tmpGenerator = new SmilesGenerator(SmiFlavor.Unique);
+            boolean tmpAreTreesOverlapping = true;
+            /*Go through each level of the tree starting at the root*/
+            for(int i = 0; i < aScaffoldTree.getMaxLevel(); i++) {
+                /*If there were no overlaps, there is no need to continue the search, as there will be no more in the future*/
+                if(!tmpAreTreesOverlapping) {
+                    /*If there was already no overlap at the root, the new tree could not be inserted*/
+                    if(i == 1) {
+                        /*The new tree was not inserted*/
+                        return false;
+                    }
+                    /*End the search*/
+                    break;
+                }
+                tmpAreTreesOverlapping = false;
+                /*Compare all nodes of the old tree on this level with all nodes of the new tree on this level*/
+                for(TreeNode tmpOldTreeNode : this.getAllNodesOnLevel(i)) {
+                    for(TreeNode tmpNewTreeNode : aScaffoldTree.getAllNodesOnLevel(i)) {
+                        /*Generate the corresponding SMILES of the molecules*/
+                        String tmpOldSmiles = tmpGenerator.create((IAtomContainer) tmpOldTreeNode.getMolecule());
+                        String tmpNewSmiles = tmpGenerator.create((IAtomContainer) tmpNewTreeNode.getMolecule());
+                        /*Check whether a fragment occurs in both trees*/
+                        if(tmpOldSmiles.equals(tmpNewSmiles)) {
+                            /*Trees are overlapping if a fragment occurs in both trees*/
+                            tmpAreTreesOverlapping = true;
+                            /*Get the children of the overlapping node*/
+                            for(Object tmpNewChild : tmpNewTreeNode.getChildren()) {
+                                TreeNode tmpNewChildNode = (TreeNode) tmpNewChild;
+                                IAtomContainer tmpNewChildMolecule = (IAtomContainer) tmpNewChildNode.getMolecule();
+                                /*Add the child if it is not already in the tree*/
+                                if(!this.isMoleculeInTree(tmpNewChildMolecule)) {
+                                    int tmpChildrenNumber = tmpOldTreeNode.getChildren().size();
+                                    tmpOldTreeNode.addChild(tmpNewChildMolecule);
+                                    TreeNode tmpAddedNode = (TreeNode) tmpOldTreeNode.getChildren().get(tmpChildrenNumber);
+                                    this.addNode(tmpAddedNode);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        /*The new tree was inserted*/
+        return true;
+    }
 }
