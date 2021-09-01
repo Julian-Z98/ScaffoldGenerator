@@ -646,6 +646,181 @@ public class ScaffoldGenerator {
         }
         return tmpScaffoldFragments;
     }
+
+
+    /**
+     * Iteratively removes the rings of the molecule according to specific rules that are queried hierarchically.
+     * A tree is built from the resulting fragments.
+     * Based on the rules from the "The Scaffold Tree" Paper by Schuffenhauer et al.
+     * Rule 7 {@link ScaffoldGenerator#applySchuffenhauerRuleSeven(IAtomContainer, List)} is only applied
+     * if {@link ScaffoldGenerator#ruleSevenAppliedSetting} is true
+     * and the aromaticity is also redetermined by {@link ScaffoldGenerator#determineAromaticitySetting}.
+     * @param aMolecule Molecule that is to be broken down into its fragments
+     * @return A tree consisting of fragments of the molecule according to the Schuffenhauer rules
+     * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
+     * @throws CloneNotSupportedException if cloning is not possible.
+     */
+    public ScaffoldTree applySchuffenhauerRulesTree(IAtomContainer aMolecule) throws CloneNotSupportedException, CDKException {
+        Objects.requireNonNull(aMolecule, "Input molecule must be non null");
+        ScaffoldTree tmpScaffoldTree = new ScaffoldTree();List<TreeNode> tmpAllNodesList = new ArrayList<>(); //List of all TreeNodes
+        IAtomContainer tmpClonedMolecule = aMolecule.clone();
+        IAtomContainer tmpScaffold = this.getScaffoldInternal(tmpClonedMolecule, this.determineAromaticitySetting ,this.aromaticityModelSetting);
+        /*All molecules with an atom-to-ring ratio of less than 1.0 are assigned the CYCLE_FINDER_BACKUP_PROPERTY = true property,
+         since too many rings were probably detected. The fact that a molecule has more rings than atoms seems concerning. That is why this value was chosen.*/
+        int tmpRingNumber = this.getRings(tmpScaffold, false).size();
+        float tmpRingAtomRatio = (float) tmpScaffold.getAtomCount() / tmpRingNumber;
+        if(tmpRingAtomRatio < 1.0 ) {
+            /*Change the property of all atoms of the molecule*/
+            for(IAtom tmpAtom : tmpClonedMolecule.atoms()) {
+                tmpAtom.setProperty(ScaffoldGenerator.CYCLE_FINDER_BACKUP_PROPERTY, true);
+            }
+            /*Apply the new Cyclefinder to the molecules*/
+            tmpRingNumber = this.getRings(tmpScaffold, false).size();
+            tmpScaffold = this.getScaffoldInternal(tmpClonedMolecule, false ,null);
+        }
+        //List of all generated fragments
+        List<IAtomContainer> tmpScaffoldFragments = new ArrayList<>(tmpRingNumber);
+        tmpScaffoldFragments.add(tmpScaffold);
+        TreeNode<IAtomContainer> tmpParentNode = new TreeNode<IAtomContainer>(tmpScaffold); //Set origin Scaffold as root
+        tmpAllNodesList.add(tmpParentNode);
+        /*Go through all the fragments generated and try to break them down further*/
+        for(int tmpCounter = 0 ; tmpCounter < tmpScaffoldFragments.size(); tmpCounter++) {
+            List<IAtomContainer> tmpRings = this.getRings(tmpScaffoldFragments.get(tmpCounter), true);
+            /*If the fragment has only one ring or no ring, it does not need to be disassembled further*/
+            if(tmpRings.size() == 1 || tmpRings.size() == 0) {
+                break;
+            }
+            /*Only the removable terminal rings are further investigated*/
+            List<IAtomContainer> tmpRemovableRings = new ArrayList<>(tmpRings.size());
+            for (IAtomContainer tmpRing : tmpRings) {
+                if (this.isRingTerminal(tmpScaffoldFragments.get(tmpCounter), tmpRing)
+                        && this.isRingRemovable(tmpRing, tmpRings, tmpScaffoldFragments.get(tmpCounter))) {
+                    tmpRemovableRings.add(tmpRing); //Add the candidate rings
+                }
+            }
+            /*If the fragment has no  candidate ring, it does not need to be disassembled further*/
+            if(tmpRemovableRings.size() == 0) {
+                break;
+            }
+            /*Apply rule number one*/
+            tmpRemovableRings = this.applySchuffenhauerRuleOne(tmpRemovableRings);
+            if (tmpRemovableRings.size() == 1) { //If only one eligible ring remains, it can be removed
+                this.removeRingForSchuffenhauerRuleTree(tmpRemovableRings.get(0), tmpScaffoldFragments, tmpAllNodesList);
+                //After a new fragment has been added, the next one is investigated
+                continue;
+            }
+            /*Apply rule number two*/
+            tmpRemovableRings = this.applySchuffenhauerRuleTwo(tmpRemovableRings);
+            if (tmpRemovableRings.size() == 1) { //If only one eligible ring remains, it can be removed
+                this.removeRingForSchuffenhauerRuleTree(tmpRemovableRings.get(0), tmpScaffoldFragments, tmpAllNodesList);
+                //After a new fragment has been added, the next one is investigated
+                continue;
+            }
+            /*Apply rule number three*/
+            tmpRemovableRings = this.applySchuffenhauerRuleThree(tmpScaffoldFragments.get(tmpScaffoldFragments.size() - 1), tmpRemovableRings);
+            if (tmpRemovableRings.size() == 1) { //If only one eligible ring remains, it can be removed
+                this.removeRingForSchuffenhauerRuleTree(tmpRemovableRings.get(0), tmpScaffoldFragments, tmpAllNodesList);
+                //After a new fragment has been added, the next one is investigated
+                continue;
+            }
+            /*Apply rule number four and five*/
+            tmpRemovableRings = this.applySchuffenhauerRuleFourAndFive(tmpScaffoldFragments.get(tmpScaffoldFragments.size() - 1), tmpRemovableRings);
+            if (tmpRemovableRings.size() == 1) { //If only one eligible ring remains, it can be removed
+                this.removeRingForSchuffenhauerRuleTree(tmpRemovableRings.get(0), tmpScaffoldFragments, tmpAllNodesList);
+                //After a new fragment has been added, the next one is investigated
+                continue;
+            }
+            /*Apply rule number six*/
+            tmpRemovableRings = this.applySchuffenhauerRuleSix(tmpRemovableRings);
+            if (tmpRemovableRings.size() == 1) { //If only one eligible ring remains, it can be removed
+                this.removeRingForSchuffenhauerRuleTree(tmpRemovableRings.get(0), tmpScaffoldFragments, tmpAllNodesList);
+                //After a new fragment has been added, the next one is investigated
+                continue;
+            }
+            //Rule seven is only useful when aromaticity is redetermined
+            if(this.ruleSevenAppliedSetting && this.determineAromaticitySetting) {
+                int tmpRuleSevenRingNumber = tmpRemovableRings.size();
+                /*Apply rule number seven*/
+                tmpRemovableRings = this.applySchuffenhauerRuleSeven(tmpScaffoldFragments.get(tmpScaffoldFragments.size() - 1), tmpRemovableRings);
+
+                /*Store molecules in which the number of rings to be examined is reduced*/
+                if(false) {
+                    System.out.println("COCONUT ID: " + aMolecule.getProperty("coconut_id"));
+                    /*Generate control pictures*/
+                    DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+                    /*Generate and save molecule picture*/
+                    aMolecule = AtomContainerManipulator.removeHydrogens(aMolecule);
+                    BufferedImage tmpImgMol = tmpGenerator.depict(aMolecule).toImg();
+                    new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Rule7COCONUT/" + aMolecule.getProperty("coconut_id") + ".png").mkdirs();
+                    File tmpOutputMol = new File(System.getProperty("user.dir") +  "/scaffoldTestOutput/Rule7COCONUT/" + aMolecule.getProperty("coconut_id") + ".png");
+                    try {
+                        ImageIO.write(tmpImgMol, "png", tmpOutputMol);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                if (tmpRemovableRings.size() == 1) { //If only one eligible ring remains, it can be removed
+                    this.removeRingForSchuffenhauerRuleTree(tmpRemovableRings.get(0), tmpScaffoldFragments, tmpAllNodesList);
+                    //After a new fragment has been added, the next one is investigated
+                    continue;
+                }
+            }
+            /*Apply rule number eight*/
+            tmpRemovableRings = this.applySchuffenhauerRuleEight(tmpRemovableRings);
+            if (tmpRemovableRings.size() == 1) { //If only one eligible ring remains, it can be removed
+                this.removeRingForSchuffenhauerRuleTree(tmpRemovableRings.get(0), tmpScaffoldFragments, tmpAllNodesList);
+                //After a new fragment has been added, the next one is investigated
+                continue;
+            }
+            /*Apply rule number nine*/
+            tmpRemovableRings = this.applySchuffenhauerRuleNine(tmpRemovableRings);
+            if (tmpRemovableRings.size() == 1) { //If only one eligible ring remains, it can be removed
+                this.removeRingForSchuffenhauerRuleTree(tmpRemovableRings.get(0), tmpScaffoldFragments, tmpAllNodesList);
+                //After a new fragment has been added, the next one is investigated
+                continue;
+            }
+            /*Apply rule number ten*/
+            tmpRemovableRings = this.applySchuffenhauerRuleTen(tmpRemovableRings);
+            if (tmpRemovableRings.size() == 1) { //If only one eligible ring remains, it can be removed
+                this.removeRingForSchuffenhauerRuleTree(tmpRemovableRings.get(0), tmpScaffoldFragments, tmpAllNodesList);
+                //After a new fragment has been added, the next one is investigated
+                continue;
+            }
+            /*Apply rule number eleven*/
+            tmpRemovableRings = this.applySchuffenhauerRuleEleven(tmpRemovableRings);
+            if (tmpRemovableRings.size() == 1) { //If only one eligible ring remains, it can be removed
+                this.removeRingForSchuffenhauerRuleTree(tmpRemovableRings.get(0), tmpScaffoldFragments, tmpAllNodesList);
+                //After a new fragment has been added, the next one is investigated
+                continue;
+            }
+            /*Apply rule number twelve*/
+            tmpRemovableRings = this.applySchuffenhauerRuleTwelve(tmpScaffoldFragments.get(tmpScaffoldFragments.size() - 1), tmpRemovableRings);
+            if (tmpRemovableRings.size() == 1) { //If only one eligible ring remains, it can be removed
+                this.removeRingForSchuffenhauerRuleTree(tmpRemovableRings.get(0), tmpScaffoldFragments, tmpAllNodesList);
+                //After a new fragment has been added, the next one is investigated
+                continue;
+            }
+            /*Apply rule number thirteen, the tiebreaking rule */
+            IAtomContainer tmpLastRuleMolecule =this.applySchuffenhauerRuleThirteen(tmpScaffoldFragments.get(tmpScaffoldFragments.size() - 1), tmpRemovableRings);
+            tmpScaffoldFragments.add(tmpLastRuleMolecule);
+            //Add the Node to the list of Nodes
+            tmpAllNodesList.add(new TreeNode<IAtomContainer>(tmpScaffoldFragments.get(tmpScaffoldFragments.size() - 1))); //Add next node
+        }
+        IAtomContainer tmpReverseStartMolecule = (IAtomContainer) tmpAllNodesList.get((tmpAllNodesList.size() - 1)).getMolecule();
+        /*Set the root for the ScaffoldTree*/
+        TreeNode tmpReverseParentNode =  new TreeNode<IAtomContainer>(tmpReverseStartMolecule);
+        tmpScaffoldTree.addNode(tmpReverseParentNode);
+        /*Build the ScaffoldTree with the smallest fragment as root*/
+        for(int i = 1; i<tmpAllNodesList.size(); i++) {
+            TreeNode tmpNewNode = tmpAllNodesList.get((tmpAllNodesList.size() - 1) - i);
+            IAtomContainer tmpTestMol = (IAtomContainer) tmpNewNode.getMolecule();
+            tmpScaffoldTree.getAllNodesOnLevel(i - 1).get(0).addChild(tmpTestMol);
+            TreeNode tmpTestNode = (TreeNode) tmpScaffoldTree.getAllNodesOnLevel(i - 1).get(0).getChildren().get(0);
+            tmpScaffoldTree.addNode(tmpTestNode);
+        }
+        return tmpScaffoldTree;
+    }
     //</editor-fold>
     //</editor-fold>
 
@@ -1107,7 +1282,25 @@ public class ScaffoldGenerator {
         //Add the fragment to the list of fragments
         aFragmentList.add(tmpSchuffRingRemoved);
     }
-
+    /**
+     * Removes the selected ring from the last fragment in the list and adds the resulting fragment to this list.
+     * In addition, the fragments are added to the node list as nodes.
+     * Specially designed for {@link ScaffoldGenerator#applySchuffenhauerRulesTree(IAtomContainer)}
+     * @param aRing Ring to be removed
+     * @param aFragmentList List of all fragments created so far
+     * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
+     * @throws CloneNotSupportedException if cloning is not possible.
+     */
+    protected void removeRingForSchuffenhauerRuleTree(IAtomContainer aRing, List<IAtomContainer> aFragmentList, List<TreeNode> aNodeList) throws CDKException, CloneNotSupportedException {
+        //Remove the ring from the fragment currently being treated
+        IAtomContainer tmpRingRemoved = this.removeRing(aFragmentList.get(aFragmentList.size() - 1), aRing);
+        //Remove the linkers
+        IAtomContainer tmpSchuffRingRemoved = this.getScaffoldInternal(tmpRingRemoved, false, null);
+        //Add the fragment to the list of fragments
+        aFragmentList.add(tmpSchuffRingRemoved);
+        //Add the node to the list of nodes
+        aNodeList.add(new TreeNode<IAtomContainer>(tmpSchuffRingRemoved));
+    }
     /**
      * Selects the correct CycleFinder based on ScaffoldGenerator.CYCLE_FINDER_BACKUP_PROPERTY.
      * @param aMolecule Molecule for which a CycleFinder is to be generated
