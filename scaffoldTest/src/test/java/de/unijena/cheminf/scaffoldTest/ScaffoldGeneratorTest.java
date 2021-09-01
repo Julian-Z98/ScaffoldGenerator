@@ -587,6 +587,87 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         tmpGraph.display();
         TimeUnit.SECONDS.sleep(300);
     }
+
+    /**
+     * Creates different ScaffoldTrees and merges them. The result is visualised with GraphStream.
+     * @throws Exception if anything goes wrong
+     */
+    @Ignore
+    @Test
+    public void mergeTreeTest() throws Exception {
+        //SMILES to IAtomContainer
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1=C(C(=NO1)C2=C(C=CC=C2Cl)F)C(=O)NC3C4N(C3=O)C(C(S4)(C)C)C(=O)O");
+        IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("c2ccc1ccccc1c2");
+        IAtomContainer tmpMolecule2 = tmpParser.parseSmiles("c2ccc(Oc1ccccc1)cc2");
+        IAtomContainer tmpMolecule3 = tmpParser.parseSmiles("O=c1[nH]c3cccc2cccc1c23");//3Rings
+        IAtomContainer tmpMolecule4 = tmpParser.parseSmiles("O=C(Nc1ccccc1)c2ccccc2");
+        IAtomContainer tmpMolecule5 = tmpParser.parseSmiles("c2ccc1CCCc1c2");
+        IAtomContainer tmpMolecule6 = tmpParser.parseSmiles("c2ccc(c1ccccc1)cc2");
+        //Generate a tree of molecules with iteratively removed terminal rings
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        ScaffoldTree tmpScaffoldTree = tmpScaffoldGenerator.applySchuffenhauerRulesTree(tmpMolecule1);
+        ScaffoldTree tmpScaffoldTree2 = tmpScaffoldGenerator.applySchuffenhauerRulesTree(tmpMolecule2);
+        ScaffoldTree tmpScaffoldTree3 = tmpScaffoldGenerator.applySchuffenhauerRulesTree(tmpMolecule3);
+        ScaffoldTree tmpScaffoldTree4 = tmpScaffoldGenerator.applySchuffenhauerRulesTree(tmpMolecule4);
+        ScaffoldTree tmpScaffoldTree5 = tmpScaffoldGenerator.applySchuffenhauerRulesTree(tmpMolecule5);
+        ScaffoldTree tmpScaffoldTree6 = tmpScaffoldGenerator.applySchuffenhauerRulesTree(tmpMolecule6);
+        tmpScaffoldTree.mergeTree(tmpScaffoldTree2);
+        tmpScaffoldTree.mergeTree(tmpScaffoldTree3);
+        tmpScaffoldTree.mergeTree(tmpScaffoldTree4);
+        tmpScaffoldTree.mergeTree(tmpScaffoldTree5);
+        ScaffoldTree tmpOverlapScaffoldTree = tmpScaffoldGenerator.applySchuffenhauerRulesTree(tmpMolecule1);
+        tmpOverlapScaffoldTree.mergeTree(tmpScaffoldTree2);
+        tmpOverlapScaffoldTree.mergeTree(tmpScaffoldTree3);
+        tmpOverlapScaffoldTree.mergeTree(tmpScaffoldTree4);
+        tmpOverlapScaffoldTree.mergeTree(tmpScaffoldTree6);
+        tmpScaffoldTree.mergeTree(tmpOverlapScaffoldTree);
+        ScaffoldTree tmpUnfitScaffoldTree = tmpScaffoldGenerator.applySchuffenhauerRulesTree(tmpMolecule);
+        System.out.println("Tree does not fit :" + tmpScaffoldTree.mergeTree(tmpUnfitScaffoldTree));
+        IAtomContainer tmpRootMolecule = (IAtomContainer) tmpScaffoldTree.getRoot().getMolecule();
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
+        System.out.println("I am Root: " + tmpSmilesGenerator.create(tmpRootMolecule));
+        /*Create a graph from the ScaffoldTree*/
+        Graph tmpGraph = new SingleGraph("TestGraph");
+        tmpGraph.setAttribute("ui.stylesheet", "node { size: 100px, 100px; }");
+        System.setProperty("org.graphstream.ui", "swing");
+        /*Add edges and nodes*/
+        int tmpEdgeCount = 0;
+        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+        Integer[][] tmpMatrix = tmpScaffoldTree.getTreeAsMatrix(); //Create the adjacency matrix
+        for(int tmpRow = 0; tmpRow < tmpMatrix.length; tmpRow++) { //Create a node for each row
+            /*Add the ScaffoldTree nodes to the graph*/
+            tmpGraph.addNode(String.valueOf(tmpRow));
+            Node tmpNode = tmpGraph.getNode(String.valueOf(tmpRow));
+            tmpNode.setAttribute("Node", tmpScaffoldTree.getMatrixNode(tmpRow));
+            /*Add a label to each node that corresponds to the position in the matrix*/
+            tmpNode.setAttribute("ui.label", tmpScaffoldTree.getMatrixNodesNumbers().get(tmpRow));
+            /*Add the images*/
+            TreeNode tmpTreeNode =  tmpScaffoldTree.getMatrixNode(tmpScaffoldTree.getMatrixNodesNumbers().get(tmpRow));
+            IAtomContainer tmpTreeNodeMolecule = (IAtomContainer) tmpTreeNode.getMolecule();
+            BufferedImage tmpNodeImg = tmpGenerator.withSize(100,100).depict(tmpTreeNodeMolecule).toImg();
+            //The images are stored temporarily, as I have not found a way to use them directly
+            new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png").mkdirs();
+            File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png");
+            ImageIO.write(tmpNodeImg, "png", tmpSecOutputRemove);
+            //set the images
+            tmpNode.setAttribute("ui.style", "fill-mode: image-scaled-ratio-max;" + "fill-image: url('GraphStream" + tmpRow + ".png');");
+            /*Add edges*/
+            for(int tmpCol = 0; tmpCol < tmpMatrix[tmpRow].length; tmpCol++) { //Go through each column of the row
+                if(tmpRow < tmpCol) { //Skip a diagonal half to get edges in one direction only.
+                    continue;
+                }
+                if(tmpMatrix[tmpRow][tmpCol] == 1) { //Insert an edge if there is a 1 in it
+                    tmpGraph.addEdge("Edge" + tmpEdgeCount, tmpRow, tmpCol);
+                    tmpEdgeCount++;
+                }
+            }
+        }
+        /*Display graph*/
+        System.setProperty("org.graphstream.ui", "swing");
+        tmpGraph.display();
+        TimeUnit.SECONDS.sleep(300);
+    }
     //</editor-fold>
 
     //<editor-fold desc="Schuffenhauer rules tests">
