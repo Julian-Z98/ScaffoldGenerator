@@ -812,7 +812,7 @@ public class ScaffoldGenerator {
         TreeNode tmpReverseParentNode =  new TreeNode<IAtomContainer>(tmpReverseStartMolecule);
         tmpScaffoldTree.addNode(tmpReverseParentNode);
         /*Build the ScaffoldTree with the smallest fragment as root*/
-        for(int i = 1; i<tmpAllNodesList.size(); i++) {
+        for(int i = 1; i < tmpAllNodesList.size(); i++) {
             TreeNode tmpNewNode = tmpAllNodesList.get((tmpAllNodesList.size() - 1) - i);
             IAtomContainer tmpTestMol = (IAtomContainer) tmpNewNode.getMolecule();
             tmpScaffoldTree.getAllNodesOnLevel(i - 1).get(0).addChild(tmpTestMol);
@@ -820,6 +820,41 @@ public class ScaffoldGenerator {
             tmpScaffoldTree.addNode(tmpTestNode);
         }
         return tmpScaffoldTree;
+    }
+
+    /**
+     * Decomposes the entered molecules into SchuffenhauerScaffolds, creates ScaffoldTrees from them and then assembles these trees if possible.
+     * If trees have the same root (smallest fragment), they are joined together so that the same fragments are no longer duplicated.
+     * In this way, no fragment created is lost when it is joined together.
+     * @param aMoleculeList Molecules to be transferred into list of trees
+     * @return List of ScaffoldTrees consisting of the fragments of the entered molecules.
+     * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
+     * @throws CloneNotSupportedException if cloning is not possible
+     */
+    public List<ScaffoldTree> mergeAllTrees (List<IAtomContainer> aMoleculeList) throws CDKException, CloneNotSupportedException {
+        Objects.requireNonNull(aMoleculeList, "Input molecule list must be non null");
+        /*Prepare the output list*/
+        List<ScaffoldTree> tmpOutputForest = new ArrayList<>();
+        ScaffoldTree tmpFirstTree = new ScaffoldTree();
+        tmpOutputForest.add(tmpFirstTree);
+        /*Go through all molecules*/
+        for(IAtomContainer tmpMolecule : aMoleculeList) {
+            boolean isMoleculeMerged = false;
+            ScaffoldTree tmpOldTree = this.applySchuffenhauerRulesTree(tmpMolecule);
+            /*Go through each newly created tree*/
+            for(ScaffoldTree tmpNewTree : tmpOutputForest) {
+                /*When one of the new trees has been joined with one of the old trees, move on to the next molecule*/
+                if(tmpNewTree.mergeTree(tmpOldTree)) {
+                    isMoleculeMerged = true;
+                    break;
+                }
+            }
+            /*If the molecule could not be included in a tree add the tree of the molecule*/
+            if(isMoleculeMerged == false) {
+                tmpOutputForest.add(tmpOldTree);
+            }
+        }
+        return tmpOutputForest;
     }
     //</editor-fold>
     //</editor-fold>
