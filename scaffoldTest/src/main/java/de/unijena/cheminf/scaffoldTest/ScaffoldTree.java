@@ -342,26 +342,16 @@ public class ScaffoldTree {
         if(this.hasOneSingleRootNode() == false) {
             for(TreeNode tmpNode : aScaffoldTree.getAllNodes()) {
                 this.addNode(tmpNode);
-                /*The new tree was inserted*/
-                return true;
             }
+            /*The new tree was inserted*/
+            return true;
         }
         /*If the old Scaffold tree is not empty*/
         else {
             SmilesGenerator tmpGenerator = new SmilesGenerator(SmiFlavor.Unique);
             boolean tmpAreTreesOverlapping = true;
             /*Go through each level of the tree starting at the root*/
-            for(int i = 0; i < aScaffoldTree.getMaxLevel(); i++) {
-                /*If there were no overlaps, there is no need to continue the search, as there will be no more in the future*/
-                if(!tmpAreTreesOverlapping) {
-                    /*If there was already no overlap at the root, the new tree could not be inserted*/
-                    if(i == 1) {
-                        /*The new tree was not inserted*/
-                        return false;
-                    }
-                    /*End the search*/
-                    break;
-                }
+            for(int i = 0; i <= aScaffoldTree.getMaxLevel(); i++) {
                 tmpAreTreesOverlapping = false;
                 /*Compare all nodes of the old tree on this level with all nodes of the new tree on this level*/
                 for(TreeNode tmpOldTreeNode : this.getAllNodesOnLevel(i)) {
@@ -387,6 +377,16 @@ public class ScaffoldTree {
                             }
                         }
                     }
+                }
+                /*If there were no overlaps, there is no need to continue the search, as there will be no more in the future*/
+                if(!tmpAreTreesOverlapping) {
+                    /*If there was already no overlap at the root, the new tree could not be inserted*/
+                    if(i == 0) {
+                        /*The new tree was not inserted*/
+                        return false;
+                    }
+                    /*End the search*/
+                    break;
                 }
             }
         }
