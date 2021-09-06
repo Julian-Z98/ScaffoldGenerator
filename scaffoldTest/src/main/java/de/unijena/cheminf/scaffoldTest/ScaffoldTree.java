@@ -64,6 +64,18 @@ public class ScaffoldTree {
     /**
      * Constructor
      */
+    public ScaffoldTree(SmilesGenerator aSmilesGenerator) {
+        this.nodeMap = new HashMap<Integer, TreeNode>();
+        this.reverseNodeMap = new HashMap<TreeNode, Integer>();
+        this.smilesMap = ArrayListMultimap.create();
+        this.levelMap = ArrayListMultimap.create();
+        this.smilesGenerator = aSmilesGenerator;
+        this.nodeCounter = 0;
+    }
+
+    /**
+     * Default Constructor
+     */
     public ScaffoldTree() {
         this.nodeMap = new HashMap<Integer, TreeNode>();
         this.reverseNodeMap = new HashMap<TreeNode, Integer>();
