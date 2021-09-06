@@ -118,6 +118,12 @@ public class ScaffoldGenerator {
     public static final Aromaticity AROMATICITY_MODEL_SETTING_DEFAULT = new Aromaticity(ElectronDonation.cdk(), Cycles.cdkAromaticSet());
 
     /**
+     * Default setting for which SmilesGenerator should be used.
+     * By default, unique SMILES are used.
+     */
+    public static final SmilesGenerator SMILES_GENERATOR_SETTING_DEFAULT = new SmilesGenerator(SmiFlavor.Unique);
+
+    /**
      * Default setting for whether rule 7 should be applied. By default, rule 7 is applied.
      */
     public static final boolean RULE_SEVEN_APPLIED_SETTING_DEFAULT = true;
@@ -150,6 +156,11 @@ public class ScaffoldGenerator {
      * Aromaticity model used to determine the aromaticity of the molecules.
      */
     private Aromaticity aromaticityModelSetting;
+
+    /**
+     * SmilesGenerator used to generate SMILES from molecules
+     */
+    private SmilesGenerator SmilesGeneratorSetting;
 
     /**
      * Indicates whether rule 7 is executed.
@@ -196,6 +207,14 @@ public class ScaffoldGenerator {
      */
     public Aromaticity getAromaticityModel() {
         return this.aromaticityModelSetting;
+    }
+
+    /**
+     * Returns the currently applied SmilesGenerator.
+     * @return the SmilesGenerator
+     */
+    public SmilesGenerator getSmilesGenerator() {
+        return this.SmilesGeneratorSetting;
     }
 
     /**
@@ -247,6 +266,15 @@ public class ScaffoldGenerator {
     }
 
     /**
+     * Sets the applied SmilesGenerator.
+     * @param aSmilesGenerator the new SmilesGenerator
+     */
+    public void setSmilesGeneratorSetting(SmilesGenerator aSmilesGenerator) {
+        Objects.requireNonNull(aSmilesGenerator, "Given SmilesGenerator must not be null");
+        this.SmilesGeneratorSetting = aSmilesGenerator;
+    }
+
+    /**
      * Sets the option to skip rule 7.
      * It can be useful to turn off rule 7 explicitly,
      * as it is only relevant for a relatively small number of molecules, but it increases the computing time.
@@ -279,6 +307,7 @@ public class ScaffoldGenerator {
     public void restoreDefaultSettings() {
         this.setDetermineAromaticitySetting(this.DETERMINE_AROMATICITY_SETTING_DEFAULT);
         this.setAromaticityModelSetting(this.AROMATICITY_MODEL_SETTING_DEFAULT);
+        this.setSmilesGeneratorSetting(this.SMILES_GENERATOR_SETTING_DEFAULT);
         this.setRuleSevenAppliedSetting(this.RULE_SEVEN_APPLIED_SETTING_DEFAULT);
         this.setRetainOnlyHybridisationsAtAromaticBondsSetting(this.RETAIN_ONLY_HYBRIDISATIONS_AT_AROMATIC_BONDS_SETTING_DEFAULT);
         this.setScaffoldModeSetting(this.SCAFFOLD_MODE_OPTION_DEFAULT);
@@ -293,7 +322,6 @@ public class ScaffoldGenerator {
      * Depending on the internal settings via {@link ScaffoldGenerator#aromaticityModelSetting},
      * a specific aromaticity model is applied to determine the aromaticity of the individual atoms of the fragment.
      * {@link ScaffoldGenerator#determineAromaticitySetting} allows you to determine whether the aromaticity is to be determined.
-     * All stereochemistry information is deleted.
      * The {@link ScaffoldGenerator#getScaffoldInternal(IAtomContainer, boolean, Aromaticity)} method is called internally.
      * @param aMolecule molecule whose scaffold is produced.
      * @return scaffold of the inserted molecule. It can be an empty molecule if the original molecule does not contain a scaffold of the used type.
@@ -412,7 +440,6 @@ public class ScaffoldGenerator {
      */
     public List<IAtomContainer> getIterativeRemoval(IAtomContainer aMolecule) throws CDKException, CloneNotSupportedException {
         Objects.requireNonNull(aMolecule, "Input molecule must be non null");
-        SmilesGenerator tmpGenerator = new SmilesGenerator(SmiFlavor.Unique);
         IAtomContainer tmpScaffoldOriginal = this.getScaffoldInternal(aMolecule, true, this.aromaticityModelSetting);
         int tmpRingCount = this.getRings(tmpScaffoldOriginal, true).size();
         List<String> tmpAddedSMILESList = new ArrayList<>(tmpRingCount * 45);
@@ -431,7 +458,7 @@ public class ScaffoldGenerator {
                 if(this.isRingTerminal(tmpIterMol, tmpRing) && this.isRingRemovable(tmpRing, tmpAllRingsList, tmpIterMol)) { //Consider all terminal rings
                     boolean tmpIsInList = false;
                     IAtomContainer tmpRingRemoved = this.getScaffoldInternal(this.removeRing(tmpIterMol, tmpRing), false, null); //Remove next ring
-                    String tmpRingRemovedSMILES = tmpGenerator.create(tmpRingRemoved); //Generate unique SMILES
+                    String tmpRingRemovedSMILES = this.getSmilesGenerator().create(tmpRingRemoved); //Generate unique SMILES
                     if(tmpAddedSMILESList.contains(tmpRingRemovedSMILES)) { //Check if the molecule has already been added to the list
                         tmpIsInList = true;
                     }
@@ -456,7 +483,7 @@ public class ScaffoldGenerator {
      */
     public ScaffoldTree getRemovalTree(IAtomContainer aMolecule) throws CDKException, CloneNotSupportedException {
         Objects.requireNonNull(aMolecule, "Input molecule must be non null");
-        ScaffoldTree tmpScaffoldTree = new ScaffoldTree();
+        ScaffoldTree tmpScaffoldTree = new ScaffoldTree(this.getSmilesGenerator());
         IAtomContainer tmpScaffoldOriginal = this.getScaffoldInternal(aMolecule, true, this.aromaticityModelSetting);
         int tmpRingCount = this.getRings(tmpScaffoldOriginal, true).size();
         //List of all fragments already created and size estimated on the basis of an empirical value
@@ -662,7 +689,8 @@ public class ScaffoldGenerator {
      */
     public ScaffoldTree applySchuffenhauerRulesTree(IAtomContainer aMolecule) throws CloneNotSupportedException, CDKException {
         Objects.requireNonNull(aMolecule, "Input molecule must be non null");
-        ScaffoldTree tmpScaffoldTree = new ScaffoldTree();List<TreeNode> tmpAllNodesList = new ArrayList<>(); //List of all TreeNodes
+        ScaffoldTree tmpScaffoldTree = new ScaffoldTree(this.getSmilesGenerator());
+        List<TreeNode> tmpAllNodesList = new ArrayList<>(); //List of all TreeNodes
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
         IAtomContainer tmpScaffold = this.getScaffoldInternal(tmpClonedMolecule, this.determineAromaticitySetting ,this.aromaticityModelSetting);
         /*All molecules with an atom-to-ring ratio of less than 1.0 are assigned the CYCLE_FINDER_BACKUP_PROPERTY = true property,
@@ -831,11 +859,11 @@ public class ScaffoldGenerator {
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
      * @throws CloneNotSupportedException if cloning is not possible
      */
-    public List<ScaffoldTree> mergeAllTrees (List<IAtomContainer> aMoleculeList) throws CDKException, CloneNotSupportedException {
+    public List<ScaffoldTree> mergeMoleculesToForrest (List<IAtomContainer> aMoleculeList) throws CDKException, CloneNotSupportedException {
         Objects.requireNonNull(aMoleculeList, "Input molecule list must be non null");
         /*Prepare the output list*/
         List<ScaffoldTree> tmpOutputForest = new ArrayList<>();
-        ScaffoldTree tmpFirstTree = new ScaffoldTree();
+        ScaffoldTree tmpFirstTree = new ScaffoldTree(this.getSmilesGenerator());
         tmpOutputForest.add(tmpFirstTree);
         /*Go through all molecules*/
         for(IAtomContainer tmpMolecule : aMoleculeList) {
@@ -866,7 +894,6 @@ public class ScaffoldGenerator {
      * Depending on the internal settings via {@link ScaffoldGenerator#aromaticityModelSetting},
      * a specific aromaticity model is applied to determine the aromaticity of the individual atoms of the fragment.
      * {@link ScaffoldGenerator#determineAromaticitySetting} allows you to determine whether the aromaticity is to be determined.
-     * All stereochemistry information is deleted.
      * @param aMolecule molecule whose Schuffenhauer scaffold is produced.
      * @param anIsAromaticitySet Indicates whether the aromaticity is to be set.
      * @param anAromaticity anAromaticity Model to be used to determine aromaticity. Can be null if anIsAromaticitySet == false.
@@ -876,9 +903,6 @@ public class ScaffoldGenerator {
      */
     protected IAtomContainer getScaffoldInternal(IAtomContainer aMolecule, boolean anIsAromaticitySet, Aromaticity anAromaticity) throws CDKException, CloneNotSupportedException {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
-        /*Clear the stereo chemistry of the molecule*/
-        List<IStereoElement> tmpStereo = new ArrayList<>();
-        tmpClonedMolecule.setStereoElements(tmpStereo);
         /*Basic wire frames and element wire frames will be numbered later, as their number will be deleted immediately by anonymization and skeleton*/
         if(ScaffoldModeOption.BECCARI_BASIC_WIRE_FRAME != this.getScaffoldModeSetting() && ScaffoldModeOption.ELEMENTAL_WIRE_FRAME != this.getScaffoldModeSetting()) {
             /*Mark each atom with ascending number*/
@@ -1702,7 +1726,6 @@ public class ScaffoldGenerator {
      * @throws CloneNotSupportedException if cloning is not possible.
      */
     protected List<IAtomContainer> applySchuffenhauerRuleSeven(IAtomContainer aMolecule, List<IAtomContainer> aRings) throws CDKException, CloneNotSupportedException {
-        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
         List<IAtomContainer> tmpReturnRings = new ArrayList<>(aRings.size());
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
         /*Check the number of aromatic rings in the original molecule*/
@@ -2127,13 +2150,12 @@ public class ScaffoldGenerator {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
         //Strings are stored in a sorted map. The natural order is alphabetical
         TreeMap<String, IAtomContainer> tmpRingRemovedMap = new TreeMap();//Sorted map
-        SmilesGenerator tmpGenerator = new SmilesGenerator(SmiFlavor.Unique);
         for (IAtomContainer tmpRing : aRings) {
             IAtomContainer tmpRingRemoved = this.removeRing(tmpClonedMolecule, tmpRing);
             //Remove linker
             IAtomContainer tmpSchuff = this.getScaffoldInternal(tmpRingRemoved, false, null);
             //A few structures do not produce a truly unique SMILES. These are overwritten and are therefore not considered for further selection.
-            tmpRingRemovedMap.put(tmpGenerator.create(tmpSchuff), tmpSchuff);
+            tmpRingRemovedMap.put(this.getSmilesGenerator().create(tmpSchuff), tmpSchuff);
         }
         //The first key in the map is automatically the SMILES key, which has the lower rank in alphabetical order
         IAtomContainer tmpReturnedStructure = tmpRingRemovedMap.get(tmpRingRemovedMap.firstKey());
