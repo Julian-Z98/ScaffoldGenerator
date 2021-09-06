@@ -548,7 +548,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         //tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(23));
         /*Create a graph from the ScaffoldTree*/
         Graph tmpGraph = new SingleGraph("TestGraph");
-        tmpGraph.setAttribute("ui.stylesheet", "node { size: 100px, 100px; }");
+        tmpGraph.setAttribute("ui.stylesheet", "node { size: 500px, 500px; }");
+        tmpGraph.setAttribute("ui.stylesheet", "node {shape: rounded-box; size-mode: fit; padding: 60px;}");
         System.setProperty("org.graphstream.ui", "swing");
         /*Add edges and nodes*/
         int tmpEdgeCount = 0;
@@ -564,13 +565,14 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             /*Add the images*/
             TreeNode tmpTreeNode =  tmpScaffoldTree.getMatrixNode(tmpScaffoldTree.getMatrixNodesNumbers().get(tmpRow));
             IAtomContainer tmpTreeNodeMolecule = (IAtomContainer) tmpTreeNode.getMolecule();
-            BufferedImage tmpNodeImg = tmpGenerator.withSize(100,100).depict(tmpTreeNodeMolecule).toImg();
+            BufferedImage tmpNodeImg = tmpGenerator.withSize(512,512).depict(tmpTreeNodeMolecule).toImg();
             //The images are stored temporarily, as I have not found a way to use them directly
             new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png").mkdirs();
             File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png");
             ImageIO.write(tmpNodeImg, "png", tmpSecOutputRemove);
             //set the images
             tmpNode.setAttribute("ui.style", "fill-mode: image-scaled-ratio-max;" + "fill-image: url('GraphStream" + tmpRow + ".png');");
+            //tmpNode.setAttribute("ui.stylesheet", "padding: 40, 10;");
             /*Add edges*/
             for(int tmpCol = 0; tmpCol < tmpMatrix[tmpRow].length; tmpCol++) { //Go through each column of the row
                 if(tmpRow < tmpCol) { //Skip a diagonal half to get edges in one direction only.
@@ -583,6 +585,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             }
         }
         /*Display graph*/
+        //tmpGraph.setAttribute("ui.stylesheet", "node {size-mode: fit; padding: 40, 40;}");
         System.setProperty("org.graphstream.ui", "swing");
         tmpGraph.display();
         TimeUnit.SECONDS.sleep(300);
@@ -636,7 +639,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         System.out.println("I am Root: " + tmpSmilesGenerator.create(tmpRootMolecule));
         /*Create a graph from the ScaffoldTree*/
         Graph tmpGraph = new SingleGraph("TestGraph");
-        tmpGraph.setAttribute("ui.stylesheet", "node { size: 100px, 100px; }");
+        tmpGraph.setAttribute("ui.stylesheet", "node { size: 512px, 512px; }");
+        tmpGraph.setAttribute("ui.stylesheet", "node {shape: rounded-box; size-mode: fit; padding: 60px;}");
         System.setProperty("org.graphstream.ui", "swing");
         /*Add edges and nodes*/
         int tmpEdgeCount = 0;
@@ -652,7 +656,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             /*Add the images*/
             TreeNode tmpTreeNode =  tmpScaffoldTree.getMatrixNode(tmpScaffoldTree.getMatrixNodesNumbers().get(tmpRow));
             IAtomContainer tmpTreeNodeMolecule = (IAtomContainer) tmpTreeNode.getMolecule();
-            BufferedImage tmpNodeImg = tmpGenerator.withSize(100,100).depict(tmpTreeNodeMolecule).toImg();
+            BufferedImage tmpNodeImg = tmpGenerator.withSize(512,512).depict(tmpTreeNodeMolecule).toImg();
             //The images are stored temporarily, as I have not found a way to use them directly
             new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png").mkdirs();
             File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png");
@@ -682,7 +686,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
      */
     @Ignore
     @Test
-    public void mergeAllTreesTest() throws Exception {
+    public void mergeMoleculesToForrestTest() throws Exception {
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
@@ -720,7 +724,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         tmpTreeList.add(tmpMolecule8);
         tmpTreeList.add(tmpMolecule9);
         tmpTreeList.add(tmpMolecule10);
-        List<ScaffoldTree> tmpFinalForrest = tmpScaffoldGenerator.mergeAllTrees(tmpTreeList);
+        List<ScaffoldTree> tmpFinalForrest = tmpScaffoldGenerator.mergeMoleculesToForrest(tmpTreeList);
         System.out.println("Forrest size: " + tmpFinalForrest.size());
         ScaffoldTree tmpScaffoldTree = tmpFinalForrest.get(1);
         IAtomContainer tmpRootMolecule = (IAtomContainer) tmpScaffoldTree.getRoot().getMolecule();
@@ -728,7 +732,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         System.out.println("I am Root: " + tmpSmilesGenerator.create(tmpRootMolecule));
         /*Create a graph from the ScaffoldTree*/
         Graph tmpGraph = new SingleGraph("TestGraph");
-        tmpGraph.setAttribute("ui.stylesheet", "node { size: 100px, 100px; }");
+        tmpGraph.setAttribute("ui.stylesheet", "node { size: 512px, 512px; }");
+        tmpGraph.setAttribute("ui.stylesheet", "node {shape: rounded-box; size-mode: fit; padding: 60px;}");
         System.setProperty("org.graphstream.ui", "swing");
         /*Add edges and nodes*/
         int tmpEdgeCount = 0;
@@ -744,7 +749,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             /*Add the images*/
             TreeNode tmpTreeNode =  tmpScaffoldTree.getMatrixNode(tmpScaffoldTree.getMatrixNodesNumbers().get(tmpRow));
             IAtomContainer tmpTreeNodeMolecule = (IAtomContainer) tmpTreeNode.getMolecule();
-            BufferedImage tmpNodeImg = tmpGenerator.withSize(100,100).depict(tmpTreeNodeMolecule).toImg();
+            BufferedImage tmpNodeImg = tmpGenerator.withSize(512,512).depict(tmpTreeNodeMolecule).toImg();
             //The images are stored temporarily, as I have not found a way to use them directly
             new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png").mkdirs();
             File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png");
@@ -774,7 +779,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
      */
     @Ignore
     @Test
-    public void mergeAllTestMoleculesTreesTest() throws Exception {
+    public void mergeAllTestMoleculesToForrestTest() throws Exception {
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
         List<IAtomContainer> tmpTestMoleculeList = new ArrayList<>();
         for (int tmpCount = 1; tmpCount < 24; tmpCount++) {
@@ -783,7 +788,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             IAtomContainer tmpTestMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
             tmpTestMoleculeList.add(tmpTestMolecule);
         }
-        List<ScaffoldTree> tmpTestTreeList = tmpScaffoldGenerator.mergeAllTrees(tmpTestMoleculeList);
+        List<ScaffoldTree> tmpTestTreeList = tmpScaffoldGenerator.mergeMoleculesToForrest(tmpTestMoleculeList);
         System.out.println("Number of molecules: " + tmpTestMoleculeList.size());
         System.out.println("Number of trees: " + tmpTestTreeList.size());
         ScaffoldTree tmpScaffoldTree = tmpTestTreeList.get(9);
@@ -794,7 +799,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         }
         /*Create a graph from the ScaffoldTree*/
         Graph tmpGraph = new SingleGraph("TestGraph");
-        tmpGraph.setAttribute("ui.stylesheet", "node { size: 100px, 100px; }");
+        tmpGraph.setAttribute("ui.stylesheet", "node { size: 512px, 512px; }");
+        tmpGraph.setAttribute("ui.stylesheet", "node {shape: rounded-box; size-mode: fit; padding: 60px;}");
         System.setProperty("org.graphstream.ui", "swing");
         /*Add edges and nodes*/
         int tmpEdgeCount = 0;
@@ -810,7 +816,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             /*Add the images*/
             TreeNode tmpTreeNode =  tmpScaffoldTree.getMatrixNode(tmpScaffoldTree.getMatrixNodesNumbers().get(tmpRow));
             IAtomContainer tmpTreeNodeMolecule = (IAtomContainer) tmpTreeNode.getMolecule();
-            BufferedImage tmpNodeImg = tmpGenerator.withSize(100,100).depict(tmpTreeNodeMolecule).toImg();
+            BufferedImage tmpNodeImg = tmpGenerator.withSize(512,512).depict(tmpTreeNodeMolecule).toImg();
             //The images are stored temporarily, as I have not found a way to use them directly
             new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png").mkdirs();
             File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png");
@@ -3107,6 +3113,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
      */
     protected ScaffoldGenerator getScaffoldGeneratorTestSettings() throws Exception {
         ScaffoldGenerator tmpScaffoldGenerator = new ScaffoldGenerator();
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
+        tmpScaffoldGenerator.setSmilesGeneratorSetting(tmpSmilesGenerator);
         return tmpScaffoldGenerator;
     }
 
