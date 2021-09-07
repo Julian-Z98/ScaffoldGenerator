@@ -510,9 +510,11 @@ public class ScaffoldGenerator {
             tmpLevelCounter++; //Increases when a level is completed
         }
         TreeNodeIter<IAtomContainer> tmpNodeIter = new TreeNodeIter<>(tmpParentNode);
-        /*Add generated nodes to the ScaffoldTree */
+        String tmpOrigin = this.getSmilesGenerator().create(aMolecule);
+        /*Add generated nodes to the ScaffoldTree and add the origin to each node */
         while(tmpNodeIter.hasNext()) { // As long as there are still other molecules in the tree
             TreeNode<IAtomContainer> tmpMoleculeNode = tmpNodeIter.next(); // Next molecule in tree
+            tmpMoleculeNode.addOriginSmiles(tmpOrigin);
             tmpScaffoldTree.addNode(tmpMoleculeNode);
         }
         return tmpScaffoldTree;
@@ -836,15 +838,18 @@ public class ScaffoldGenerator {
             tmpAllNodesList.add(new TreeNode<IAtomContainer>(tmpScaffoldFragments.get(tmpScaffoldFragments.size() - 1))); //Add next node
         }
         IAtomContainer tmpReverseStartMolecule = (IAtomContainer) tmpAllNodesList.get((tmpAllNodesList.size() - 1)).getMolecule();
-        /*Set the root for the ScaffoldTree*/
+        /*Set the root for the ScaffoldTree and add the origin of the root*/
         TreeNode tmpReverseParentNode =  new TreeNode<IAtomContainer>(tmpReverseStartMolecule);
+        String tmpSmiles = this.getSmilesGenerator().create(tmpClonedMolecule);
+        tmpReverseParentNode.addOriginSmiles(tmpSmiles);
         tmpScaffoldTree.addNode(tmpReverseParentNode);
-        /*Build the ScaffoldTree with the smallest fragment as root*/
+        /*Build the ScaffoldTree with the smallest fragment as root and add the origin to each fragment*/
         for(int i = 1; i < tmpAllNodesList.size(); i++) {
             TreeNode tmpNewNode = tmpAllNodesList.get((tmpAllNodesList.size() - 1) - i);
             IAtomContainer tmpTestMol = (IAtomContainer) tmpNewNode.getMolecule();
             tmpScaffoldTree.getAllNodesOnLevel(i - 1).get(0).addChild(tmpTestMol);
             TreeNode tmpTestNode = (TreeNode) tmpScaffoldTree.getAllNodesOnLevel(i - 1).get(0).getChildren().get(0);
+            tmpTestNode.addOriginSmiles(tmpSmiles);
             tmpScaffoldTree.addNode(tmpTestNode);
         }
         return tmpScaffoldTree;
