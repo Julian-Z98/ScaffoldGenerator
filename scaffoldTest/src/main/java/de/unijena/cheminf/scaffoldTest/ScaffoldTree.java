@@ -103,6 +103,15 @@ public class ScaffoldTree {
         this.smilesMap.put(tmpSmiles, aNode);
         //Add to levelMap
         this.levelMap.put(aNode.getLevel(), aNode);
+        /*Add origins from the new node to parent nodes*/
+        TreeNode tmpNode = aNode;
+        for(int tmpCount = 0; tmpCount < aNode.getLevel(); tmpCount++) {
+            TreeNode tmpNextNode = tmpNode.getParent();
+            for(Object tmpString : tmpNode.getOriginSmilesList()) {
+                tmpNextNode.addOriginSmiles((String) tmpString);
+            }
+            tmpNode = tmpNextNode;
+        }
         //Increase nodeCounter
         this.nodeCounter++;
     }
@@ -373,6 +382,10 @@ public class ScaffoldTree {
                         String tmpNewSmiles = tmpGenerator.create((IAtomContainer) tmpNewTreeNode.getMolecule());
                         /*Check whether a fragment occurs in both trees*/
                         if(tmpOldSmiles.equals(tmpNewSmiles)) {
+                            /*Add the origin smiles to the OldSmilesTree fragment*/
+                            for(Object tmpOriginSmiles : tmpNewTreeNode.getOriginSmilesList()) {
+                                tmpOldTreeNode.addOriginSmiles((String) tmpOriginSmiles);
+                            }
                             /*Trees are overlapping if a fragment occurs in both trees*/
                             tmpAreTreesOverlapping = true;
                             /*Get the children of the overlapping node*/
