@@ -19,10 +19,7 @@
 
 package de.unijena.cheminf.scaffoldTest;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * The TreeNodes are nodes from which a tree can be built.
@@ -37,6 +34,11 @@ public class TreeNode<MoleculeType> implements Iterable<TreeNode<MoleculeType>> 
      * Molecule that can be stored in each node
      */
     private MoleculeType molecule;
+
+    /**
+     * List of SMILES of the molecules from which this fragment originates
+     */
+    private ArrayList<String> OriginSmilesList;
 
     /**
      * Parent of the node
@@ -78,6 +80,7 @@ public class TreeNode<MoleculeType> implements Iterable<TreeNode<MoleculeType>> 
         Objects.requireNonNull(aMolecule, "Given molecule is 'null'");
         this.molecule = aMolecule;
         this.children = new LinkedList<TreeNode<MoleculeType>>();
+        this.OriginSmilesList = new ArrayList<String>();
         this.elementsIndex = new LinkedList<TreeNode<MoleculeType>>();
         this.elementsIndex.add(this);
     }
@@ -96,6 +99,16 @@ public class TreeNode<MoleculeType> implements Iterable<TreeNode<MoleculeType>> 
         return tmpChildNode;
     }
 
+    /**
+     * Adds another string to the OriginSmilesList if it is not already present.
+     * @param aString String to be added
+     */
+    public void addOriginSmiles(String aString) {
+        Objects.requireNonNull(aString, "Given SMILES of the molecule is 'null'");
+        if(!this.OriginSmilesList.contains(aString)) {
+            OriginSmilesList.add(aString);
+        }
+    }
     /**
      * Outputs the level on which the node is located in the entire tree
      * @return level of the node in the entire tree
@@ -195,6 +208,23 @@ public class TreeNode<MoleculeType> implements Iterable<TreeNode<MoleculeType>> 
     public void setChildren(List<TreeNode<MoleculeType>> aChildren) {
         Objects.requireNonNull(aChildren, "Given TreeNode List is 'null'");
         this.children = aChildren;
+    }
+
+    /**
+     * Get the OriginSmilesList
+     * @return List of SMILES of the molecules from which this fragment originates
+     */
+    public ArrayList<String> getOriginSmilesList() {
+        return this.OriginSmilesList;
+    }
+
+    /**
+     * Set the entire OriginSmilesList
+     * @param aOriginSmilesList SMILES of molecules that are set
+     */
+    public void setOriginSmilesList(ArrayList<String> aOriginSmilesList) {
+        Objects.requireNonNull(aOriginSmilesList, "Given SMILES of the molecule List is 'null'");
+        this.OriginSmilesList = aOriginSmilesList;
     }
     //</editor-fold>
 }
