@@ -36,7 +36,10 @@ public class TreeNode<MoleculeType> implements Iterable<TreeNode<MoleculeType>> 
     private MoleculeType molecule;
 
     /**
-     * List of SMILES of the molecules from which this fragment originates
+     * List of SMILES of the molecules from which this fragment originates.
+     *
+     * If additional information of the origin is needed,
+     * it can be stored in a matrix with the IAtomContainer. The SMILES stored here can then be used as a key.
      */
     private ArrayList<String> OriginSmilesList;
 
