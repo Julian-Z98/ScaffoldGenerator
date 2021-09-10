@@ -476,6 +476,8 @@ public class ScaffoldGenerator {
      * Iteratively removes the terminal rings. All resulting Scaffold are saved in a ScaffoldTree.
      * A new level is created with each removal step. Duplicates are permitted.
      * The Scaffold of the entire entered molecule is the root of the tree.
+     *
+     * If a molecule does not generate a SchuffenhauerScaffold, it is stored as a node with empty SMILES and is treated normally.
      * @param aMolecule Molecule to be disassembled.
      * @return ScaffoldTree with all resulting Scaffold.
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
@@ -684,6 +686,9 @@ public class ScaffoldGenerator {
      * Rule 7 {@link ScaffoldGenerator#applySchuffenhauerRuleSeven(IAtomContainer, List)} is only applied
      * if {@link ScaffoldGenerator#ruleSevenAppliedSetting} is true
      * and the aromaticity is also redetermined by {@link ScaffoldGenerator#determineAromaticitySetting}.
+     *
+     * If a molecule does not generate a SchuffenhauerScaffold,
+     * it is stored as node with empty SMILES in a ScaffoldTree and is treated normally.
      * @param aMolecule Molecule that is to be broken down into its fragments
      * @return A tree consisting of fragments of the molecule according to the Schuffenhauer rules
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
@@ -859,6 +864,9 @@ public class ScaffoldGenerator {
      * Decomposes the entered molecules into SchuffenhauerScaffolds, creates ScaffoldTrees from them and then assembles these trees if possible.
      * If trees have the same root (smallest fragment), they are joined together so that the same fragments are no longer duplicated.
      * In this way, no fragment created is lost when it is joined together.
+     *
+     * If a molecule does not generate a SchuffenhauerScaffold, it is stored as a node with empty SMILES in a new ScaffoldTree and is treated normally.
+     * All other empty nodes are then added to this tree accordingly.
      * @param aMoleculeList Molecules to be transferred into list of trees
      * @return List of ScaffoldTrees consisting of the fragments of the entered molecules.
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
