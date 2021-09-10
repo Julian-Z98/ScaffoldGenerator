@@ -615,6 +615,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         //IAtomContainer tmpMolecule6 = tmpParser.parseSmiles("c2ccc(c1ccccc1)cc2");
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1=C(C(=NO1)C2=C(C=CC=C2Cl)F)C(=O)NC3C4N(C3=O)C(C(S4)(C)C)C(=O)O");
         IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("C2NC1SCNN1N2");
+        //IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("CC");
         IAtomContainer tmpMolecule2 = tmpParser.parseSmiles("c4ccc(C3NC2SC(c1ccccc1)NN2N3)cc4");
         IAtomContainer tmpMolecule3 = tmpParser.parseSmiles("c2ccc(C1NCNN1)cc2");
         IAtomContainer tmpMolecule4 = tmpParser.parseSmiles("c3ccc(C2NNC(c1ccccc1)N2)cc3");
@@ -890,11 +891,260 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         List<ScaffoldTree> tmpTestTreeList = tmpScaffoldGenerator.mergeMoleculesToForrest(tmpTestMoleculeList);
         System.out.println("Number of molecules: " + tmpTestMoleculeList.size());
         System.out.println("Number of trees: " + tmpTestTreeList.size());
-        ScaffoldTree tmpScaffoldTree = tmpTestTreeList.get(9);
+        ScaffoldTree tmpScaffoldTree = tmpTestTreeList.get(0);
+        System.out.println("Origin SMILES: " + tmpScaffoldTree.getRoot().getOriginSmilesList());
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
         for(ScaffoldTree tmpTestTree : tmpTestTreeList) {
             System.out.println("Number of Nodes:" + tmpTestTree.getAllNodes().size());
             System.out.println("Root:" + tmpSmilesGenerator.create((IAtomContainer) tmpTestTree.getRoot().getMolecule()));
+        }
+        /*Create a graph from the ScaffoldTree*/
+        Graph tmpGraph = new SingleGraph("TestGraph");
+        tmpGraph.setAttribute("ui.stylesheet", "node { size: 512px, 512px; }");
+        tmpGraph.setAttribute("ui.stylesheet", "node {shape: rounded-box; size-mode: fit; padding: 60px;}");
+        System.setProperty("org.graphstream.ui", "swing");
+        /*Add edges and nodes*/
+        int tmpEdgeCount = 0;
+        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+        Integer[][] tmpMatrix = tmpScaffoldTree.getTreeAsMatrix(); //Create the adjacency matrix
+        for(int tmpRow = 0; tmpRow < tmpMatrix.length; tmpRow++) { //Create a node for each row
+            /*Add the ScaffoldTree nodes to the graph*/
+            tmpGraph.addNode(String.valueOf(tmpRow));
+            Node tmpNode = tmpGraph.getNode(String.valueOf(tmpRow));
+            tmpNode.setAttribute("Node", tmpScaffoldTree.getMatrixNode(tmpRow));
+            /*Add a label to each node that corresponds to the position in the matrix*/
+            tmpNode.setAttribute("ui.label", tmpScaffoldTree.getMatrixNodesNumbers().get(tmpRow));
+            /*Add the images*/
+            TreeNode tmpTreeNode =  tmpScaffoldTree.getMatrixNode(tmpScaffoldTree.getMatrixNodesNumbers().get(tmpRow));
+            IAtomContainer tmpTreeNodeMolecule = (IAtomContainer) tmpTreeNode.getMolecule();
+            BufferedImage tmpNodeImg = tmpGenerator.withSize(512,512).depict(tmpTreeNodeMolecule).toImg();
+            //The images are stored temporarily, as I have not found a way to use them directly
+            new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png").mkdirs();
+            File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png");
+            ImageIO.write(tmpNodeImg, "png", tmpSecOutputRemove);
+            //set the images
+            tmpNode.setAttribute("ui.style", "fill-mode: image-scaled-ratio-max;" + "fill-image: url('GraphStream" + tmpRow + ".png');");
+            /*Add edges*/
+            for(int tmpCol = 0; tmpCol < tmpMatrix[tmpRow].length; tmpCol++) { //Go through each column of the row
+                if(tmpRow < tmpCol) { //Skip a diagonal half to get edges in one direction only.
+                    continue;
+                }
+                if(tmpMatrix[tmpRow][tmpCol] == 1) { //Insert an edge if there is a 1 in it
+                    tmpGraph.addEdge("Edge" + tmpEdgeCount, tmpRow, tmpCol);
+                    tmpEdgeCount++;
+                }
+            }
+        }
+        /*Display graph*/
+        System.setProperty("org.graphstream.ui", "swing");
+        tmpGraph.display();
+        TimeUnit.SECONDS.sleep(300);
+    }
+
+    /**
+     * Creates 25000 different ScaffoldTrees from COCONUT molecules and merges them.
+     * The result is visualised with GraphStream.
+     * @throws Exception if anything goes wrong
+     */
+    @Ignore
+    @Test
+    public void mergeCOCONUTMoleculesToForrestTest() throws Exception {
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        List<IAtomContainer> tmpTestMoleculeList = new ArrayList<>();
+        /*Loading and reading the library*/
+        File tmpResourcesDirectory = new File("src/test/resources/COCONUT_DB.sdf");
+        IteratingSDFReader tmpReader = new IteratingSDFReader( new FileInputStream(tmpResourcesDirectory), DefaultChemObjectBuilder.getInstance());
+        int tmpAllCounter = 0;
+        int tmpCounter = 0;
+        while (tmpReader.hasNext()) {
+            tmpAllCounter++;
+            tmpCounter++;
+            if(tmpCounter < 25000) {
+                continue;
+            }
+            IAtomContainer tmpMolecule = (IAtomContainer) tmpReader.next();
+            tmpTestMoleculeList.add(tmpMolecule);
+            if(tmpAllCounter == 50000) {
+                break;
+            }
+        }
+        System.out.println("Number of molecules: " + tmpTestMoleculeList.size());
+        List<ScaffoldTree> tmpTestTreeList = tmpScaffoldGenerator.mergeMoleculesToForrest(tmpTestMoleculeList);
+        System.out.println("Number of trees: " + tmpTestTreeList.size());
+        ScaffoldTree tmpScaffoldTree = tmpTestTreeList.get(10);
+        System.out.println("Origin SMILES: " + tmpScaffoldTree.getRoot().getOriginSmilesList());
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
+        tmpCounter = 0;
+        for(ScaffoldTree tmpTestTree : tmpTestTreeList) {
+            System.out.println(tmpCounter + "Root:" + tmpSmilesGenerator.create((IAtomContainer) tmpTestTree.getRoot().getMolecule()));
+            System.out.println("Number of Nodes:" + tmpTestTree.getAllNodes().size());
+            tmpCounter++;
+        }
+        /*Create a graph from the ScaffoldTree*/
+        Graph tmpGraph = new SingleGraph("TestGraph");
+        tmpGraph.setAttribute("ui.stylesheet", "node { size: 512px, 512px; }");
+        tmpGraph.setAttribute("ui.stylesheet", "node {shape: rounded-box; size-mode: fit; padding: 60px;}");
+        System.setProperty("org.graphstream.ui", "swing");
+        /*Add edges and nodes*/
+        int tmpEdgeCount = 0;
+        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+        Integer[][] tmpMatrix = tmpScaffoldTree.getTreeAsMatrix(); //Create the adjacency matrix
+        for(int tmpRow = 0; tmpRow < tmpMatrix.length; tmpRow++) { //Create a node for each row
+            /*Add the ScaffoldTree nodes to the graph*/
+            tmpGraph.addNode(String.valueOf(tmpRow));
+            Node tmpNode = tmpGraph.getNode(String.valueOf(tmpRow));
+            tmpNode.setAttribute("Node", tmpScaffoldTree.getMatrixNode(tmpRow));
+            /*Add a label to each node that corresponds to the position in the matrix*/
+            tmpNode.setAttribute("ui.label", tmpScaffoldTree.getMatrixNodesNumbers().get(tmpRow));
+            /*Add the images*/
+            TreeNode tmpTreeNode =  tmpScaffoldTree.getMatrixNode(tmpScaffoldTree.getMatrixNodesNumbers().get(tmpRow));
+            IAtomContainer tmpTreeNodeMolecule = (IAtomContainer) tmpTreeNode.getMolecule();
+            BufferedImage tmpNodeImg = tmpGenerator.withSize(512,512).depict(tmpTreeNodeMolecule).toImg();
+            //The images are stored temporarily, as I have not found a way to use them directly
+            new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png").mkdirs();
+            File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png");
+            ImageIO.write(tmpNodeImg, "png", tmpSecOutputRemove);
+            //set the images
+            tmpNode.setAttribute("ui.style", "fill-mode: image-scaled-ratio-max;" + "fill-image: url('GraphStream" + tmpRow + ".png');");
+            /*Add edges*/
+            for(int tmpCol = 0; tmpCol < tmpMatrix[tmpRow].length; tmpCol++) { //Go through each column of the row
+                if(tmpRow < tmpCol) { //Skip a diagonal half to get edges in one direction only.
+                    continue;
+                }
+                if(tmpMatrix[tmpRow][tmpCol] == 1) { //Insert an edge if there is a 1 in it
+                    tmpGraph.addEdge("Edge" + tmpEdgeCount, tmpRow, tmpCol);
+                    tmpEdgeCount++;
+                }
+            }
+        }
+        /*Display graph*/
+        System.setProperty("org.graphstream.ui", "swing");
+        tmpGraph.display();
+        TimeUnit.SECONDS.sleep(300);
+    }
+    /**
+     * @throws Exception if anything goes wrong
+     */
+    @Ignore
+    @Test
+    public void mergeStereoMoleculesToForrestTest() throws Exception {
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        List<IAtomContainer> tmpTestMoleculeList = new ArrayList<>();
+        /*Loading and reading the library*/
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        IAtomContainer tmpMolecule = tmpParser.parseSmiles("F\\C(=C(\\F)CC1CCCCC1)CC2CCCCC2");
+        IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("F\\C(=C(/F)CC1CCCCC1)CC2CCCCC2");
+        tmpTestMoleculeList.add(tmpMolecule);
+        tmpTestMoleculeList.add(tmpMolecule1);
+        tmpScaffoldGenerator.setSmilesGeneratorSetting(new SmilesGenerator(SmiFlavor.Isomeric));
+        List<ScaffoldTree> tmpTestTreeList = tmpScaffoldGenerator.mergeMoleculesToForrest(tmpTestMoleculeList);
+        System.out.println("Number of molecules: " + tmpTestMoleculeList.size());
+        System.out.println("Number of trees: " + tmpTestTreeList.size());
+        ScaffoldTree tmpScaffoldTree = tmpTestTreeList.get(0);
+        System.out.println("Origin SMILES: " + tmpScaffoldTree.getRoot().getOriginSmilesList());
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Isomeric);
+        for(ScaffoldTree tmpTestTree : tmpTestTreeList) {
+            System.out.println("Number of Nodes:" + tmpTestTree.getAllNodes().size());
+            tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.MURCKO_FRAGMENT);
+            tmpMolecule = tmpParser.parseSmiles("F\\C(=C(\\F)CC1CCCCC1)CC2CCCCC2");
+            IAtomContainer tmpScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule);
+            System.out.println("Root:" + tmpSmilesGenerator.create((IAtomContainer) tmpTestTree.getRoot().getMolecule()));
+            System.out.println("Scaffold:" + tmpSmilesGenerator.create(tmpScaffold));
+            for(TreeNode tmpNode : tmpTestTree.getAllNodes()) {
+                System.out.println("Molecules:" + tmpSmilesGenerator.create((IAtomContainer) tmpNode.getMolecule()));
+            }
+        }
+        /*Create a graph from the ScaffoldTree*/
+        Graph tmpGraph = new SingleGraph("TestGraph");
+        tmpGraph.setAttribute("ui.stylesheet", "node { size: 512px, 512px; }");
+        tmpGraph.setAttribute("ui.stylesheet", "node {shape: rounded-box; size-mode: fit; padding: 60px;}");
+        System.setProperty("org.graphstream.ui", "swing");
+        /*Add edges and nodes*/
+        int tmpEdgeCount = 0;
+        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+        Integer[][] tmpMatrix = tmpScaffoldTree.getTreeAsMatrix(); //Create the adjacency matrix
+        for(int tmpRow = 0; tmpRow < tmpMatrix.length; tmpRow++) { //Create a node for each row
+            /*Add the ScaffoldTree nodes to the graph*/
+            tmpGraph.addNode(String.valueOf(tmpRow));
+            Node tmpNode = tmpGraph.getNode(String.valueOf(tmpRow));
+            tmpNode.setAttribute("Node", tmpScaffoldTree.getMatrixNode(tmpRow));
+            /*Add a label to each node that corresponds to the position in the matrix*/
+            tmpNode.setAttribute("ui.label", tmpScaffoldTree.getMatrixNodesNumbers().get(tmpRow));
+            /*Add the images*/
+            TreeNode tmpTreeNode =  tmpScaffoldTree.getMatrixNode(tmpScaffoldTree.getMatrixNodesNumbers().get(tmpRow));
+            IAtomContainer tmpTreeNodeMolecule = (IAtomContainer) tmpTreeNode.getMolecule();
+            BufferedImage tmpNodeImg = tmpGenerator.withSize(512,512).depict(tmpTreeNodeMolecule).toImg();
+            //The images are stored temporarily, as I have not found a way to use them directly
+            new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png").mkdirs();
+            File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png");
+            ImageIO.write(tmpNodeImg, "png", tmpSecOutputRemove);
+            //set the images
+            tmpNode.setAttribute("ui.style", "fill-mode: image-scaled-ratio-max;" + "fill-image: url('GraphStream" + tmpRow + ".png');");
+            /*Add edges*/
+            for(int tmpCol = 0; tmpCol < tmpMatrix[tmpRow].length; tmpCol++) { //Go through each column of the row
+                if(tmpRow < tmpCol) { //Skip a diagonal half to get edges in one direction only.
+                    continue;
+                }
+                if(tmpMatrix[tmpRow][tmpCol] == 1) { //Insert an edge if there is a 1 in it
+                    tmpGraph.addEdge("Edge" + tmpEdgeCount, tmpRow, tmpCol);
+                    tmpEdgeCount++;
+                }
+            }
+        }
+        /*Display graph*/
+        System.setProperty("org.graphstream.ui", "swing");
+        tmpGraph.display();
+        TimeUnit.SECONDS.sleep(300);
+    }
+
+    /**
+     * @throws Exception if anything goes wrong
+     */
+    @Ignore
+    @Test
+    public void mergeStereoMOLToForrestTest() throws Exception {
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        List<IAtomContainer> tmpTestMoleculeList = new ArrayList<>();
+        /*Loading and reading the library*/
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Isomeric);
+        /*Loading and reading the library*/
+        File tmpResourcesDirectory = new File("src/test/resources/Stereo1.sdf");
+        IteratingSDFReader tmpReader = new IteratingSDFReader( new FileInputStream(tmpResourcesDirectory), DefaultChemObjectBuilder.getInstance());
+        while (tmpReader.hasNext()) {
+            String tmpCoconutID = null;
+            IAtomContainer tmpMolecule = (IAtomContainer) tmpReader.next();
+            tmpTestMoleculeList.add(tmpMolecule);
+            MurckoFragmenter tmpMurckoFragmenter = new MurckoFragmenter(true, 1);
+            tmpMurckoFragmenter.setComputeRingFragments(false);
+            IAtomContainer tmpMurckoFragment = tmpMurckoFragmenter.scaffold(tmpMolecule);
+            System.out.println("Murcko1" + tmpSmilesGenerator.create(tmpMurckoFragment));
+        }
+        File tmpResourcesDirectory2 = new File("src/test/resources/Stereo2.sdf");
+        IteratingSDFReader tmpReader2 = new IteratingSDFReader( new FileInputStream(tmpResourcesDirectory2), DefaultChemObjectBuilder.getInstance());
+        while (tmpReader2.hasNext()) {
+            String tmpCoconutID = null;
+            IAtomContainer tmpMolecule = (IAtomContainer) tmpReader2.next();
+            tmpTestMoleculeList.add(tmpMolecule);
+            MurckoFragmenter tmpMurckoFragmenter = new MurckoFragmenter(true, 1);
+            tmpMurckoFragmenter.setComputeRingFragments(false);
+            IAtomContainer tmpMurckoFragment = tmpMurckoFragmenter.scaffold(tmpMolecule);
+            System.out.println("Murcko2" + tmpSmilesGenerator.create(tmpMurckoFragment));
+        }
+        tmpScaffoldGenerator.setSmilesGeneratorSetting(new SmilesGenerator(SmiFlavor.Isomeric));
+        List<ScaffoldTree> tmpTestTreeList = tmpScaffoldGenerator.mergeMoleculesToForrest(tmpTestMoleculeList);
+        System.out.println("Number of molecules: " + tmpTestMoleculeList.size());
+        System.out.println("Number of trees: " + tmpTestTreeList.size());
+        ScaffoldTree tmpScaffoldTree = tmpTestTreeList.get(0);
+        System.out.println("Origin SMILES: " + tmpScaffoldTree.getRoot().getOriginSmilesList());
+        int tmpCounter = 0;
+        for(ScaffoldTree tmpTestTree : tmpTestTreeList) {
+            System.out.println("Number of Nodes:" + tmpTestTree.getAllNodes().size());
+            tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.MURCKO_FRAGMENT);
+            System.out.println(tmpCounter + "Root:" + tmpSmilesGenerator.create((IAtomContainer) tmpTestTree.getRoot().getMolecule()));
+            for(TreeNode tmpNode : tmpTestTree.getAllNodes()) {
+                System.out.println("Molecules:" + tmpSmilesGenerator.create((IAtomContainer) tmpNode.getMolecule()));
+            }
+            tmpCounter++;
         }
         /*Create a graph from the ScaffoldTree*/
         Graph tmpGraph = new SingleGraph("TestGraph");
