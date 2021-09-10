@@ -77,12 +77,7 @@ public class ScaffoldTree {
      * Default Constructor
      */
     public ScaffoldTree() {
-        this.nodeMap = new HashMap<Integer, TreeNode>();
-        this.reverseNodeMap = new HashMap<TreeNode, Integer>();
-        this.smilesMap = ArrayListMultimap.create();
-        this.levelMap = ArrayListMultimap.create();
-        this.smilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
-        this.nodeCounter = 0;
+        this(new SmilesGenerator(SmiFlavor.Unique));
     }
 
     /**
@@ -354,8 +349,11 @@ public class ScaffoldTree {
      *
      * The new tree is simply taken over if the existing tree is empty.
      * If there is no match between the two trees, false is returned and the old tree is not changed.
+     *
+     * If a molecule does not generate a SchuffenhauerScaffold, it is stored as a node with empty SMILES and is treated normally.
+     * All other empty nodes are then added to this tree accordingly.
      * @param aScaffoldTree tree to be inserted into the existing ScaffoldTree.
-     * @return false if the new tree cannot be inserted because the two trees have no common nodes.
+     * @return false if the new tree has nodes and cannot be inserted because the two trees have no common nodes.
      * @throws CDKException In case of a problem with the SmilesGenerator
      */
     public boolean mergeTree(ScaffoldTree aScaffoldTree) throws CDKException {
@@ -369,7 +367,6 @@ public class ScaffoldTree {
         }
         /*If the old Scaffold tree is not empty*/
         else {
-            SmilesGenerator tmpGenerator = new SmilesGenerator(SmiFlavor.Unique);
             boolean tmpAreTreesOverlapping = true;
             /*Go through each level of the tree starting at the root*/
             for(int i = 0; i <= aScaffoldTree.getMaxLevel(); i++) {
@@ -378,8 +375,8 @@ public class ScaffoldTree {
                 for(TreeNode tmpOldTreeNode : this.getAllNodesOnLevel(i)) {
                     for(TreeNode tmpNewTreeNode : aScaffoldTree.getAllNodesOnLevel(i)) {
                         /*Generate the corresponding SMILES of the molecules*/
-                        String tmpOldSmiles = tmpGenerator.create((IAtomContainer) tmpOldTreeNode.getMolecule());
-                        String tmpNewSmiles = tmpGenerator.create((IAtomContainer) tmpNewTreeNode.getMolecule());
+                        String tmpOldSmiles = this.smilesGenerator.create((IAtomContainer) tmpOldTreeNode.getMolecule());
+                        String tmpNewSmiles = this.smilesGenerator.create((IAtomContainer) tmpNewTreeNode.getMolecule());
                         /*Check whether a fragment occurs in both trees*/
                         if(tmpOldSmiles.equals(tmpNewSmiles)) {
                             /*Add the origin smiles to the OldSmilesTree fragment*/
