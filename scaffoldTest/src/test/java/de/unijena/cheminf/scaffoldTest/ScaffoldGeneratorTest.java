@@ -541,7 +541,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
      */
     @Ignore
     @Test
-    public void graphStreamTest() throws Exception {
+    public void graphStreamTreeTest() throws Exception {
         String tmpFileName = "Test11" ;
         //Load molecule from molfile
         IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -550,7 +550,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         ScaffoldTree tmpScaffoldTree = tmpScaffoldGenerator.getRemovalTree(tmpMolecule);
         /*Remove some nodes*/
         //tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(24));
-        //tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(22));
+        tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(10));
         //tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(23));
         /*Create a graph from the ScaffoldTree*/
         Graph tmpGraph = new SingleGraph("TestGraph");
@@ -582,6 +582,86 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             /*Add edges*/
             for(int tmpCol = 0; tmpCol < tmpMatrix[tmpRow].length; tmpCol++) { //Go through each column of the row
                 if(tmpRow < tmpCol) { //Skip a diagonal half to get edges in one direction only.
+                    continue;
+                }
+                if(tmpMatrix[tmpRow][tmpCol] == 1) { //Insert an edge if there is a 1 in it
+                    tmpGraph.addEdge("Edge" + tmpEdgeCount, tmpRow, tmpCol);
+                    tmpEdgeCount++;
+                }
+            }
+        }
+        /*Display graph*/
+        //tmpGraph.setAttribute("ui.stylesheet", "node {size-mode: fit; padding: 40, 40;}");
+        System.setProperty("org.graphstream.ui", "swing");
+        tmpGraph.display();
+        TimeUnit.SECONDS.sleep(300);
+    }
+
+    /**
+     * Creates a ScaffoldNetwork from a V2000 or V3000 mol file and displays it as a network with GraphStream.
+     * @throws Exception if anything goes wrong
+     */
+    @Ignore
+    @Test
+    public void graphStreamNetworkTest() throws Exception {
+        String tmpFileName = "Test11" ;
+        //Load molecule from molfile
+        IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
+        //Generate a tree of molecules with iteratively removed terminal rings
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.getRemovalNetwork(tmpMolecule);
+        /*Remove some nodes. Nodes can be removed from the non-root end.
+        If nodes are removed in the middle of the tree, it cannot be displayed with Graphstream.*/
+        System.out.println(tmpScaffoldNetwork.getAllNodes().size());
+        //tmpScaffoldNetwork.removeNode(tmpScaffoldNetwork.getMatrixNode(0));
+        //tmpScaffoldNetwork.removeNode(tmpScaffoldNetwork.getMatrixNode(1));
+        System.out.println(tmpScaffoldNetwork.getAllNodes().size());
+        /*Create a graph from the ScaffoldNetwork*/
+        Graph tmpGraph = new SingleGraph("TestGraph");
+        tmpGraph.setAttribute("ui.stylesheet", "node { size: 500px, 500px; }");
+        tmpGraph.setAttribute("ui.stylesheet", "node {shape: rounded-box; size-mode: fit; padding: 60px;}");
+        System.setProperty("org.graphstream.ui", "swing");
+        System.out.println("Root size: " + tmpScaffoldNetwork.getRoots().size());
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
+        for(NetworkNode tmpTestNode : tmpScaffoldNetwork.getAllNodes()) {
+            IAtomContainer tmpTestMolecule = (IAtomContainer) tmpTestNode.getMolecule();
+            System.out.println("--- Node: " + tmpSmilesGenerator.create(tmpTestMolecule) + " ---");
+            System.out.println("Node on LvL: " + tmpTestNode.getLevel());
+            System.out.println("Children Number: " + tmpTestNode.getChildren().size());
+            System.out.println("Origin" +tmpTestNode.getOriginSmilesList().get(0) + "Size" + tmpTestNode.getOriginSmilesList().size());
+            for(Object tmpChildObject : tmpTestNode.getChildren()) {
+                NetworkNode tmpChildNode = (NetworkNode) tmpChildObject;
+                IAtomContainer tmpChildMolecule = (IAtomContainer) tmpChildNode.getMolecule();
+                System.out.println("Child: " + tmpSmilesGenerator.create(tmpChildMolecule));
+            }
+        }
+        //System.out.println(tmpSmilesGenerator.create((IAtomContainer) tmpScaffoldNetwork.getRoots().get(1).getMolecule()));
+        //System.out.println(tmpScaffoldNetwork.getRoots().get(1).getChildren().size());
+        /*Add edges and nodes*/
+        int tmpEdgeCount = 0;
+        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+        Integer[][] tmpMatrix = tmpScaffoldNetwork.getNetworkAsMatrix(); //Create the adjacency matrix
+        for(int tmpRow = 0; tmpRow < tmpMatrix.length; tmpRow++) { //Create a node for each row
+            /*Add the ScaffoldNetwork nodes to the graph*/
+            tmpGraph.addNode(String.valueOf(tmpRow));
+            Node tmpNode = tmpGraph.getNode(String.valueOf(tmpRow));
+            tmpNode.setAttribute("Node", tmpScaffoldNetwork.getMatrixNode(tmpRow));
+            /*Add a label to each node that corresponds to the position in the matrix*/
+            tmpNode.setAttribute("ui.label", tmpScaffoldNetwork.getMatrixNodesNumbers().get(tmpRow));
+            /*Add the images*/
+            NetworkNode tmpNetworkNode =  tmpScaffoldNetwork.getMatrixNode(tmpScaffoldNetwork.getMatrixNodesNumbers().get(tmpRow));
+            IAtomContainer tmpTreeNodeMolecule = (IAtomContainer) tmpNetworkNode.getMolecule();
+            BufferedImage tmpNodeImg = tmpGenerator.withSize(512,512).depict(tmpTreeNodeMolecule).toImg();
+            //The images are stored temporarily, as I have not found a way to use them directly
+            new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png").mkdirs();
+            File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png");
+            ImageIO.write(tmpNodeImg, "png", tmpSecOutputRemove);
+            //set the images
+            tmpNode.setAttribute("ui.style", "fill-mode: image-scaled-ratio-max;" + "fill-image: url('GraphStream" + tmpRow + ".png');");
+            //tmpNode.setAttribute("ui.stylesheet", "padding: 40, 10;");
+            /*Add edges*/
+            for(int tmpCol = 0; tmpCol < tmpMatrix[tmpRow].length; tmpCol++) { //Go through each column of the row
+                if(tmpRow < tmpCol) { //Skip a diagonal half to get edges in one direction only
                     continue;
                 }
                 if(tmpMatrix[tmpRow][tmpCol] == 1) { //Insert an edge if there is a 1 in it
