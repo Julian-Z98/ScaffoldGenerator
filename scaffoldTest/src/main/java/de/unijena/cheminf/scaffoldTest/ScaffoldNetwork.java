@@ -94,8 +94,14 @@ public class ScaffoldNetwork {
         IAtomContainer tmpMolecule = (IAtomContainer) aNode.getMolecule();
         String tmpSmiles = this.smilesGenerator.create(tmpMolecule); //Convert molecule to SMILES
         this.smilesMap.put(tmpSmiles, aNode);
-        //Add to levelMap
+        /*Since the network is built from the leaves to the root,
+         the levels of all nodes in the network must be re-determined for every node added.*/
         this.levelMap.put(aNode.getLevel(), aNode);
+        ListMultimap<Integer, NetworkNode> tmpLevelMap = ArrayListMultimap.create();
+        for(NetworkNode tmpNode : this.getAllNodes()) {
+            tmpLevelMap.put(tmpNode.getLevel(), tmpNode);
+        }
+        this.levelMap = tmpLevelMap;
         //Increase nodeCounter
         this.nodeCounter++;
         return this.getNetworkNode((IAtomContainer) aNode.getMolecule());
@@ -288,10 +294,10 @@ public class ScaffoldNetwork {
     /**
      * Adds another ScaffoldNetwork to the existing one if possible.
      * The new network is inserted at the node that both networks have in common.
-     * All children of the new network at this node are taken over if they do not already exist.
+     * All children of the new network at this node and there linkages are taken over if they do not already exist.
      *
      * The new network is simply taken over if the existing network is empty.
-     * If there is no match between the two networks, false is returned and the old network is not changed.
+     * If there is no match between the two networks the new network is inserted without linkages.
      *
      * If a molecule does not generate a SchuffenhauerScaffold, it is stored as a node with empty SMILES and is treated normally.
      * All other empty nodes are then added to this network accordingly.
@@ -299,21 +305,20 @@ public class ScaffoldNetwork {
      * @return false if the new network has nodes and cannot be inserted because the two networks have no common nodes.
      * @throws CDKException In case of a problem with the SmilesGenerator
      */
-    public boolean mergeNetwork(ScaffoldNetwork aScaffoldNetwork) throws CDKException {
+    public void mergeNetwork(ScaffoldNetwork aScaffoldNetwork) throws CDKException {
         /*If the old ScaffoldNetwork is empty, transfer the new ScaffoldNetwork to be added.*/
         if(this.getRoots().isEmpty()) {
             for(Object tmpNode : aScaffoldNetwork.getAllNodes()) {
                 this.addNode((NetworkNode) tmpNode);
             }
-            /*The new network was inserted*/
-            return true;
         }
         /*If the old Scaffold network is not empty*/
         else {
-            boolean tmpAreNetworksOverlapping = true;
+            int tmpMaxNodeNumber = aScaffoldNetwork.getAllNodes().size();
+            ArrayList<NetworkNode> tmpNodesToAdd = new ArrayList(tmpMaxNodeNumber);
+            ArrayList<IAtomContainer> tmpMoleculeList = new ArrayList(tmpMaxNodeNumber);
             /*Go through each level of the network starting at the root*/
             for(int i = 0; i <= aScaffoldNetwork.getMaxLevel(); i++) {
-                tmpAreNetworksOverlapping = false;
                 /*Compare all nodes of the old network on this level with all nodes of the new network on this level*/
                 for(NetworkNode tmpOldNetworkNode : this.getAllNodesOnLevel(i)) {
                     for(Object tmpNewNetworkObject : aScaffoldNetwork.getAllNodesOnLevel(i)) {
@@ -327,36 +332,46 @@ public class ScaffoldNetwork {
                             for(Object tmpOriginSmiles : tmpNewNetworkNode.getOriginSmilesList()) {
                                 tmpOldNetworkNode.addOriginSmiles((String) tmpOriginSmiles);
                             }
-                            /*Networks are overlapping if a fragment occurs in both networks*/
-                            tmpAreNetworksOverlapping = true;
-                            /*Get the children of the overlapping node*/
+                            /*Networks are overlapping if a fragment occurs in both networks
+                            Get the children of the overlapping node*/
                             for(Object tmpNewChild : tmpNewNetworkNode.getChildren()) {
                                 NetworkNode tmpNewChildNode = (NetworkNode) tmpNewChild;
                                 IAtomContainer tmpNewChildMolecule = (IAtomContainer) tmpNewChildNode.getMolecule();
                                 /*Add the child if it is not already in the network*/
                                 if(!this.isMoleculeInNetwork(tmpNewChildMolecule)) {
-                                    int tmpChildrenNumber = tmpOldNetworkNode.getChildren().size();
-                                    tmpOldNetworkNode.addChild(tmpNewChildMolecule);
-                                    NetworkNode tmpAddedNode = (NetworkNode) tmpOldNetworkNode.getChildren().get(tmpChildrenNumber);
-                                    this.addNode(tmpAddedNode);
+                                    NetworkNode tmpNewNode = new NetworkNode<>(tmpNewChildMolecule);
+                                    tmpNewNode.addParent(tmpOldNetworkNode);
+                                    tmpMoleculeList.add(tmpNewChildMolecule);
+                                    this.addNode(tmpNewNode);
                                 }
                             }
+                        } else { /*Node is not in network*/
+                            /*Add node to lists so that it is added to the network later*/
+                            tmpNodesToAdd.add(tmpNewNetworkNode);
+                            tmpMoleculeList.add((IAtomContainer) tmpNewNetworkNode.getMolecule());
                         }
+
                     }
                 }
-                /*If there were no overlaps, there is no need to continue the search, as there will be no more in the future*/
-                if(!tmpAreNetworksOverlapping) {
-                    /*If there was already no overlap at the root, the new network could not be inserted*/
-                    if(i == 0) {
-                        /*The new network was not inserted*/
-                        return false;
+            }
+            /*Add the nodes of the new network that are not yet in the whole network*/
+            for(NetworkNode tmpNode : tmpNodesToAdd) {
+                if(!this.isMoleculeInNetwork((IAtomContainer) tmpNode.getMolecule())) {
+                    NetworkNode tmpNewNode = new NetworkNode<>((IAtomContainer) tmpNode.getMolecule());
+                    this.addNode(tmpNewNode);
+                }
+            }
+            /*Add the matching parents to the newly added nodes. Childs are automatically set when the parents are set.*/
+            for(IAtomContainer tmpMolecule : tmpMoleculeList) {
+                ArrayList<NetworkNode> tmpParentList = (ArrayList<NetworkNode>) aScaffoldNetwork.getNetworkNode(tmpMolecule).getParents();
+                for(NetworkNode tmpParentNode : tmpParentList) {
+                    /*Only molecules that are in the network*/
+                    if(this.isMoleculeInNetwork((IAtomContainer) tmpParentNode.getMolecule())) {
+                        NetworkNode tmpOldParentNode = this.getNetworkNode((IAtomContainer) tmpParentNode.getMolecule());
+                        this.getNetworkNode(tmpMolecule).addParent(tmpOldParentNode);
                     }
-                    /*End the search*/
-                    break;
                 }
             }
         }
-        /*The new network was inserted*/
-        return true;
     }
 }
