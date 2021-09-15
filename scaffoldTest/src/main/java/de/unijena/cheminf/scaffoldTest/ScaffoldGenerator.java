@@ -523,6 +523,93 @@ public class ScaffoldGenerator {
     }
 
     /**
+     * Iteratively removes the terminal rings. All resulting Scaffold are saved in a ScaffoldNetwork.
+     * A new level is created when the total number of rings decreases by 1.
+     * Level 0 is the one with the fewest (mostly 1) rings and therefore the root.
+     *
+     * Duplicates are permitted.
+     * Duplicates are not given their own node, but a link created to the existing related node.
+     * In this way, a child can have several parents.
+     *
+     * If a molecule does not generate a SchuffenhauerScaffold, it is stored as a node with empty SMILES and is treated normally.
+     * @param aMolecule Molecule to be disassembled.
+     * @return ScaffoldNetwork with all resulting Scaffold.
+     * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
+     * @throws CloneNotSupportedException if cloning is not possible.
+     */
+    public ScaffoldNetwork getRemovalNetwork(IAtomContainer aMolecule) throws CDKException, CloneNotSupportedException {
+        Objects.requireNonNull(aMolecule, "Input molecule must be non null");
+        ScaffoldNetwork tmpScaffoldNetwork = new ScaffoldNetwork(this.getSmilesGenerator());
+        IAtomContainer tmpScaffoldOriginal = this.getScaffoldInternal(aMolecule, true, this.aromaticityModelSetting);
+        int tmpRingCount = this.getRings(tmpScaffoldOriginal, true).size();
+        //List of all fragments already created and size estimated on the basis of an empirical value
+        List<IAtomContainer> tmpIterativeRemovalList = new ArrayList<>(tmpRingCount * 45);
+        tmpIterativeRemovalList.add(tmpScaffoldOriginal); //Add origin Scaffold
+        /*Add the first node to the tree*/
+        NetworkNode tmpFirstNode = new NetworkNode<>(tmpScaffoldOriginal);
+        tmpScaffoldNetwork.addNode(tmpFirstNode);
+        /*Get the origin and link it to the first node*/
+        String tmpFirstNodeSmiles = this.getSmilesGenerator().create(aMolecule);
+        tmpFirstNode.addOriginSmiles(tmpFirstNodeSmiles);
+        /*Go through all fragments created by iterative removal*/
+        for (int tmpCounter = 0; tmpCounter < tmpIterativeRemovalList.size(); tmpCounter++) {
+            IAtomContainer tmpIterMol = tmpIterativeRemovalList.get(tmpCounter); //Take the next molecule from the list
+            List<IAtomContainer> tmpAllRingsList = this.getRings(tmpIterMol, true);
+            int tmpRingSize = tmpAllRingsList.size();
+            /*Go though all rings of the fragment*/
+            for (IAtomContainer tmpRing : tmpAllRingsList) {
+                /*Skip molecule if it has less than 2 rings*/
+                if (tmpRingSize < 2) {
+                    continue;
+                }
+                /*Consider all removable terminal rings*/
+                if (this.isRingTerminal(tmpIterMol, tmpRing) && this.isRingRemovable(tmpRing, tmpAllRingsList, tmpIterMol)) {
+                    //Remove next ring
+                    IAtomContainer tmpRingRemoved = this.getScaffoldInternal(this.removeRing(tmpIterMol, tmpRing), false, null);
+                    /*The node is not yet in the network and must therefore still be added.*/
+                    if(!tmpScaffoldNetwork.isMoleculeInNetwork(tmpRingRemoved)) {
+                        tmpIterativeRemovalList.add(tmpRingRemoved);
+                        //Create new node
+                        NetworkNode tmpNewNode = new NetworkNode<>(tmpRingRemoved);
+                        //Add the new node as parent for the old one
+                        tmpScaffoldNetwork.getNetworkNode(tmpIterMol).addParent(tmpNewNode);
+                        //Add Origin
+                        tmpNewNode.addOriginSmiles(tmpFirstNodeSmiles);
+                        //Add new child of the node
+                        //tmpNewNode.addChild(tmpScaffoldNetwork.getNetworkNode(tmpIterMol).getMolecule());
+                        //Add new node to the tree
+                        tmpScaffoldNetwork.addNode(tmpNewNode);
+                        /*The node is already in the network*/
+                    }   else {
+                        /*Node with the same molecule already in the tree*/
+                        NetworkNode tmpOldNode = tmpScaffoldNetwork.getNetworkNode(tmpRingRemoved);
+                        //Add parent
+                        NetworkNode tmpNewNode = tmpScaffoldNetwork.getNetworkNode(tmpIterMol);
+                        tmpNewNode.addParent(tmpOldNode);
+                        /*Add children*/
+                        for (Object tmpParentObject : tmpNewNode.getParents()) {
+                            boolean tmpIsChildrenAlreadySet = false;
+                            NetworkNode tmpParentNode = (NetworkNode) tmpParentObject;
+                            for(Object tmpChildObject : tmpParentNode.getChildren()) {
+                                NetworkNode tmpChildNode = (NetworkNode) tmpChildObject;
+                                /*Is children already set*/
+                                if(getSmilesGenerator().create((IAtomContainer) tmpChildNode.getMolecule()).equals(getSmilesGenerator().create((IAtomContainer) tmpScaffoldNetwork.getNetworkNode(tmpIterMol).getMolecule()))) {
+                                    tmpIsChildrenAlreadySet = true;
+                                }
+                            }
+                            /*Do not add children already set*/
+                            if(!tmpIsChildrenAlreadySet) {
+                                //tmpParentNode.addChild(tmpScaffoldNetwork.getNetworkNode(tmpIterMol).getMolecule());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return tmpScaffoldNetwork;
+    }
+
+    /**
      * Iteratively removes the rings of the molecule according to specific rules that are queried hierarchically.
      * Based on the rules from the "The Scaffold Tree" Paper by Schuffenhauer et al.
      * Rule 7 {@link ScaffoldGenerator#applySchuffenhauerRuleSeven(IAtomContainer, List)} is only applied
