@@ -18,9 +18,6 @@
 
 package de.unijena.cheminf.scaffoldTest;
 
-import org.openscience.cdk.smiles.SmiFlavor;
-import org.openscience.cdk.smiles.SmilesGenerator;
-
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -102,10 +99,6 @@ public class NetworkNode <MoleculeType> {
     public NetworkNode<MoleculeType> addChild(MoleculeType aMolecule) {
         Objects.requireNonNull(aMolecule, "Given molecule is 'null'");
         NetworkNode<MoleculeType> tmpChildNode = new NetworkNode<MoleculeType>(aMolecule);
-        //Test
-        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
-        //tmpChildNode.addParent(this);
-        //tmpChildNode.parents = this;
         this.children.add(tmpChildNode);
         return tmpChildNode;
     }
@@ -167,11 +160,22 @@ public class NetworkNode <MoleculeType> {
     }
 
     /**
-     * Add the parents node.
+     * Add the parents node and add this node as child to the parent node if not already done.
      * @param aParent parent that are added
      */
     public void addParent(NetworkNode<MoleculeType> aParent) {
         Objects.requireNonNull(aParent, "Given NetworkNode is 'null'");
+        /*Add child if not already added*/
+        boolean tmpIsAlreadyChild = false;
+        for(NetworkNode tmpNode : aParent.getChildren()) {
+            if(tmpNode.getMolecule() == this.getMolecule()){
+                tmpIsAlreadyChild = true;
+            }
+        }
+        if(tmpIsAlreadyChild == false) {
+            aParent.addChild(this.getMolecule());
+        }
+        //Add parent
         this.parents.add(aParent);
     }
 
