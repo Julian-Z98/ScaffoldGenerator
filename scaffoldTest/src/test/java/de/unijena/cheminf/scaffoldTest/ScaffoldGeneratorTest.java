@@ -635,8 +635,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
                 System.out.println("Child: " + tmpSmilesGenerator.create(tmpChildMolecule));
             }
         }
-        //System.out.println(tmpSmilesGenerator.create((IAtomContainer) tmpScaffoldNetwork.getRoots().get(1).getMolecule()));
-        //System.out.println(tmpScaffoldNetwork.getRoots().get(1).getChildren().size());
+        System.out.println("Max Lvl: " + tmpScaffoldNetwork.getMaxLevel());
         /*Add edges and nodes*/
         int tmpEdgeCount = 0;
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
@@ -672,6 +671,86 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         }
         /*Display graph*/
         //tmpGraph.setAttribute("ui.stylesheet", "node {size-mode: fit; padding: 40, 40;}");
+        System.setProperty("org.graphstream.ui", "swing");
+        tmpGraph.display();
+        TimeUnit.SECONDS.sleep(300);
+    }
+
+    /**
+     * Loads Figure 1 from the "Mining for Bioactive Scaffolds with Scaffold Networks"(2011) Paper by Varin et al.
+     * Creates the Scaffold Networks of Ondasetron, Alosetron or Ramosetron. The result is visualised with GraphStream.
+     * By selecting the corresponding lines, the molecule to be displayed can be chosen.
+     * @throws Exception if anything goes wrong
+     */
+    @Ignore
+    @Test
+    public void getFigure1NetworkTest() throws Exception {
+        //SMILES to IAtomContainer
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("CC1=NC=CN1CC2CCC3=C(C2=O)C4=CC=CC=C4N3C");//Ondasetron
+        IAtomContainer tmpMolecule2 = tmpParser.parseSmiles("CC1=C(N=CN1)CN2CCC3=C(C2=O)C4=CC=CC=C4N3C");//Alosetron
+        IAtomContainer tmpMolecule3 = tmpParser.parseSmiles("CN1C=C(C2=CC=CC=C21)C(=O)C3CCC4=C(C3)NC=N4");//Ramosetron
+        //Generate a Network of molecules with iteratively removed terminal rings
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        /*Uncomment the molecule to display it*/
+        ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.getRemovalNetwork(tmpMolecule1);//Ondasetron
+        //ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.getRemovalNetwork(tmpMolecule2);//Alosetron
+        //ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.getRemovalNetwork(tmpMolecule3);//Ramosetron
+        /*Print some further information*/
+        System.out.println("Root size: " + tmpScaffoldNetwork.getRoots().size());
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
+        for(NetworkNode tmpTestNode : tmpScaffoldNetwork.getAllNodes()) {
+            IAtomContainer tmpTestMolecule = (IAtomContainer) tmpTestNode.getMolecule();
+            System.out.println("--- Node: " + tmpSmilesGenerator.create(tmpTestMolecule) + " ---");
+            System.out.println("Node on LvL: " + tmpTestNode.getLevel());
+            System.out.println("Children Number: " + tmpTestNode.getChildren().size());
+            for(Object tmpOrigin : tmpTestNode.getOriginSmilesList()) {
+                System.out.println("Origin: " + tmpOrigin);
+            }
+            for(Object tmpChildObject : tmpTestNode.getChildren()) {
+                NetworkNode tmpChildNode = (NetworkNode) tmpChildObject;
+                IAtomContainer tmpChildMolecule = (IAtomContainer) tmpChildNode.getMolecule();
+                System.out.println("Child: " + tmpSmilesGenerator.create(tmpChildMolecule));
+            }
+        }
+        /*Create a graph from the ScaffoldNetwork*/
+        Graph tmpGraph = new SingleGraph("TestGraph");
+        tmpGraph.setAttribute("ui.stylesheet", "node { size: 512px, 512px; }");
+        tmpGraph.setAttribute("ui.stylesheet", "node {shape: rounded-box; size-mode: fit; padding: 60px;}");
+        System.setProperty("org.graphstream.ui", "swing");
+        /*Add edges and nodes*/
+        int tmpEdgeCount = 0;
+        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+        Integer[][] tmpMatrix = tmpScaffoldNetwork.getNetworkAsMatrix(); //Create the adjacency matrix
+        for(int tmpRow = 0; tmpRow < tmpMatrix.length; tmpRow++) { //Create a node for each row
+            /*Add the ScaffoldNetwork nodes to the graph*/
+            tmpGraph.addNode(String.valueOf(tmpRow));
+            Node tmpNode = tmpGraph.getNode(String.valueOf(tmpRow));
+            tmpNode.setAttribute("Node", tmpScaffoldNetwork.getMatrixNode(tmpRow));
+            /*Add a label to each node that corresponds to the position in the matrix*/
+            tmpNode.setAttribute("ui.label", tmpScaffoldNetwork.getMatrixNode(tmpRow).getLevel());
+            /*Add the images*/
+            NetworkNode tmpNetworkNode =  tmpScaffoldNetwork.getMatrixNode(tmpScaffoldNetwork.getMatrixNodesNumbers().get(tmpRow));
+            IAtomContainer tmpNetworkNodeMolecule = (IAtomContainer) tmpNetworkNode.getMolecule();
+            BufferedImage tmpNodeImg = tmpGenerator.withSize(512,512).depict(tmpNetworkNodeMolecule).toImg();
+            //The images are stored temporarily, as I have not found a way to use them directly
+            new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png").mkdirs();
+            File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png");
+            ImageIO.write(tmpNodeImg, "png", tmpSecOutputRemove);
+            //set the images
+            tmpNode.setAttribute("ui.style", "fill-mode: image-scaled-ratio-max;" + "fill-image: url('GraphStream" + tmpRow + ".png');");
+            /*Add edges*/
+            for(int tmpCol = 0; tmpCol < tmpMatrix[tmpRow].length; tmpCol++) { //Go through each column of the row
+                if(tmpRow < tmpCol) { //Skip a diagonal half to get edges in one direction only.
+                    continue;
+                }
+                if(tmpMatrix[tmpRow][tmpCol] == 1) { //Insert an edge if there is a 1 in it
+                    tmpGraph.addEdge("Edge" + tmpEdgeCount, tmpRow, tmpCol);
+                    tmpEdgeCount++;
+                }
+            }
+        }
+        /*Display graph*/
         System.setProperty("org.graphstream.ui", "swing");
         tmpGraph.display();
         TimeUnit.SECONDS.sleep(300);
@@ -744,6 +823,178 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             TreeNode tmpTreeNode =  tmpScaffoldTree.getMatrixNode(tmpScaffoldTree.getMatrixNodesNumbers().get(tmpRow));
             IAtomContainer tmpTreeNodeMolecule = (IAtomContainer) tmpTreeNode.getMolecule();
             BufferedImage tmpNodeImg = tmpGenerator.withSize(512,512).depict(tmpTreeNodeMolecule).toImg();
+            //The images are stored temporarily, as I have not found a way to use them directly
+            new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png").mkdirs();
+            File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png");
+            ImageIO.write(tmpNodeImg, "png", tmpSecOutputRemove);
+            //set the images
+            tmpNode.setAttribute("ui.style", "fill-mode: image-scaled-ratio-max;" + "fill-image: url('GraphStream" + tmpRow + ".png');");
+            /*Add edges*/
+            for(int tmpCol = 0; tmpCol < tmpMatrix[tmpRow].length; tmpCol++) { //Go through each column of the row
+                if(tmpRow < tmpCol) { //Skip a diagonal half to get edges in one direction only.
+                    continue;
+                }
+                if(tmpMatrix[tmpRow][tmpCol] == 1) { //Insert an edge if there is a 1 in it
+                    tmpGraph.addEdge("Edge" + tmpEdgeCount, tmpRow, tmpCol);
+                    tmpEdgeCount++;
+                }
+            }
+        }
+        /*Display graph*/
+        System.setProperty("org.graphstream.ui", "swing");
+        tmpGraph.display();
+        TimeUnit.SECONDS.sleep(300);
+    }
+
+    /**
+     * Creates different ScaffoldNetworks and merges them. The result is visualised with GraphStream.
+     * A network is added here that has no connection to the rest of the network.
+     * @throws Exception if anything goes wrong
+     */
+    @Ignore
+    @Test
+    public void mergeNetworkTest() throws Exception {
+        //SMILES to IAtomContainer
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        /*Generate IAtomContainer from SMILES*/
+        IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("C2NC1SCNN1N2");
+        IAtomContainer tmpMolecule2 = tmpParser.parseSmiles("c4ccc(C3NC2SC(c1ccccc1)NN2N3)cc4");
+        //Molecule without connection to the network
+        IAtomContainer tmpMolecule3 = tmpParser.parseSmiles("C3CC1CC1CC4CCC2CC2CC34");
+        IAtomContainer tmpMolecule4 = tmpParser.parseSmiles("c3ccc(C2NNC(c1ccccc1)N2)cc3");
+        //Generate a Network of molecules with iteratively removed terminal rings
+        /*Generate Networks*/
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.getRemovalNetwork(tmpMolecule1);
+        ScaffoldNetwork tmpScaffoldNetwork2 = tmpScaffoldGenerator.getRemovalNetwork(tmpMolecule2);
+        ScaffoldNetwork tmpScaffoldNetwork3 = tmpScaffoldGenerator.getRemovalNetwork(tmpMolecule3);
+        ScaffoldNetwork tmpScaffoldNetwork4 = tmpScaffoldGenerator.getRemovalNetwork(tmpMolecule4);
+        /*Merge Networks*/
+        tmpScaffoldNetwork.mergeNetwork(tmpScaffoldNetwork2);
+        tmpScaffoldNetwork.mergeNetwork(tmpScaffoldNetwork3);
+        tmpScaffoldNetwork.mergeNetwork(tmpScaffoldNetwork4);
+        /*Add edges and nodes*/
+        System.out.println("Root size: " + tmpScaffoldNetwork.getRoots().size());
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
+        for(NetworkNode tmpTestNode : tmpScaffoldNetwork.getAllNodes()) {
+            IAtomContainer tmpTestMolecule = (IAtomContainer) tmpTestNode.getMolecule();
+            System.out.println("--- Node: " + tmpSmilesGenerator.create(tmpTestMolecule) + " ---");
+            System.out.println("Node on LvL: " + tmpTestNode.getLevel());
+            System.out.println("Children Number: " + tmpTestNode.getChildren().size());
+            for(Object tmpOrigin : tmpTestNode.getOriginSmilesList()) {
+                System.out.println("Origin: " + tmpOrigin);
+            }
+            for(Object tmpChildObject : tmpTestNode.getChildren()) {
+                NetworkNode tmpChildNode = (NetworkNode) tmpChildObject;
+                IAtomContainer tmpChildMolecule = (IAtomContainer) tmpChildNode.getMolecule();
+                System.out.println("Child: " + tmpSmilesGenerator.create(tmpChildMolecule));
+            }
+        }
+        /*Create a graph from the ScaffoldNetwork*/
+        Graph tmpGraph = new SingleGraph("TestGraph");
+        tmpGraph.setAttribute("ui.stylesheet", "node { size: 512px, 512px; }");
+        tmpGraph.setAttribute("ui.stylesheet", "node {shape: rounded-box; size-mode: fit; padding: 60px;}");
+        System.setProperty("org.graphstream.ui", "swing");
+        /*Add edges and nodes*/
+        int tmpEdgeCount = 0;
+        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+        Integer[][] tmpMatrix = tmpScaffoldNetwork.getNetworkAsMatrix(); //Create the adjacency matrix
+        for(int tmpRow = 0; tmpRow < tmpMatrix.length; tmpRow++) { //Create a node for each row
+            /*Add the ScaffoldNetwork nodes to the graph*/
+            tmpGraph.addNode(String.valueOf(tmpRow));
+            Node tmpNode = tmpGraph.getNode(String.valueOf(tmpRow));
+            tmpNode.setAttribute("Node", tmpScaffoldNetwork.getMatrixNode(tmpRow));
+            /*Add a label to each node that corresponds to the position in the matrix*/
+            tmpNode.setAttribute("ui.label", tmpScaffoldNetwork.getMatrixNode(tmpRow).getLevel());
+            /*Add the images*/
+            NetworkNode tmpNetworkNode =  tmpScaffoldNetwork.getMatrixNode(tmpScaffoldNetwork.getMatrixNodesNumbers().get(tmpRow));
+            IAtomContainer tmpNetworkNodeMolecule = (IAtomContainer) tmpNetworkNode.getMolecule();
+            BufferedImage tmpNodeImg = tmpGenerator.withSize(512,512).depict(tmpNetworkNodeMolecule).toImg();
+            //The images are stored temporarily, as I have not found a way to use them directly
+            new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png").mkdirs();
+            File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png");
+            ImageIO.write(tmpNodeImg, "png", tmpSecOutputRemove);
+            //set the images
+            tmpNode.setAttribute("ui.style", "fill-mode: image-scaled-ratio-max;" + "fill-image: url('GraphStream" + tmpRow + ".png');");
+            /*Add edges*/
+            for(int tmpCol = 0; tmpCol < tmpMatrix[tmpRow].length; tmpCol++) { //Go through each column of the row
+                if(tmpRow < tmpCol) { //Skip a diagonal half to get edges in one direction only.
+                    continue;
+                }
+                if(tmpMatrix[tmpRow][tmpCol] == 1) { //Insert an edge if there is a 1 in it
+                    tmpGraph.addEdge("Edge" + tmpEdgeCount, tmpRow, tmpCol);
+                    tmpEdgeCount++;
+                }
+            }
+        }
+        /*Display graph*/
+        System.setProperty("org.graphstream.ui", "swing");
+        tmpGraph.display();
+        TimeUnit.SECONDS.sleep(300);
+    }
+
+    /**
+     * Creates the different ScaffoldNetworks from Figure 1 from the "Mining for Bioactive Scaffolds with Scaffold Networks"(2011) Paper
+     * by Varin et al. and merges them.
+     * The networks of Ondasetron and Alosetron are merged.
+     * The result is visualised with GraphStream.
+     * @throws Exception if anything goes wrong
+     */
+    @Ignore
+    @Test
+    public void mergeFigure1NetworksTest() throws Exception {
+        //SMILES to IAtomContainer
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("CC1=NC=CN1CC2CCC3=C(C2=O)C4=CC=CC=C4N3C");//Ondasetron
+        IAtomContainer tmpMolecule2 = tmpParser.parseSmiles("CC1=C(N=CN1)CN2CCC3=C(C2=O)C4=CC=CC=C4N3C");//Alosetron
+        IAtomContainer tmpMolecule3 = tmpParser.parseSmiles("CN1C=C(C2=CC=CC=C21)C(=O)C3CCC4=C(C3)NC=N4");//Ramosetron
+        /*Generate a network of molecules with iteratively removed terminal rings*/
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.getRemovalNetwork(tmpMolecule1);
+        ScaffoldNetwork tmpScaffoldNetwork2 = tmpScaffoldGenerator.getRemovalNetwork(tmpMolecule2);
+        ScaffoldNetwork tmpScaffoldNetwork3 = tmpScaffoldGenerator.getRemovalNetwork(tmpMolecule3);
+        /*Merge the networks*/
+        tmpScaffoldNetwork.mergeNetwork(tmpScaffoldNetwork2);
+        //Uncomment if ramosetron should also be added to the network
+        //tmpScaffoldNetwork.mergeNetwork(tmpScaffoldNetwork3);//Ramosetron
+        /*Print some further information*/
+        System.out.println("Root size: " + tmpScaffoldNetwork.getRoots().size());
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
+        for(NetworkNode tmpTestNode : tmpScaffoldNetwork.getAllNodes()) {
+            IAtomContainer tmpTestMolecule = (IAtomContainer) tmpTestNode.getMolecule();
+            System.out.println("--- Node: " + tmpSmilesGenerator.create(tmpTestMolecule) + " ---");
+            System.out.println("Node on LvL: " + tmpTestNode.getLevel());
+            System.out.println("Children Number: " + tmpTestNode.getChildren().size());
+            for(Object tmpOrigin : tmpTestNode.getOriginSmilesList()) {
+                System.out.println("Origin: " + tmpOrigin);
+            }
+            for(Object tmpChildObject : tmpTestNode.getChildren()) {
+                NetworkNode tmpChildNode = (NetworkNode) tmpChildObject;
+                IAtomContainer tmpChildMolecule = (IAtomContainer) tmpChildNode.getMolecule();
+                System.out.println("Child: " + tmpSmilesGenerator.create(tmpChildMolecule));
+            }
+        }
+        /*Create a graph from the ScaffoldNetwork*/
+        Graph tmpGraph = new SingleGraph("TestGraph");
+        tmpGraph.setAttribute("ui.stylesheet", "node { size: 512px, 512px; }");
+        tmpGraph.setAttribute("ui.stylesheet", "node {shape: rounded-box; size-mode: fit; padding: 60px;}");
+        System.setProperty("org.graphstream.ui", "swing");
+        /*Add edges and nodes*/
+        int tmpEdgeCount = 0;
+        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+        Integer[][] tmpMatrix = tmpScaffoldNetwork.getNetworkAsMatrix(); //Create the adjacency matrix
+        for(int tmpRow = 0; tmpRow < tmpMatrix.length; tmpRow++) { //Create a node for each row
+            /*Add the ScaffoldNetwork nodes to the graph*/
+            tmpGraph.addNode(String.valueOf(tmpRow));
+            Node tmpNode = tmpGraph.getNode(String.valueOf(tmpRow));
+            tmpNode.setAttribute("Node", tmpScaffoldNetwork.getMatrixNode(tmpRow));
+            /*Add a label to each node that corresponds to the position in the matrix*/
+            //tmpNode.setAttribute("ui.label", tmpScaffoldNetwork.getMatrixNodesNumbers().get(tmpRow));
+            tmpNode.setAttribute("ui.label", tmpScaffoldNetwork.getMatrixNode(tmpRow).getLevel());
+            /*Add the images*/
+            NetworkNode tmpNetworkNode =  tmpScaffoldNetwork.getMatrixNode(tmpScaffoldNetwork.getMatrixNodesNumbers().get(tmpRow));
+            IAtomContainer tmpNetworkNodeMolecule = (IAtomContainer) tmpNetworkNode.getMolecule();
+            BufferedImage tmpNodeImg = tmpGenerator.withSize(512,512).depict(tmpNetworkNodeMolecule).toImg();
             //The images are stored temporarily, as I have not found a way to use them directly
             new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png").mkdirs();
             File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png");
@@ -3195,7 +3446,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
     @Ignore
     @Test
     public void calculateSchuffenhauerSpeedTest() throws Exception {
-        this.ScaffoldGeneratorSpeedTest(true, false, false, false, true, 4242);
+        this.ScaffoldGeneratorSpeedTest(true, false, false, false, false, true, 4242);
     }
 
     /**
@@ -3206,7 +3457,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
     @Ignore
     @Test
     public void calculateRingsSpeedTest() throws Exception {
-        this.ScaffoldGeneratorSpeedTest(false, true, false, false, true, 4242);
+        this.ScaffoldGeneratorSpeedTest(false, true, false, false, false, true, 4242);
     }
 
     /**
@@ -3220,7 +3471,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
     @Ignore
     @Test
     public void calculateRemoveRingsSpeedTest() throws Exception {
-        this.ScaffoldGeneratorSpeedTest(false, false, true, false, true, 4242);
+        this.ScaffoldGeneratorSpeedTest(false, false, true, false, false, true, 4242);
     }
 
     /**
@@ -3234,7 +3485,20 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
     @Ignore
     @Test
     public void calculateApplySchuffenhauerRulesSpeedTest() throws Exception {
-        this.ScaffoldGeneratorSpeedTest(false, false, false, true, true, 4242);
+        this.ScaffoldGeneratorSpeedTest(false, false, false, true, false, true, 4242);
+    }
+
+    /**
+     * Speed test for the getRemovalNetworkRules Method with over 400000 molecules from the COCONUT DB.
+     * Skips all molecules with more than 1000 rings.
+     * In this case, these are the molecules with the COCONUT IDs: CNP0022608, CNP0029543, CNP0065312 and CNP0103752.
+     * Runtime
+     * @throws Exception if anything goes wrong
+     */
+    @Ignore
+    @Test
+    public void calculateGetRemovalNetworkSpeedTest() throws Exception {
+        this.ScaffoldGeneratorSpeedTest(false, false, false, true, false, true, 4242);
     }
 
     /**
@@ -3250,7 +3514,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
      * @throws Exception if anything goes wrong
      */
     private void ScaffoldGeneratorSpeedTest(boolean anIsSchuffenhauerScaffoldCalculated, boolean anIsRingCalculated, boolean anIsRemoveRingCalculated,
-                                            boolean anIsApplySchuffenhauerCalculated, boolean anIsPictureCreated, int aPictureNumber) throws Exception {
+                                            boolean anIsApplySchuffenhauerCalculated, boolean anIsGetRemovalNetworkCalculated, boolean anIsPictureCreated, int aPictureNumber) throws Exception {
         /*Counter*/
         int tmpExceptionCounter = 0;
         int tmpNumberCounter = 0;
@@ -3381,7 +3645,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
                 }
 
                 /*Calculate a list of molecules with iteratively removed terminal rings*/
-                if(anIsApplySchuffenhauerCalculated == true) {
+                if(anIsApplySchuffenhauerCalculated == true && anIsGetRemovalNetworkCalculated == false) {
                     /*Skip molecules with to many rings if needed*/
                     ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
                     if(tmpScaffoldGenerator.getRings(tmpScaffoldGenerator.getScaffold(tmpMolecule),false).size() > 100) {
@@ -3435,6 +3699,20 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
                         ImageIO.write(tmpImgMod, "png" ,tmpOutputMod);
                         System.out.println("Conspicuous: " + tmpCoconutID);
                         tmpFusedRingCounter++;
+                    }
+                }
+                if(anIsGetRemovalNetworkCalculated = true) {
+                    /*Skip molecules with to many rings if needed*/
+                    ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+                    if(tmpScaffoldGenerator.getRings(tmpScaffoldGenerator.getScaffold(tmpMolecule),false).size() > 10) {
+                        tmpSkipCounter++;
+                        System.out.println("Molecule skipped: " + tmpCoconutID);
+                        continue;
+                    }
+                    ScaffoldNetwork tmpNetwork = tmpScaffoldGenerator.getRemovalNetwork(tmpMolecule);
+                    if(tmpCounter == 10000){
+                        System.out.println("Root size: " + tmpNetwork.getRoots().size());
+                        System.out.println("Origin" + tmpNetwork.getRoots().get(0).getOriginSmilesList().get(0));
                     }
                 }
 
