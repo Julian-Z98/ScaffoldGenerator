@@ -16,19 +16,21 @@
  *
  */
 
+package de.unijena.cheminf.scaffolds;
 
-package de.unijena.cheminf.scaffoldTest;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
 
 /**
- * The TreeNodes are nodes from which a tree can be built.
+ * The NetworkNodes are nodes from which a Network can be built.
  * It is used to organise the IAtomContainers and enables a relationship between the different objects.
  * As MoleculeType, any data type can be defined. In our scenario, the nodes contain molecules.
  *
  * Inspired by: https://github.com/gt4dev/yet-another-tree-structure
  */
-public class TreeNode<MoleculeType> implements Iterable<TreeNode<MoleculeType>> {
+public class NetworkNode <MoleculeType> {
 
     /**
      * Molecule that can be stored in each node
@@ -44,26 +46,26 @@ public class TreeNode<MoleculeType> implements Iterable<TreeNode<MoleculeType>> 
     private ArrayList<String> OriginSmilesList;
 
     /**
-     * Parent of the node
+     * parents of the node
      */
-    private TreeNode<MoleculeType> parent;
+    private List<NetworkNode<MoleculeType>> parents;
 
     /**
-     * Child of the Node
+     * Children of the Node
      */
-    private List<TreeNode<MoleculeType>> children;
+    private List<NetworkNode<MoleculeType>> children;
 
     /**
      * List of indices of all elements
      */
-    private List<TreeNode<MoleculeType>> elementsIndex;
+    private List<NetworkNode<MoleculeType>> elementsIndex;
 
     /**
      * Shows if the node has parents
      * @return Whether the node has parents
      */
     public boolean isOrphan() {
-        return parent == null;
+        return parents.isEmpty();
     }
 
     /**
@@ -76,29 +78,28 @@ public class TreeNode<MoleculeType> implements Iterable<TreeNode<MoleculeType>> 
     }
 
     /**
-     * Creates a TreeNode
-     * @param aMolecule molecule of the TreeNode
+     * Creates a NetworkNode
+     * @param aMolecule molecule of the NetworkNode
      */
-    public TreeNode(MoleculeType aMolecule) {
+    public NetworkNode(MoleculeType aMolecule) {
         Objects.requireNonNull(aMolecule, "Given molecule is 'null'");
         this.molecule = aMolecule;
-        this.children = new LinkedList<TreeNode<MoleculeType>>();
+        this.parents =  new ArrayList<NetworkNode<MoleculeType>>();
+        this.children = new LinkedList<NetworkNode<MoleculeType>>();
         this.OriginSmilesList = new ArrayList<String>();
-        this.elementsIndex = new LinkedList<TreeNode<MoleculeType>>();
+        this.elementsIndex = new LinkedList<NetworkNode<MoleculeType>>();
         this.elementsIndex.add(this);
     }
 
     /**
-     * Adds a child to the TreeNode, i.e. links it to a TreeNode on the level below
+     * Adds a child to the NetworkNode, i.e. links it to a NetworkNode on the level below
      * @param aMolecule Molecule of the child leave
      * @return Node of the child leave
      */
-    public TreeNode<MoleculeType> addChild(MoleculeType aMolecule) {
+    public NetworkNode<MoleculeType> addChild(MoleculeType aMolecule) {
         Objects.requireNonNull(aMolecule, "Given molecule is 'null'");
-        TreeNode<MoleculeType> tmpChildNode = new TreeNode<MoleculeType>(aMolecule);
-        tmpChildNode.parent = this;
+        NetworkNode<MoleculeType> tmpChildNode = new NetworkNode<MoleculeType>(aMolecule);
         this.children.add(tmpChildNode);
-        this.registerChildForSearch(tmpChildNode);
         return tmpChildNode;
     }
 
@@ -113,52 +114,14 @@ public class TreeNode<MoleculeType> implements Iterable<TreeNode<MoleculeType>> 
         }
     }
     /**
-     * Outputs the level on which the node is located in the entire tree
-     * @return level of the node in the entire tree
+     * Outputs the level on which the node is located in the entire network
+     * @return level of the node in the entire network
      */
     public int getLevel() {
         if (this.isOrphan())
             return 0;
         else
-            return parent.getLevel() + 1;
-    }
-
-    /**
-     * Child is registered for the index search.
-     * The node can only be found with findTreeNode if it was previously registered in this way.
-     * @param aNode Node to be registered
-     */
-    private void registerChildForSearch(TreeNode<MoleculeType> aNode) {
-        Objects.requireNonNull(aNode, "Given Tree Node is 'null'");
-        elementsIndex.add(aNode);
-        if (parent != null)
-            parent.registerChildForSearch(aNode);
-    }
-
-    /**
-     * Find a specific TreeNode in the tree
-     * Node must have been previously registered via registerChildForSearch
-     * @param aCompMolecule Molecule on the basis of which the node is to be searched for
-     * @return Element of the searched TreeNode
-     */
-    public TreeNode<MoleculeType> findTreeNode(Comparable<MoleculeType> aCompMolecule) {
-        Objects.requireNonNull(aCompMolecule, "Given comparable Molecule is 'null'");
-        for (TreeNode<MoleculeType> tmpElement : this.elementsIndex) {
-            MoleculeType tmpMolecule = tmpElement.molecule;
-            if (aCompMolecule.compareTo(tmpMolecule) == 0)
-                return tmpElement;
-        }
-        return null;
-    }
-
-    /**
-     * Iterator to iterate through the entire tree
-     * @return the iterator
-     */
-    @Override
-    public Iterator<TreeNode<MoleculeType>> iterator() {
-        TreeNodeIter<MoleculeType> tmpIter = new TreeNodeIter<MoleculeType>(this);
-        return tmpIter;
+            return parents.get(0).getLevel() + 1;
     }
 
     //<editor-fold desc="get/set">
@@ -180,27 +143,47 @@ public class TreeNode<MoleculeType> implements Iterable<TreeNode<MoleculeType>> 
     }
 
     /**
-     * Get the parent node.
-     * @return parent node
+     * Get the parents node.
+     * @return parents node
      */
-    public TreeNode<MoleculeType> getParent() {
-        return this.parent;
+    public List<NetworkNode<MoleculeType>> getParents() {
+        return this.parents;
     }
 
     /**
-     * Set the parent node.
-     * @param aParent parent that are set
+     * Set the parents node.
+     * @param aParents parents that are set
      */
-    public void setParent(TreeNode<MoleculeType> aParent) {
-        Objects.requireNonNull(aParent, "Given TreeNode is 'null'");
-        this.parent = aParent;
+    public void setParents(List<NetworkNode<MoleculeType>> aParents) {
+        Objects.requireNonNull(aParents, "Given NetworkNode is 'null'");
+        this.parents = aParents;
+    }
+
+    /**
+     * Add the parents node and add this node as child to the parent node if not already done.
+     * @param aParent parent that are added
+     */
+    public void addParent(NetworkNode<MoleculeType> aParent) {
+        Objects.requireNonNull(aParent, "Given NetworkNode is 'null'");
+        /*Add child if not already added*/
+        boolean tmpIsAlreadyChild = false;
+        for(NetworkNode tmpNode : aParent.getChildren()) {
+            if(tmpNode.getMolecule() == this.getMolecule()){
+                tmpIsAlreadyChild = true;
+            }
+        }
+        if(tmpIsAlreadyChild == false) {
+            aParent.addChild(this.getMolecule());
+        }
+        //Add parent
+        this.parents.add(aParent);
     }
 
     /**
      * Get the children nodes.
      * @return children nodes
      */
-    public List<TreeNode<MoleculeType>> getChildren() {
+    public List<NetworkNode<MoleculeType>> getChildren() {
         return this.children;
     }
 
@@ -208,8 +191,8 @@ public class TreeNode<MoleculeType> implements Iterable<TreeNode<MoleculeType>> 
      * Set the children node.
      * @param aChildren children that are set
      */
-    public void setChildren(List<TreeNode<MoleculeType>> aChildren) {
-        Objects.requireNonNull(aChildren, "Given TreeNode List is 'null'");
+    public void setChildren(List<NetworkNode<MoleculeType>> aChildren) {
+        Objects.requireNonNull(aChildren, "Given NetworkNode List is 'null'");
         this.children = aChildren;
     }
 
@@ -229,5 +212,4 @@ public class TreeNode<MoleculeType> implements Iterable<TreeNode<MoleculeType>> 
         Objects.requireNonNull(aOriginSmilesList, "Given SMILES of the molecule List is 'null'");
         this.OriginSmilesList = aOriginSmilesList;
     }
-    //</editor-fold>
 }

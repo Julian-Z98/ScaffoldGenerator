@@ -16,7 +16,7 @@
  *
  */
 
-package de.unijena.cheminf.scaffoldTest;
+package de.unijena.cheminf.scaffolds;
 
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.aromaticity.Aromaticity;

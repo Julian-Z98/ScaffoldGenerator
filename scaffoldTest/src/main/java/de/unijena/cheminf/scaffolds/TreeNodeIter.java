@@ -16,7 +16,7 @@
  *
  */
 
-package de.unijena.cheminf.scaffoldTest;
+package de.unijena.cheminf.scaffolds;
 
 import java.util.Iterator;
 import java.util.Objects;

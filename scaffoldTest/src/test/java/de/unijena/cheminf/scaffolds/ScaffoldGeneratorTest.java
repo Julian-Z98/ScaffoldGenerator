@@ -16,7 +16,7 @@
  *
  */
 
-package de.unijena.cheminf.scaffoldTest;
+package de.unijena.cheminf.scaffolds;
 
 import org.junit.Ignore;
 import org.junit.Test;

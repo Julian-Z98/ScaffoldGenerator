@@ -16,7 +16,7 @@
  *
  */
 
-package de.unijena.cheminf.scaffoldTest;
+package de.unijena.cheminf.scaffolds;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
