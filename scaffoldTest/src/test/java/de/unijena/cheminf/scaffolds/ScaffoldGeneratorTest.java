@@ -550,8 +550,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(10));
         //tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(23));
         /*Display the tree*/
-        Utility tmpUtility = new Utility();
-        tmpUtility.displayTreeWithGraphStream(tmpScaffoldTree);
+        GraphStreamUtility.displayTreeWithGraphStream(tmpScaffoldTree);
     }
 
     /**
@@ -590,8 +589,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         }
         System.out.println("Max Lvl: " + tmpScaffoldNetwork.getMaxLevel());
         /*Display the network*/
-        Utility tmpUtility = new Utility();
-        tmpUtility.displayNetworkWithGraphStream(tmpScaffoldNetwork);
+        GraphStreamUtility.displayNetworkWithGraphStream(tmpScaffoldNetwork);
     }
 
     /**
@@ -632,8 +630,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             }
         }
         /*Display the network*/
-        Utility tmpUtility = new Utility();
-        tmpUtility.displayNetworkWithGraphStream(tmpScaffoldNetwork);
+        GraphStreamUtility.displayNetworkWithGraphStream(tmpScaffoldNetwork);
     }
 
     /**
@@ -684,8 +681,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
         System.out.println("I am Root: " + tmpSmilesGenerator.create(tmpRootMolecule));
         /*Display the tree*/
-        Utility tmpUtility = new Utility();
-        tmpUtility.displayTreeWithGraphStream(tmpScaffoldTree);
+        GraphStreamUtility.displayTreeWithGraphStream(tmpScaffoldTree);
     }
 
     /**
@@ -733,8 +729,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             }
         }
         /*Display the network*/
-        Utility tmpUtility = new Utility();
-        tmpUtility.displayNetworkWithGraphStream(tmpScaffoldNetwork);
+        GraphStreamUtility.displayNetworkWithGraphStream(tmpScaffoldNetwork);
     }
 
     /**
@@ -779,8 +774,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             }
         }
         /*Display the network*/
-        Utility tmpUtility = new Utility();
-        tmpUtility.displayNetworkWithGraphStream(tmpScaffoldNetwork);
+        GraphStreamUtility.displayNetworkWithGraphStream(tmpScaffoldNetwork);
     }
 
     /**
@@ -838,8 +832,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             }
         }
         /*Display the tree*/
-        Utility tmpUtility = new Utility();
-        tmpUtility.displayTreeWithGraphStream(tmpScaffoldTree);
+        GraphStreamUtility.displayTreeWithGraphStream(tmpScaffoldTree);
     }
 
     /**
@@ -893,8 +886,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
         System.out.println("I am Root: " + tmpSmilesGenerator.create(tmpRootMolecule));
         /*Display the tree*/
-        Utility tmpUtility = new Utility();
-        tmpUtility.displayTreeWithGraphStream(tmpScaffoldTree);
+        GraphStreamUtility.displayTreeWithGraphStream(tmpScaffoldTree);
     }
 
     /**
@@ -923,8 +915,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             System.out.println("Root:" + tmpSmilesGenerator.create((IAtomContainer) tmpTestTree.getRoot().getMolecule()));
         }
         /*Display the tree*/
-        Utility tmpUtility = new Utility();
-        tmpUtility.displayTreeWithGraphStream(tmpScaffoldTree);
+        GraphStreamUtility.displayTreeWithGraphStream(tmpScaffoldTree);
     }
 
     /**
@@ -967,8 +958,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             tmpCounter++;
         }
         /*Display the tree*/
-        Utility tmpUtility = new Utility();
-        tmpUtility.displayTreeWithGraphStream(tmpScaffoldTree);
+        GraphStreamUtility.displayTreeWithGraphStream(tmpScaffoldTree);
     }
     /**
      * @throws Exception if anything goes wrong
@@ -1003,8 +993,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             }
         }
         /*Display the tree*/
-        Utility tmpUtility = new Utility();
-        tmpUtility.displayTreeWithGraphStream(tmpScaffoldTree);
+        GraphStreamUtility.displayTreeWithGraphStream(tmpScaffoldTree);
     }
 
     /**
@@ -1057,8 +1046,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             tmpCounter++;
         }
         /*Display the tree*/
-        Utility tmpUtility = new Utility();
-        tmpUtility.displayTreeWithGraphStream(tmpScaffoldTree);
+        GraphStreamUtility.displayTreeWithGraphStream(tmpScaffoldTree);
     }
     //</editor-fold>
 

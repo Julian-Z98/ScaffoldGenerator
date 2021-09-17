@@ -32,13 +32,13 @@ import java.util.concurrent.TimeUnit;
 /**
  * Contains useful functions such as visualisation with Graphstream.
  */
-public class Utility {
+public final class GraphStreamUtility {
     /**
      * The tree is displayed in a window with GraphStream. The numbering of the nodes reflects the respective level.
      * @param aScaffoldTree displayed Tree
      * @throws Exception if anything goes wrong
      */
-    public void displayTreeWithGraphStream(ScaffoldTree aScaffoldTree) throws Exception {
+    public static void displayTreeWithGraphStream(ScaffoldTree aScaffoldTree) throws Exception {
         /*Create a graph from the ScaffoldTree*/
         Graph tmpGraph = new SingleGraph("TestGraph");
         tmpGraph.setAttribute("ui.stylesheet", "node { size: 500px, 500px; }");
@@ -91,7 +91,7 @@ public class Utility {
      * @param aScaffoldNetwork displayed Network
      * @throws Exception if anything goes wrong
      */
-    public void displayNetworkWithGraphStream(ScaffoldNetwork aScaffoldNetwork) throws Exception {
+    public static void displayNetworkWithGraphStream(ScaffoldNetwork aScaffoldNetwork) throws Exception {
         /*Create a graph from the ScaffoldNetwork*/
         Graph tmpGraph = new SingleGraph("TestGraph");
         tmpGraph.setAttribute("ui.stylesheet", "node { size: 500px, 500px; }");
