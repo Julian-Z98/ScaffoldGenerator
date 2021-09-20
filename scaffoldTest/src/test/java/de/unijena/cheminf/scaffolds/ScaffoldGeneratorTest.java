@@ -547,7 +547,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         ScaffoldTree tmpScaffoldTree = tmpScaffoldGenerator.getRemovalTree(tmpMolecule);
         /*Remove some nodes*/
         //tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(24));
-        tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(10));
+        //tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(10));
         //tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(23));
         /*Display the tree*/
         GraphStreamUtility.displayTreeWithGraphStream(tmpScaffoldTree);
