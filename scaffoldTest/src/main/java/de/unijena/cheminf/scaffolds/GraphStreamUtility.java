@@ -41,8 +41,7 @@ public final class GraphStreamUtility {
     public static void displayTreeWithGraphStream(ScaffoldTree aScaffoldTree) throws Exception {
         /*Create a graph from the ScaffoldTree*/
         Graph tmpGraph = new SingleGraph("TestGraph");
-        tmpGraph.setAttribute("ui.stylesheet", "node { size: 500px, 500px; }");
-        tmpGraph.setAttribute("ui.stylesheet", "node {shape: rounded-box; size-mode: fit; padding: 60px;}");
+        tmpGraph.setAttribute("ui.stylesheet", "node { shape: rounded-box; size-mode: fit; padding: 60px; } graph { shape: box; size-mode: fit; padding: 70px; }");
         tmpGraph.setAttribute("ui.quality");
         tmpGraph.setAttribute("ui.antialias");
         System.setProperty("org.graphstream.ui", "swing");
@@ -94,8 +93,7 @@ public final class GraphStreamUtility {
     public static void displayNetworkWithGraphStream(ScaffoldNetwork aScaffoldNetwork) throws Exception {
         /*Create a graph from the ScaffoldNetwork*/
         Graph tmpGraph = new SingleGraph("TestGraph");
-        tmpGraph.setAttribute("ui.stylesheet", "node { size: 500px, 500px; }");
-        tmpGraph.setAttribute("ui.stylesheet", "node {shape: rounded-box; size-mode: fit; padding: 60px;}");
+        tmpGraph.setAttribute("ui.stylesheet", "node { shape: rounded-box; size-mode: fit; padding: 60px; } graph { shape: box; size-mode: fit; padding: 70px; }");
         tmpGraph.setAttribute("ui.quality");
         tmpGraph.setAttribute("ui.antialias");
         System.setProperty("org.graphstream.ui", "swing");
