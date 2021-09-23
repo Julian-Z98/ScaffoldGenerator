@@ -52,13 +52,13 @@ public class ScaffoldGenerator {
          * Schuffenhauer scaffolds are generated. Based on the "The Scaffold Tree" Paper by Schuffenhauer et al. 2006.
          * The terminal side chains of the molecule are removed, but any atoms non-single bonded to linkers or rings are retained.
          */
-        SCHUFFENHAUER_FRAMEWORK(),
+        SCHUFFENHAUER_SCAFFOLD(),
 
         /**
          * Murcko scaffolds are generated. Based on the "The Properties of Known Drugs. 1. Molecular Frameworks" Paper by Bemis and Murcko 1996.
          * All terminal side chains are removed and only linkers and rings are retained.
          */
-        MURCKO_FRAGMENT(),
+        MURCKO_FRAMEWORK(),
         
         /**
          * Basic wire frames are generated based on the "Molecular Anatomy: a new multi‑dimensional hierarchical scaffold analysis tool"
@@ -138,7 +138,7 @@ public class ScaffoldGenerator {
      * Default setting for which scaffold mode should be used.
      * By default, ScaffoldModeOption.SCHUFFENHAUER_FRAMEWORK is used.
      */
-    public static final ScaffoldModeOption SCAFFOLD_MODE_OPTION_DEFAULT = ScaffoldModeOption.SCHUFFENHAUER_FRAMEWORK;
+    public static final ScaffoldModeOption SCAFFOLD_MODE_OPTION_DEFAULT = ScaffoldModeOption.SCHUFFENHAUER_SCAFFOLD;
     //</editor-fold>
 
     //<editor-fold desc="Private variables">
@@ -361,7 +361,7 @@ public class ScaffoldGenerator {
         /*Store non sinlge bonded atoms*/
         if(anIsKeepingNonSingleBonds == true) { //Only needed if non single bonded atoms are retained
             /*Generate the murckoFragment*/
-            IAtomContainer tmpMurckoFragment = this.murckoFragmenter.scaffold(tmpClonedMolecule);
+            IAtomContainer tmpMurckoFragment = this.getMurckoFragment(tmpClonedMolecule);
             /*Store the number of each Atom of the murckoFragment*/
             HashSet<Integer> tmpMurckoAtomNumbers = new HashSet<>(tmpClonedMolecule.getAtomCount(), 1);
             for (IAtom tmpMurckoAtom : tmpMurckoFragment.atoms()) {
@@ -426,6 +426,73 @@ public class ScaffoldGenerator {
             tmpCycles.add(tmpCycle); //Add rings to list
         }
         return tmpCycles;
+    }
+
+    /**
+     * Outputs all fragments that are not contained in the generated scaffold in contrast to the unchanged molecule.
+     * The scaffold is therefore subtracted from the original molecule and all remaining fragments are saturated with hydrogens.
+     *
+     * SideChains cannot be generated for ELEMENTAL_WIRE_FRAME, BECCARI_BASIC_FRAMEWORK and BECCARI_BASIC_WIRE_FRAME themselves.
+     * Their SideChains are identical to those of MURCKO_FRAMEWORK. Therefore, they can be used.
+     * @param aMolecule Molecule whose side chains are to be returned
+     * @return List of SideChains of the input molecule
+     * @throws CloneNotSupportedException if cloning is not possible.
+     * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present or problem with aromaticity.apply()
+     */
+    public List<IAtomContainer> getSideChains(IAtomContainer aMolecule) throws CloneNotSupportedException, CDKException {
+        IAtomContainer tmpClonedMolecule = aMolecule.clone();
+        List<IAtomContainer> tmpSideChainList = new ArrayList<>(tmpClonedMolecule.getAtomCount());
+        /*Mark each atom with ascending number*/
+        Integer tmpCounter = 0;
+        for(IAtom tmpAtom : tmpClonedMolecule.atoms()) {
+            tmpAtom.setProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY, tmpCounter);
+            tmpCounter++;
+        }
+        /*Generate scaffold*/
+        boolean tmpIsScaffoldModeChanged = false;
+        ScaffoldModeOption tmpSavedScaffoldMode = this.scaffoldModeSetting;
+        /*SideChains cannot be generated for ELEMENTAL_WIRE_FRAME, BECCARI_BASIC_FRAMEWORK and BECCARI_BASIC_WIRE_FRAME themselves.
+        Their SideChains are identical to those of MURCKO_FRAMEWORK. Therefore, they can be used.*/
+        if(this.scaffoldModeSetting == ScaffoldModeOption.ELEMENTAL_WIRE_FRAME || this.scaffoldModeSetting == ScaffoldModeOption.BECCARI_BASIC_FRAMEWORK
+                || this.scaffoldModeSetting == ScaffoldModeOption.BECCARI_BASIC_WIRE_FRAME) {
+            /*Change the ScaffoldModeOption for those scaffolds*/
+            tmpIsScaffoldModeChanged = true;
+            this.scaffoldModeSetting = ScaffoldModeOption.MURCKO_FRAMEWORK;
+        }
+        //Get scaffold
+        IAtomContainer tmpScaffold = this.getScaffoldInternal(tmpClonedMolecule.clone(), this.determineAromaticitySetting, this.aromaticityModelSetting);
+        /*Change the ScaffoldModeOption to the original if it was changed*/
+        if(tmpIsScaffoldModeChanged) {
+            this.scaffoldModeSetting = tmpSavedScaffoldMode;
+        }
+        /*Store the numbers of scaffold atoms in list*/
+        List<Integer> tmpRemovedNumberList = new ArrayList<>(tmpClonedMolecule.getAtomCount());
+        for(IAtom tmpAtom : tmpScaffold.atoms()) {
+            tmpRemovedNumberList.add(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
+        }
+        /*Remove all numbers of the scaffold from the origin molecule*/
+        for(Integer tmpNumber : tmpRemovedNumberList) {
+            for(IAtom tmpAtom : tmpClonedMolecule.atoms()) {
+                if(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY) == tmpNumber) {
+                    tmpClonedMolecule.removeAtom(tmpAtom);
+                    break;
+                }
+            }
+        }
+        //Save each unconnected fragment that remains as a separate AtomContainer
+        IAtomContainerSet tmpFragments = ConnectivityChecker.partitionIntoMolecules(tmpClonedMolecule);
+        /*Add fragments to the SideChain list*/
+        for(IAtomContainer tmpFragment : tmpFragments.atomContainers()) {
+            if(tmpFragment.getAtomCount() == 1 && tmpFragment.getAtom(0).getSymbol() == "H") {
+                //Skip single hydrogen
+                continue;
+            }
+            /*Add back hydrogens*/
+            AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpFragment);
+            CDKHydrogenAdder.getInstance(tmpFragment.getBuilder()).addImplicitHydrogens(tmpFragment);
+            tmpSideChainList.add(tmpFragment);
+        }
+        return tmpSideChainList;
     }
     //</editor-fold>
 
@@ -1013,10 +1080,10 @@ public class ScaffoldGenerator {
             }
         }
         /*Generate the murckoFragment*/
-        IAtomContainer tmpMurckoFragment = this.murckoFragmenter.scaffold(tmpClonedMolecule);
+        IAtomContainer tmpMurckoFragment = this.getMurckoFragment(tmpClonedMolecule);
         switch (this.scaffoldModeSetting) {
             /*Generate the Murcko scaffold*/
-            case MURCKO_FRAGMENT:
+            case MURCKO_FRAMEWORK:
                 break;
             /*Generate the basic wire frame*/
             case BECCARI_BASIC_WIRE_FRAME:
@@ -1029,7 +1096,7 @@ public class ScaffoldGenerator {
                 }
                 break;
             /*Generate the Schuffenhauer scaffold*/
-            case SCHUFFENHAUER_FRAMEWORK:
+            case SCHUFFENHAUER_SCAFFOLD:
                 /*Store the number of each Atom of the murckoFragment*/
                 HashSet<Integer> tmpMurckoAtomNumbers = new HashSet<>(tmpClonedMolecule.getAtomCount(), 1);
                 for (IAtom tmpMurckoAtom : tmpMurckoFragment.atoms()) {
@@ -1117,6 +1184,53 @@ public class ScaffoldGenerator {
             Objects.requireNonNull(anAromaticity, "If anIsAromaticitySet == true, anAromaticity must be non null");
             //Set aromaticity
             anAromaticity.apply(tmpMurckoFragment);
+        }
+        return tmpMurckoFragment;
+    }
+
+    /**
+     * Returns the Murcko fragment of each molecule entered.
+     * In addition, the stereo elements are transferred from the original molecule to the Murcko fragment if possible,
+     * as these are lost when the Murcko fragment is generated.
+     * @param aMolecule Molecule whose Murcko fragment is to be created
+     * @return Murcko fragment of the input molecule
+     */
+    protected IAtomContainer getMurckoFragment(IAtomContainer aMolecule) {
+        IAtomContainer tmpMurckoFragment = this.murckoFragmenter.scaffold(aMolecule);
+        /*Go through all StereoElements of the original molecule*/
+        for (IStereoElement tmpElement : aMolecule.stereoElements()) {
+            /*Collect all Carriers and the Focus of the StereoElement of the original molecule*/
+            List<IChemObject> tmpList = new ArrayList<>(tmpElement.getCarriers().size() + 1);
+            tmpList.addAll(tmpElement.getCarriers());
+            tmpList.add(tmpElement.getFocus());
+            boolean tmpAllElementsStillPresent = true;
+            /*Go through all objects of the original molecule and check if they are still included in the murcko fragment*/
+            for (IChemObject tmpObj : tmpList) {
+                /*Object is an atom*/
+                if (tmpObj instanceof IAtom) {
+                    /*Change the boolean if an object is missing*/
+                    if (!tmpMurckoFragment.contains((IAtom) tmpObj)) {
+                        tmpAllElementsStillPresent = false;
+                        break;
+                    }
+                /*Object is a bond*/
+                } else if (tmpObj instanceof IBond) {
+                    /*Change the boolean if an object is missing*/
+                    if (!tmpMurckoFragment.contains((IBond) tmpObj)) {
+                        tmpAllElementsStillPresent = false;
+                        break;
+                    }
+                /*Object is something else (UFO)*/
+                } else {
+                    /*Change the boolean if it is an unknown object*/
+                    tmpAllElementsStillPresent = false;
+                    break;
+                }
+            }
+            /*Add the stereo element only if all objects are still there*/
+            if (tmpAllElementsStillPresent) {
+                tmpMurckoFragment.addStereoElement(tmpElement);
+            }
         }
         return tmpMurckoFragment;
     }
@@ -1662,12 +1776,12 @@ public class ScaffoldGenerator {
         List<IAtomContainer> tmpRemoveRings = new ArrayList<>(aRings.size()); //Rings with the longest linker
         List<Integer> tmpLinkerSize = new ArrayList<>(aRings.size()); //Linker length of each ring
         /*Generate the murcko fragment, as this removes the multiple bonded atoms at the linkers*/
-        Integer tmpMoleculeAtomCount = this.murckoFragmenter.scaffold(tmpClonedMolecule).getAtomCount();
+        Integer tmpMoleculeAtomCount = this.getMurckoFragment(tmpClonedMolecule).getAtomCount();
         /*Calculate the linker length of each ring. Negative integers are fused rings*/
         for(IAtomContainer tmpRing : aRings) {
             IAtomContainer tmpRemovedRing = this.removeRing(tmpClonedMolecule, tmpRing);
             //Generate the murcko fragment, as this removes the multiple bonded atoms at the linkers
-            IAtomContainer tmpRemovedRingMurckoFragment = this.murckoFragmenter.scaffold(tmpRemovedRing);
+            IAtomContainer tmpRemovedRingMurckoFragment = this.getMurckoFragment(tmpRemovedRing);
             //The number of atoms of the removed ring and the molecule from which the ring and the linker were removed are subtracted from the atomic number of the whole molecule
             //This leaves only the atomic number of the linker
             tmpLinkerSize.add(tmpMoleculeAtomCount - (tmpRing.getAtomCount() + tmpRemovedRingMurckoFragment.getAtomCount()));
@@ -2121,7 +2235,7 @@ public class ScaffoldGenerator {
         List<IAtomContainer> tmpRemoveRings = new ArrayList<>(aRings.size()); //Rings with the longest linker
         /*Check for each ring whether it is attached to a linker with a heteroatom at the end*/
         for(IAtomContainer tmpRing : aRings) {
-            if(this.isRingAttachedToHeteroatomLinker(tmpClonedMolecule, tmpRing, this.murckoFragmenter)) {
+            if(this.isRingAttachedToHeteroatomLinker(tmpClonedMolecule, tmpRing)) {
                 //If the ring is bound to such a linker add it to the list
                 tmpRemoveRings.add(tmpRing);
             }
@@ -2150,12 +2264,11 @@ public class ScaffoldGenerator {
      * Designed for the {@link ScaffoldGenerator#applySchuffenhauerRuleTwelve(IAtomContainer, List)} method.
      * @param aMolecule Molecule from which a ring is to be removed
      * @param aRing rings of the molecule to which the rule is applied
-     * @param aMurckoFragmenter MurckoFragmenter with which the molecules are treated
      * @return Whether it is one of the rings sought for
      * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present
      * @throws CloneNotSupportedException if cloning is not possible.
      */
-    protected boolean isRingAttachedToHeteroatomLinker(IAtomContainer aMolecule, IAtomContainer aRing, MurckoFragmenter aMurckoFragmenter) throws CDKException, CloneNotSupportedException {
+    protected boolean isRingAttachedToHeteroatomLinker(IAtomContainer aMolecule, IAtomContainer aRing) throws CDKException, CloneNotSupportedException {
         HashSet<Integer> tmpRingPropertyNumbers = new HashSet<>(aRing.getAtomCount(), 1);
         HashSet<Integer> tmpRemovedMurckoAtomNumbers = new HashSet<>(aMolecule.getAtomCount(), 1);
         /*Save all numbers of the ring atoms*/
@@ -2165,7 +2278,7 @@ public class ScaffoldGenerator {
         //Remove the examined ring
         IAtomContainer tmpRemovedRing = this.removeRing(aMolecule, aRing);
         //Generate the murcko fragment, as this removes the multiple bonded atoms at the linkers and exocyclic bonds
-        IAtomContainer tmpRemovedRingMurckoFragment = aMurckoFragmenter.scaffold(tmpRemovedRing);
+        IAtomContainer tmpRemovedRingMurckoFragment = this.getMurckoFragment(tmpRemovedRing);
         /*Save all numbers of the murcko fragment atoms*/
         for(IAtom tmpAtom : tmpRemovedRingMurckoFragment.atoms()) {
             tmpRemovedMurckoAtomNumbers.add(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
@@ -2203,7 +2316,7 @@ public class ScaffoldGenerator {
         }
         /*Treatment for linkers that consist of more than one bond, i.e. at least one atom*/
         //Generate the murcko fragment, as this removes the multiple bonded atoms at the linkers and exocyclic bonds
-        IAtomContainer tmpMurcko = aMurckoFragmenter.scaffold(aMolecule);
+        IAtomContainer tmpMurcko = this.getMurckoFragment(aMolecule);
         for(IAtom tmpAtom : tmpMurcko.atoms()) {
             /*Atom is not part of the murcko fragment from which the ring was removed, nor is it part of the ring under investigation.
             It is therefore a linker atom.*/
