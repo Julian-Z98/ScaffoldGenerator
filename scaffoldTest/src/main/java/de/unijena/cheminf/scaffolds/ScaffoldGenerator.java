@@ -430,6 +430,7 @@ public class ScaffoldGenerator {
 
     /**
      * Outputs all fragments that are not contained in the generated scaffold in contrast to the unchanged molecule.
+     * Those fragments are called SideChains.
      * The scaffold is therefore subtracted from the original molecule and all remaining fragments are saturated with hydrogens.
      *
      * SideChains cannot be generated for ELEMENTAL_WIRE_FRAME, BECCARI_BASIC_FRAMEWORK and BECCARI_BASIC_WIRE_FRAME themselves.
@@ -460,7 +461,7 @@ public class ScaffoldGenerator {
             this.scaffoldModeSetting = ScaffoldModeOption.MURCKO_FRAMEWORK;
         }
         //Get scaffold
-        IAtomContainer tmpScaffold = this.getScaffoldInternal(tmpClonedMolecule.clone(), this.determineAromaticitySetting, this.aromaticityModelSetting);
+        IAtomContainer tmpScaffold = this.getScaffoldInternal(tmpClonedMolecule, this.determineAromaticitySetting, this.aromaticityModelSetting);
         /*Change the ScaffoldModeOption to the original if it was changed*/
         if(tmpIsScaffoldModeChanged) {
             this.scaffoldModeSetting = tmpSavedScaffoldMode;
@@ -496,6 +497,51 @@ public class ScaffoldGenerator {
     }
     //</editor-fold>
 
+    /**
+     * Returns the linkers of the molecule as a fragment list. Linkers are all fragments that are neither ring nor side chain.
+     * Depending on the ScaffoldMode selected, the linkers are different.
+     * @param aMolecule Molecule whose linkers are to be returned
+     * @return linkers of the input molecule
+     * @throws CloneNotSupportedException if cloning is not possible.
+     * @throws CDKException problem with CDKHydrogenAdder: Throws if insufficient information is present or problem with aromaticity.apply()
+     */
+    public List<IAtomContainer> getLinkers(IAtomContainer aMolecule) throws CloneNotSupportedException, CDKException {
+        IAtomContainer tmpClonedMolecule = aMolecule.clone();
+        //Generate Scaffold
+        IAtomContainer tmpScaffold = this.getScaffoldInternal(tmpClonedMolecule, this.determineAromaticitySetting, this.aromaticityModelSetting);
+        List<IAtomContainer> tmpLinkerList = new ArrayList<>(tmpClonedMolecule.getAtomCount());
+        List<IAtomContainer> tmpRingList = this.getRings(tmpScaffold, true);
+        List<Integer> tmpRingAtomNumberList = new ArrayList<>(tmpClonedMolecule.getAtomCount());
+        /*Go through each ring of the scaffold and add there atom number to the list*/
+        for(IAtomContainer tmpRing : tmpRingList) {
+            for(IAtom tmpAtom : tmpRing.atoms()) {
+                tmpRingAtomNumberList.add(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
+            }
+        }
+        /*Identify each ring atom with the tmpRingAtomNumberList and remove it from the scaffold*/
+        for(Integer tmpRingAtomNumber : tmpRingAtomNumberList) {
+            for(IAtom tmpScaffoldAtom : tmpScaffold.atoms()) {
+                if(tmpRingAtomNumber == tmpScaffoldAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY)) {
+                    tmpScaffold.removeAtom(tmpScaffoldAtom);
+                    break;
+                }
+            }
+        }
+        //Save each unconnected fragment that remains as a separate AtomContainer
+        IAtomContainerSet tmpFragments = ConnectivityChecker.partitionIntoMolecules(tmpScaffold);
+        /*Add fragments to the tmpLinkerList*/
+        for(IAtomContainer tmpFragment : tmpFragments.atomContainers()) {
+            if(tmpFragment.getAtomCount() == 1 && tmpFragment.getAtom(0).getSymbol() == "H") {
+                //Skip single hydrogen
+                continue;
+            }
+            /*Add back hydrogens*/
+            AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpFragment);
+            CDKHydrogenAdder.getInstance(tmpFragment.getBuilder()).addImplicitHydrogens(tmpFragment);
+            tmpLinkerList.add(tmpFragment);
+        }
+        return tmpLinkerList;
+    }
     //<editor-fold desc="Advanced methods">
     /**
      * Iteratively removes the terminal rings. All resulting Scaffold are returned. Duplicates are not permitted.
