@@ -29,10 +29,7 @@ import org.openscience.cdk.depict.DepictionGenerator;
 import org.openscience.cdk.fragment.MurckoFragmenter;
 import org.openscience.cdk.graph.CycleFinder;
 import org.openscience.cdk.graph.Cycles;
-import org.openscience.cdk.interfaces.IAtom;
-import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.cdk.interfaces.IAtomType;
-import org.openscience.cdk.interfaces.IChemObjectBuilder;
+import org.openscience.cdk.interfaces.*;
 import org.openscience.cdk.io.FormatFactory;
 import org.openscience.cdk.io.MDLV2000Reader;
 import org.openscience.cdk.io.MDLV3000Reader;
@@ -328,6 +325,95 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
                 tmpCounter++;
             }
         }
+    }
+
+
+    /**
+     * Stores the side chains of the Schuffenhauer scaffold of all test molecules as images
+     * The images are saved in the folder with the name of the test molecule. By removing the annotation, side chains from other scaffolds can also be output.
+     * @throws Exception If anything goes wrong
+     */
+    @Test
+    public void getSideChainTest() throws Exception {
+        for (int tmpCount = 1; tmpCount < 23; tmpCount++) {
+            String tmpFileName = "Test" + tmpCount;
+            //Load molecule from molfile
+            IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
+            //Generate the SchuffenhauerScaffold
+            ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+            //tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.MURCKO_FRAMEWORK);
+            //tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.ELEMENTAL_WIRE_FRAME);
+            //Generate SideChains
+            List<IAtomContainer> tmpSideChains = tmpScaffoldGenerator.getSideChains(tmpMolecule);
+            /*Generate pictures of the SideChains*/
+            DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+            int tmpCounter = 1;
+            for (IAtomContainer tmpSideChain : tmpSideChains) {
+                BufferedImage tmpImgtmpSideChain = tmpGenerator.depict(tmpSideChain).toImg();
+                /*Save the picture*/
+                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/SideChain" + tmpCounter + ".png").mkdirs();
+                File tmpOutputtmpSideChain = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/SideChain" + tmpCounter + ".png");
+                ImageIO.write(tmpImgtmpSideChain, "png", tmpOutputtmpSideChain);
+                tmpCounter++;
+            }
+        }
+    }
+
+    /**
+     * Creates the SideChains for the Schuffenhauer Scaffold, the Murcko Framework and the Beccari Basic Framework. Since the SideChains of the Beccari Basic Framework correspond to those of the Elemental Wire Frame and the Beccari Wire Framework, all possible side chains are covered.
+     * The images of the side chains are saved.
+     * @throws Exception if anything goes wrong
+     */
+    @Test
+    public void getSideChainScaffoldModeTest() throws Exception {
+        String tmpFileName = "Test11";
+        //Load molecule from molfile
+        IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
+        //Generate the SchuffenhauerScaffold
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        //Generate SideChains
+        List<IAtomContainer> tmpSideChainsSchuff = tmpScaffoldGenerator.getSideChains(tmpMolecule);
+        /*Generate pictures of the rings*/
+        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+        int tmpCounter = 1;
+        for (IAtomContainer tmpSideChain : tmpSideChainsSchuff) {
+            BufferedImage tmpImgtmpSideChain = tmpGenerator.depict(tmpSideChain).toImg();
+            /*Save the picture*/
+            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/ScaffoldModeTest/SideChain/Schuffenhauer/" + tmpCounter + ".png").mkdirs();
+            File tmpOutputtmpSideChain = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/ScaffoldModeTest/SideChain/Schuffenhauer/" + tmpCounter + ".png");
+            ImageIO.write(tmpImgtmpSideChain, "png", tmpOutputtmpSideChain);
+            tmpCounter++;
+        }
+        /*Murcko framework SideChains*/
+        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.MURCKO_FRAMEWORK);
+        //Generate SideChains
+        List<IAtomContainer> tmpSideChainsMurcko = tmpScaffoldGenerator.getSideChains(tmpMolecule);
+        /*Generate pictures of the rings*/
+        tmpCounter = 1;
+        for (IAtomContainer tmpSideChain : tmpSideChainsMurcko) {
+            BufferedImage tmpImgtmpSideChain = tmpGenerator.depict(tmpSideChain).toImg();
+            /*Save the picture*/
+            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/ScaffoldModeTest/SideChain/Murcko/" + tmpCounter + ".png").mkdirs();
+            File tmpOutputtmpSideChain = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/ScaffoldModeTest/SideChain/Murcko/" + tmpCounter + ".png");
+            ImageIO.write(tmpImgtmpSideChain, "png", tmpOutputtmpSideChain);
+            tmpCounter++;
+        }
+        /*Beccari Basic Framework SideChains
+        * These are identical with Elemental Wire Frame and Beccari Wire Framework*/
+        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.BECCARI_BASIC_FRAMEWORK);
+        //Generate SideChains
+        List<IAtomContainer> tmpSideChainsBeccari = tmpScaffoldGenerator.getSideChains(tmpMolecule);
+        /*Generate pictures of the rings*/
+        tmpCounter = 1;
+        for (IAtomContainer tmpSideChain : tmpSideChainsBeccari) {
+            BufferedImage tmpImgtmpSideChain = tmpGenerator.depict(tmpSideChain).toImg();
+            /*Save the picture*/
+            new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/ScaffoldModeTest/SideChain/Beccari/" + tmpCounter + ".png").mkdirs();
+            File tmpOutputtmpSideChain = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/Settings/ScaffoldModeTest/SideChain/Beccari/" + tmpCounter + ".png");
+            ImageIO.write(tmpImgtmpSideChain, "png", tmpOutputtmpSideChain);
+            tmpCounter++;
+        }
+        
     }
     //</editor-fold>
 
@@ -960,7 +1046,34 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         /*Display the tree*/
         GraphStreamUtility.displayTreeWithGraphStream(tmpScaffoldTree);
     }
+
     /**
+     * Loads a molecule with two stereochemical information from a SMILES. Outputs its fragments.
+     * Shows that one piece of information is retained even though the other has already been removed.
+     * @throws Exception if anything goes wrong
+     */
+    @Ignore
+    @Test
+    public void stereoFragmentationTest() throws Exception {
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        tmpScaffoldGenerator.setSmilesGeneratorSetting(new SmilesGenerator(SmiFlavor.Isomeric));
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        IAtomContainer tmpMolecule = tmpParser.parseSmiles("F\\C(=C(\\F)CC1CCCCC1)CC2CCCCC2");
+        //tmpMolecule = tmpParser.parseSmiles("C1CC[C@]2(OCC=CC2)NC1");
+        tmpMolecule = tmpParser.parseSmiles("C8CCCC(/C(=C(C1CCCNCCC1)\\C6CCCCC(C5CCCC(C/C(CC2CCNCC2)=C(CC3CCCCC3)/CC4CCNCC4)C5)CC6)C7CCCCCNC7)CCC8");
+        //tmpMolecule = tmpParser.parseSmiles("C1CC[C@@]2(OCC=CC2)NC1");
+        List<IAtomContainer> tmpFragmentList = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Isomeric);
+        for(IAtomContainer tmpFragment : tmpFragmentList) {
+            System.out.println(tmpSmilesGenerator.create(tmpFragment));
+        }
+    }
+
+    /**
+     * Loads two stereoisomers as SMILES and joins them as a tree. Since the SMILESGenerator setting is "Isomeric",
+     * the stereochemistry is kept in consideration and the two molecules are represented in the tree as two different ones.
+     *
+     * The structure is similar to the method "mergeNonStereoMoleculesToForrestTest()" except for the setting.
      * @throws Exception if anything goes wrong
      */
     @Ignore
@@ -970,8 +1083,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         List<IAtomContainer> tmpTestMoleculeList = new ArrayList<>();
         /*Loading and reading the library*/
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
-        IAtomContainer tmpMolecule = tmpParser.parseSmiles("F\\C(=C(\\F)CC1CCCCC1)CC2CCCCC2");
-        IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("F\\C(=C(/F)CC1CCCCC1)CC2CCCCC2");
+        IAtomContainer tmpMolecule = tmpParser.parseSmiles("C4CCC(C/C(CC1CC[F+]CC1)=C(CC2CCCCC2)\\CC3CC[F+]CC3)CC4");
+        IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("C4CCC(C/C(CC1CC[F+]CC1)=C(CC2CCCCC2)/CC3CC[F+]CC3)CC4");
         tmpTestMoleculeList.add(tmpMolecule);
         tmpTestMoleculeList.add(tmpMolecule1);
         tmpScaffoldGenerator.setSmilesGeneratorSetting(new SmilesGenerator(SmiFlavor.Isomeric));
@@ -983,8 +1096,46 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Isomeric);
         for(ScaffoldTree tmpTestTree : tmpTestTreeList) {
             System.out.println("Number of Nodes:" + tmpTestTree.getAllNodes().size());
-            tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.MURCKO_FRAGMENT);
-            tmpMolecule = tmpParser.parseSmiles("F\\C(=C(\\F)CC1CCCCC1)CC2CCCCC2");
+            tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.MURCKO_FRAMEWORK);
+            IAtomContainer tmpScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule);
+            System.out.println("Root:" + tmpSmilesGenerator.create((IAtomContainer) tmpTestTree.getRoot().getMolecule()));
+            for(TreeNode tmpNode : tmpTestTree.getAllNodes()) {
+                System.out.println("Molecules:" + tmpSmilesGenerator.create((IAtomContainer) tmpNode.getMolecule()));
+            }
+        }
+        assertEquals(5, tmpScaffoldTree.getAllNodes().size());
+        /*Display the tree*/
+        GraphStreamUtility.displayTreeWithGraphStream(tmpScaffoldTree);
+    }
+
+    /**
+     * Loads two stereoisomers as SMILES and joins them as a tree. Since the SMILESGenerator setting is "Unique",
+     * the stereochemistry is ignored and the two molecules are represented as one in the tree.
+     *
+     * The structure is similar to the method "mergeStereoMoleculesToForrestTest()" except for the setting.
+     * @throws Exception if anything goes wrong
+     */
+    @Ignore
+    @Test
+    public void mergeNonStereoMoleculesToForrestTest() throws Exception {
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        List<IAtomContainer> tmpTestMoleculeList = new ArrayList<>();
+        /*Loading and reading the library*/
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        IAtomContainer tmpMolecule = tmpParser.parseSmiles("C4CCC(C/C(CC1CC[F+]CC1)=C(CC2CCCCC2)\\CC3CC[F+]CC3)CC4");
+        IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("C4CCC(C/C(CC1CC[F+]CC1)=C(CC2CCCCC2)/CC3CC[F+]CC3)CC4");
+        tmpTestMoleculeList.add(tmpMolecule);
+        tmpTestMoleculeList.add(tmpMolecule1);
+        tmpScaffoldGenerator.setSmilesGeneratorSetting(new SmilesGenerator(SmiFlavor.Unique));
+        List<ScaffoldTree> tmpTestTreeList = tmpScaffoldGenerator.mergeMoleculesToForrest(tmpTestMoleculeList);
+        System.out.println("Number of molecules: " + tmpTestMoleculeList.size());
+        System.out.println("Number of trees: " + tmpTestTreeList.size());
+        ScaffoldTree tmpScaffoldTree = tmpTestTreeList.get(0);
+        System.out.println("Origin SMILES: " + tmpScaffoldTree.getRoot().getOriginSmilesList());
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
+        for(ScaffoldTree tmpTestTree : tmpTestTreeList) {
+            System.out.println("Number of Nodes:" + tmpTestTree.getAllNodes().size());
+            tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.MURCKO_FRAMEWORK);
             IAtomContainer tmpScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule);
             System.out.println("Root:" + tmpSmilesGenerator.create((IAtomContainer) tmpTestTree.getRoot().getMolecule()));
             System.out.println("Scaffold:" + tmpSmilesGenerator.create(tmpScaffold));
@@ -992,59 +1143,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
                 System.out.println("Molecules:" + tmpSmilesGenerator.create((IAtomContainer) tmpNode.getMolecule()));
             }
         }
-        /*Display the tree*/
-        GraphStreamUtility.displayTreeWithGraphStream(tmpScaffoldTree);
-    }
-
-    /**
-     * @throws Exception if anything goes wrong
-     */
-    @Ignore
-    @Test
-    public void mergeStereoMOLToForrestTest() throws Exception {
-        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
-        List<IAtomContainer> tmpTestMoleculeList = new ArrayList<>();
-        /*Loading and reading the library*/
-        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Isomeric);
-        /*Loading and reading the library*/
-        File tmpResourcesDirectory = new File("src/test/resources/Stereo1.sdf");
-        IteratingSDFReader tmpReader = new IteratingSDFReader( new FileInputStream(tmpResourcesDirectory), DefaultChemObjectBuilder.getInstance());
-        while (tmpReader.hasNext()) {
-            String tmpCoconutID = null;
-            IAtomContainer tmpMolecule = (IAtomContainer) tmpReader.next();
-            tmpTestMoleculeList.add(tmpMolecule);
-            MurckoFragmenter tmpMurckoFragmenter = new MurckoFragmenter(true, 1);
-            tmpMurckoFragmenter.setComputeRingFragments(false);
-            IAtomContainer tmpMurckoFragment = tmpMurckoFragmenter.scaffold(tmpMolecule);
-            System.out.println("Murcko1" + tmpSmilesGenerator.create(tmpMurckoFragment));
-        }
-        File tmpResourcesDirectory2 = new File("src/test/resources/Stereo2.sdf");
-        IteratingSDFReader tmpReader2 = new IteratingSDFReader( new FileInputStream(tmpResourcesDirectory2), DefaultChemObjectBuilder.getInstance());
-        while (tmpReader2.hasNext()) {
-            String tmpCoconutID = null;
-            IAtomContainer tmpMolecule = (IAtomContainer) tmpReader2.next();
-            tmpTestMoleculeList.add(tmpMolecule);
-            MurckoFragmenter tmpMurckoFragmenter = new MurckoFragmenter(true, 1);
-            tmpMurckoFragmenter.setComputeRingFragments(false);
-            IAtomContainer tmpMurckoFragment = tmpMurckoFragmenter.scaffold(tmpMolecule);
-            System.out.println("Murcko2" + tmpSmilesGenerator.create(tmpMurckoFragment));
-        }
-        tmpScaffoldGenerator.setSmilesGeneratorSetting(new SmilesGenerator(SmiFlavor.Isomeric));
-        List<ScaffoldTree> tmpTestTreeList = tmpScaffoldGenerator.mergeMoleculesToForrest(tmpTestMoleculeList);
-        System.out.println("Number of molecules: " + tmpTestMoleculeList.size());
-        System.out.println("Number of trees: " + tmpTestTreeList.size());
-        ScaffoldTree tmpScaffoldTree = tmpTestTreeList.get(0);
-        System.out.println("Origin SMILES: " + tmpScaffoldTree.getRoot().getOriginSmilesList());
-        int tmpCounter = 0;
-        for(ScaffoldTree tmpTestTree : tmpTestTreeList) {
-            System.out.println("Number of Nodes:" + tmpTestTree.getAllNodes().size());
-            tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.MURCKO_FRAGMENT);
-            System.out.println(tmpCounter + "Root:" + tmpSmilesGenerator.create((IAtomContainer) tmpTestTree.getRoot().getMolecule()));
-            for(TreeNode tmpNode : tmpTestTree.getAllNodes()) {
-                System.out.println("Molecules:" + tmpSmilesGenerator.create((IAtomContainer) tmpNode.getMolecule()));
-            }
-            tmpCounter++;
-        }
+        assertEquals(4, tmpScaffoldTree.getAllNodes().size());
         /*Display the tree*/
         GraphStreamUtility.displayTreeWithGraphStream(tmpScaffoldTree);
     }
@@ -2866,7 +2965,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         ImageIO.write(tmpImgOriginal, "png" ,tmpOutputOriginal);
         //Generate SchuffenhauerScaffold
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
-        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.SCHUFFENHAUER_FRAMEWORK);
+        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.SCHUFFENHAUER_SCAFFOLD);
         IAtomContainer tmpSchuffenhauerSMILES = tmpScaffoldGenerator.getScaffold(tmpMolecule);
         /*Generate picture of the SchuffenhauerScaffold*/
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerSMILES).toImg();
@@ -2878,7 +2977,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
         assertEquals("O=C(NC1C(=O)N2CCSC21)C3=CON=C3C=4C=CC=CC4", tmpSmilesGenerator.create(tmpSchuffenhauerSMILES));
         /*Generate Murcko Scaffold*/
-        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.MURCKO_FRAGMENT);
+        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.MURCKO_FRAMEWORK);
         IAtomContainer tmpMurckoSMILES = tmpScaffoldGenerator.getScaffold(tmpMolecule);
         /*Generate picture of the SchuffenhauerScaffold*/
         BufferedImage tmpImgMurcko = tmpGenerator.depict(tmpMurckoSMILES).toImg();
@@ -3180,9 +3279,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
                     if(tmpScaffoldGenerator.getRings(tmpScaffoldGenerator.getScaffold(tmpMolecule),false).size() > 100) {
                         tmpSkipCounter++;
                         System.out.println("Molecule skipped: " + tmpCoconutID);
-                        continue;
+                        //continue;
                     }
-
                     /*Detect and save conspicuous molecules*/
                     boolean tmpIsConspicuous = false;
                     /*
@@ -3230,7 +3328,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
                         tmpFusedRingCounter++;
                     }
                 }
-                if(anIsGetRemovalNetworkCalculated = true) {
+                if(anIsGetRemovalNetworkCalculated == true) {
                     /*Skip molecules with to many rings if needed*/
                     ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
                     if(tmpScaffoldGenerator.getRings(tmpScaffoldGenerator.getScaffold(tmpMolecule),false).size() > 10) {
@@ -3285,10 +3383,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
                 e.printStackTrace(pw);
                 String sStackTrace = sw.toString();
                 System.out.println(sStackTrace);
-
                 tmpExceptionCounter++;
-
-
                 /*Generate control pictures*/
                 DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
                 /*Generate and save molecule picture*/
@@ -3308,6 +3403,74 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         System.out.println("total Runtime: " + TimeUnit.NANOSECONDS.toSeconds((System.nanoTime() - tmpStartTime)) + " seconds");
         System.out.println("Number of skipped molecules" + tmpSkipCounter);
         System.out.println("Number of fused molecules" + tmpFusedRingCounter);
+    }
+
+    /**
+     * Measures the time it takes to decompose the COCONUT with the entire stereochemistry (975.000 molecules) using Schuffenhauers rules.
+     * Counts the number of molecules whose stereoelements are reduced by the scaffold formation.
+     * @throws Exception if anything goes wrong
+     */
+    @Ignore
+    @Test
+    public void calculateStereoSpeedTest() throws Exception {
+        //Start timer
+        long tmpStartTime = System.nanoTime();
+        File tmpResourcesDirectory = new File("src/test/resources/COCONUT_DB.sdf");
+        BufferedReader tmpBufferedReader = new BufferedReader(new FileReader("src/test/resources/coconut_all_stereo.smi"));
+        String tmpRow = null;
+        int tmpCounter = 0;
+        int tmpInternCounter = 0;
+        int tmpStereoChangeCounter = 0;
+        int tmpExceptionCounter = 0;
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        tmpScaffoldGenerator.setSmilesGeneratorSetting(new SmilesGenerator(SmiFlavor.Isomeric));
+        while ((tmpRow = tmpBufferedReader.readLine()) != null) {
+            tmpCounter++;
+            tmpInternCounter++;
+            if(tmpInternCounter == 25000){
+                tmpInternCounter = 0;
+                System.out.println("Molecule Number: " + tmpCounter);
+                System.out.println("Number of Exception: " + tmpExceptionCounter);
+                System.out.println("Stereo Counter: " + tmpStereoChangeCounter);
+                System.out.println("Runtime: " + TimeUnit.NANOSECONDS.toSeconds((System.nanoTime() - tmpStartTime)) + " seconds");
+            }
+            String[] tmpSplitted = tmpRow.split("\t");
+            try{
+                SmilesParser tmpSmiPar = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+                IAtomContainer tmpMolecule = tmpSmiPar.parseSmiles(tmpSplitted[0]);
+                int tmpOriginalElementCounter = 0;
+                for(IStereoElement tmpElement : tmpMolecule.stereoElements()) {
+                    tmpOriginalElementCounter++;
+                }
+                List<IAtomContainer> tmpIterations = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
+                int tmpScaffoldElementCounter = 0;
+                for(IStereoElement tmpElement : tmpIterations.get(0).stereoElements()) {
+                    tmpScaffoldElementCounter++;
+                }
+                if(tmpOriginalElementCounter != tmpScaffoldElementCounter) {
+                    System.out.println("Original " + tmpSmilesGenerator.create(tmpMolecule));
+                    System.out.println("Scaffold " + tmpSmilesGenerator.create(tmpIterations.get(0)));
+                    tmpStereoChangeCounter++;
+                }
+            }
+            /*Count exceptions*/
+            catch(Exception e) {
+                System.out.println("Exception at number: " + tmpCounter);
+                System.out.println("COCONUT ID: " + tmpSplitted[1]);
+                System.out.println("SMILES: " + tmpSplitted[0]);
+                /*Print out the exception stack trace*/
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                e.printStackTrace(pw);
+                String sStackTrace = sw.toString();
+                System.out.println(sStackTrace);
+                tmpExceptionCounter++;
+            }
+        }
+        System.out.println("Fin");
+        System.out.println("Number of exceptions" + tmpExceptionCounter);
+        System.out.println("total Runtime: " + TimeUnit.NANOSECONDS.toSeconds((System.nanoTime() - tmpStartTime)) + " seconds");
     }
     //</editor-fold>
     //</editor-fold>
@@ -3365,7 +3528,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
         List<IAtomContainer> tmpRemovableRings = new ArrayList<>();
         /*All molecules with an atom-to-ring ratio of less than 1.0 are assigned the CYCLE_FINDER_BACKUP_PROPERTY = true property,
-         since too many rings were probably detected. The fact that a molecule has more rings than atoms seems concerning. That is why this value was chosen.*/
+         since to many rings were probably detected. The fact that a molecule has more rings than atoms seems concerning. That is why this value was chosen.*/
         int tmpRingNumber = this.getRings(tmpClonedMolecule, false).size();
         float tmpRingAtomRatio = (float) tmpClonedMolecule.getAtomCount() / tmpRingNumber;
         if(tmpRingAtomRatio < 1.0 ) {
