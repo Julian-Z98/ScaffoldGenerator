@@ -327,7 +327,6 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         }
     }
 
-
     /**
      * Stores the side chains of the Schuffenhauer scaffold of all test molecules as images
      * The images are saved in the folder with the name of the test molecule. By removing the annotation, side chains from other scaffolds can also be output.
@@ -415,6 +414,71 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         }
         
     }
+
+    /**
+     * Stores the linkers of the Schuffenhauer scaffold of all test molecules as images
+     * The images are saved in the folder with the name of the test molecule. By removing the annotation, side chains from other scaffolds can also be output.
+     * @throws Exception If anything goes wrong
+     */
+    @Test
+    public void getLinkersTest() throws Exception {
+        for (int tmpCount = 1; tmpCount < 23; tmpCount++) {
+            String tmpFileName = "Test" + tmpCount;
+            //Load molecule from molfile
+            IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
+            //Generate the SchuffenhauerScaffold
+            ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+            //tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.MURCKO_FRAMEWORK);
+            //tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.ELEMENTAL_WIRE_FRAME);
+            //Generate Linker
+            List<IAtomContainer> tmpLinkers = tmpScaffoldGenerator.getLinkers(tmpMolecule);
+            /*Generate pictures of the Linkers*/
+            DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+            int tmpCounter = 1;
+            for (IAtomContainer tmpLinker : tmpLinkers) {
+                BufferedImage tmpImgtmpLinker = tmpGenerator.depict(tmpLinker).toImg();
+                /*Save the picture*/
+                new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Linker" + tmpCounter + ".png").mkdirs();
+                File tmpOutputtmpLinker = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Linker" + tmpCounter + ".png");
+                ImageIO.write(tmpImgtmpLinker, "png", tmpOutputtmpLinker);
+                tmpCounter++;
+            }
+        }
+    }
+
+    /**
+     * Loads a molecule with a C=N linker from a SMILES and generates the corresponding linker for the different scaffolds.
+     * @throws Exception If anything goes wrong
+     */
+    @Test
+    public void getLinkersDoubleBondTest() throws Exception {
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        IAtomContainer tmpMolecule = tmpParser.parseSmiles("C=C1CCCCC1/N=C/C2CC(C)CCC2C");
+        //Generate the SchuffenhauerScaffold
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
+        /*Generate the linkers of the Schuffenhauer Scaffold*/
+        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.SCHUFFENHAUER_SCAFFOLD);
+        List<IAtomContainer> tmpLinkers = tmpScaffoldGenerator.getLinkers(tmpMolecule);
+        assertEquals("N=C",tmpSmilesGenerator.create(tmpLinkers.get(0)));
+        /*Generate the linkers of the Murcko Framework*/
+        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.MURCKO_FRAMEWORK);
+        tmpLinkers = tmpScaffoldGenerator.getLinkers(tmpMolecule);
+        assertEquals("N=C",tmpSmilesGenerator.create(tmpLinkers.get(0)));
+        /*Generate the linkers of the Elemental Wire Frame*/
+        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.ELEMENTAL_WIRE_FRAME);
+        tmpLinkers = tmpScaffoldGenerator.getLinkers(tmpMolecule);
+        assertEquals("NC",tmpSmilesGenerator.create(tmpLinkers.get(0)));
+        /*Generate the linkers of the Beccari Basic Framework*/
+        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.BECCARI_BASIC_FRAMEWORK);
+        tmpLinkers = tmpScaffoldGenerator.getLinkers(tmpMolecule);
+        assertEquals("C=C",tmpSmilesGenerator.create(tmpLinkers.get(0)));
+        /*Generate the linkers of the Beccari Basic Wire Frame*/
+        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.BECCARI_BASIC_WIRE_FRAME);
+        tmpLinkers = tmpScaffoldGenerator.getLinkers(tmpMolecule);
+        assertEquals("CC",tmpSmilesGenerator.create(tmpLinkers.get(0)));
+    }
+
     //</editor-fold>
 
     //<editor-fold desc="Advanced method test">
