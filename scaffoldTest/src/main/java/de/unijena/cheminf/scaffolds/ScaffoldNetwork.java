@@ -25,50 +25,21 @@ import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.smiles.SmilesGenerator;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * Top-level class to organise the NetworkNodes
  */
-public class ScaffoldNetwork {
-    /**
-     * Saves all NetworkNodes and numbers them in ascending order. Starts at 0. Key:Number, Value:NetworkNode
-     */
-    private HashMap<Integer, NetworkNode> nodeMap;
-    /**
-     * Saves all NetworkNodes and numbers them in ascending order. Starts at 0.
-     * nodeMap with key and value swapped. Key:NetworkNode, Value:Number
-     */
-    private HashMap<NetworkNode, Integer> reverseNodeMap;
-    /**
-     * Saves all NetworkNodes according to their Unique SMILES. Key:SMILES, Value:NetworkNode
-     */
-    private ListMultimap<String, NetworkNode> smilesMap;
-    /**
-     * Saves all NetworkNodes according to their level. Key:Level, Value:NetworkNode
-     */
-    private ListMultimap<Integer, NetworkNode> levelMap;
-    /**
-     * Generator for the creation of Unique SMILES
-     * Unique SMILES: canonical SMILES string, different atom ordering produces the same (apart from rare exceptions) SMILES.
-     *                No isotope or stereochemistry encoded.
-     */
-    private SmilesGenerator smilesGenerator;
-    /**
-     * Shows how many nodes have been added so far. Removing nodes has no effect on it.
-     */
-    private int nodeCounter;
+public class ScaffoldNetwork extends ScaffoldNodeCollectionBase {
 
     /**
      * Constructor
+     * @param aSmilesGenerator Used SMILES Generator
      */
     public ScaffoldNetwork(SmilesGenerator aSmilesGenerator) {
-        this.nodeMap = new HashMap<Integer, NetworkNode>();
-        this.reverseNodeMap = new HashMap<NetworkNode, Integer>();
-        this.smilesMap = ArrayListMultimap.create();
-        this.levelMap = ArrayListMultimap.create();
-        this.smilesGenerator = aSmilesGenerator;
-        this.nodeCounter = 0;
+        super(aSmilesGenerator);
     }
 
     /**
@@ -97,26 +68,27 @@ public class ScaffoldNetwork {
         /*Since the network is built from the leaves to the root,
          the levels of all nodes in the network must be re-determined for every node added.*/
         this.levelMap.put(aNode.getLevel(), aNode);
-        ListMultimap<Integer, NetworkNode> tmpLevelMap = ArrayListMultimap.create();
-        for(NetworkNode tmpNode : this.getAllNodes()) {
+        ListMultimap<Integer, ScaffoldNodeBase> tmpLevelMap = ArrayListMultimap.create();
+        for(ScaffoldNodeBase tmpNodeBase : this.getAllNodes()) {
+            NetworkNode tmpNode = (NetworkNode) tmpNodeBase;
             tmpLevelMap.put(tmpNode.getLevel(), tmpNode);
         }
         this.levelMap = tmpLevelMap;
         //Increase nodeCounter
         this.nodeCounter++;
-        return this.getNetworkNode((IAtomContainer) aNode.getMolecule());
+        return (NetworkNode) this.getNode((IAtomContainer) aNode.getMolecule());
     }
 
     /**
      * Removes a Node. This does not change the order. The numbering does not move up.
      * @param aNode Node to remove
      * @throws CDKException In case of a problem with the SmilesGenerator
-     * @throws IllegalArgumentException if the node is not in the network
+     * @throws IllegalArgumentException if the node is not in the Scaffold
      */
     public void removeNode(NetworkNode aNode) throws CDKException, IllegalArgumentException {
-        Objects.requireNonNull(aNode, "Given NetworkNode is 'null'");
-        if(!this.reverseNodeMap.containsKey(aNode)) { //Check if the node exists in the network
-            throw new IllegalArgumentException("Node is not in network");
+        Objects.requireNonNull(aNode, "Given ScaffoldNode is 'null'");
+        if(!this.reverseNodeMap.containsKey(aNode)) { //Check if the node exists in the Scaffold
+            throw new IllegalArgumentException("Node is not in Scaffold");
         }
         /*Remove from nodeMap and reverseNodeMap*/
         int tmpNumberInNodeMap = this.reverseNodeMap.get(aNode); //get number in nodeMap
@@ -127,168 +99,6 @@ public class ScaffoldNetwork {
         this.smilesMap.remove(tmpSmiles, aNode);
         /*Remove from levelMap*/
         levelMap.remove(aNode.getLevel(), aNode);
-    }
-
-    /**
-     * Checks whether the molecule is already present in the Scaffold Network
-     * Check whether it is the same molecule using the Unique SMILES.
-     * Unique SMILES: canonical SMILES string, different atom ordering produces the same (apart from rare exceptions) SMILES.
-     *                No isotope or stereochemistry encoded.
-     * @param aMolecule Molecule to check
-     * @return Whether the molecule is located in the Scaffold Network
-     * @throws CDKException In case of a problem with the SmilesGenerator
-     */
-    public boolean isMoleculeInNetwork(IAtomContainer aMolecule) throws CDKException {
-        Objects.requireNonNull(aMolecule, "Given atom container is 'null'");
-        //Generate SMILES
-        String tmpSmiles = this.smilesGenerator.create(aMolecule);
-        /*Check in smilesMap*/
-        if(this.smilesMap.containsKey(tmpSmiles)) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Return the NetworkNode that belongs to a specific molecule.
-     * Check whether it is the same molecule using the Unique SMILES.
-     * If a molecule occurs more than once in the network, only one corresponding NetworkNode is returned.
-     * Unique SMILES: canonical SMILES string, different atom ordering produces the same (apart from rare exceptions) SMILES.
-     *                No isotope or stereochemistry encoded.
-     * @param aMolecule molecule that is being searched for
-     * @return NetworkNode of the searched molecule
-     * @throws CDKException In case of a problem with the SmilesGenerator
-     * @throws IllegalArgumentException if the node is not in the network
-     */
-    public NetworkNode getNetworkNode(IAtomContainer aMolecule) throws CDKException, IllegalArgumentException {
-        Objects.requireNonNull(aMolecule, "Given atom container is 'null'");
-        if(!this.isMoleculeInNetwork(aMolecule)) { //Check if the molecule exists in the network
-            throw new IllegalArgumentException("Molecule is not in network");
-        }
-        return this.smilesMap.get(this.smilesGenerator.create(aMolecule)).get(0);
-    }
-
-    /**
-     * Outputs the maximum level of the network
-     * @return the maximum level of the network
-     */
-    public int getMaxLevel() {
-        List<Integer> tmpLevelList = new ArrayList<>();
-        tmpLevelList.addAll(this.levelMap.keys());
-        return Collections.max(tmpLevelList);
-    }
-
-    /**
-     * Return all NetworkNodes that are at a certain level in the network.
-     * @param aLevel Level whose NetworkNodes are to be returned
-     * @return NetworkNodes that are at a certain level
-     * @throws IllegalArgumentException if the level does not exist
-     */
-    public List<NetworkNode> getAllNodesOnLevel(int aLevel) throws IllegalArgumentException {
-        Objects.requireNonNull(aLevel, "Given number is 'null'");
-        if(this.getMaxLevel() >= aLevel) { //Level must be less than or equal to the maximum level
-            return this.levelMap.get(aLevel);
-        }
-        throw new IllegalArgumentException("Level does not exist: " + aLevel);
-    }
-
-    /**
-     * Get all NetworkNodes of the ScaffoldNetwork
-     * @return all NetworkNodes of the ScaffoldNetwork
-     */
-    public List<NetworkNode> getAllNodes() {
-        List<NetworkNode> tmpList = new ArrayList<>();
-        tmpList.addAll(this.levelMap.values());
-        return tmpList;
-    }
-
-    /**
-     * Outputs an adjacency matrix in which the parent node of each node is marked with a 1.
-     * All others are marked with 0. Each row and column number in the matrix is assigned to a node.
-     * The assignment can be requested with getMatrixNodes/getMatrixNode.
-     * only works with connected networks. Can be checked with isNetworkConnected.
-     * @return the adjacency matrix
-     * @throws IllegalStateException if the network is not connected
-     */
-    public Integer[][] getNetworkAsMatrix() throws IllegalStateException {
-        int tmpSize = this.nodeMap.size();
-        Integer[][] tmpMatrix = new Integer[tmpSize][tmpSize];
-        /*Set all values of the matrix to 0*/
-        for (int tmpRow = 0; tmpRow < tmpMatrix.length; tmpRow++) {
-            for (int tmpCol = 0; tmpCol < tmpMatrix[tmpRow].length; tmpCol++) {
-                tmpMatrix[tmpRow][tmpCol] = 0;
-            }
-        }
-        /*Insert a 1 for each parent node*/
-        int tmpCounter = 0;
-        for (NetworkNode tmpNode : this.nodeMap.values()) {
-            if (tmpNode.getParents() != null) {
-                for(Object tmpParentNode : tmpNode.getParents()) {
-                    //Set a 1 at the level of the parent and at the level of the node
-                    tmpMatrix[tmpCounter][this.getMatrixNodesNumbers().indexOf(this.reverseNodeMap.get(tmpParentNode))] = 1;
-                    //Set a 1 at the level of the node and at the level of the parent
-                    tmpMatrix[this.getMatrixNodesNumbers().indexOf(this.reverseNodeMap.get(tmpParentNode))][tmpCounter] = 1;
-                }
-            }
-            tmpCounter++;
-        }
-        return tmpMatrix;
-    }
-
-    /**
-     * Returns the number of the nodes and the nodes of the matrix in ascending order.
-     * @return HashMap with the number of the nodes and the nodes in the order they appear in the matrix
-     */
-    public HashMap<Integer, NetworkNode> getMatrixNodes() {
-        return this.nodeMap;
-    }
-
-    /**
-     * Gives the number of nodes as they occur in the matrix. Missing numbers have been removed.
-     * @return List with all node numbers of the matrix
-     */
-    public List<Integer> getMatrixNodesNumbers() {
-        List<Integer> tmpList = new ArrayList<>();
-        tmpList.addAll(this.nodeMap.keySet());
-        return tmpList;
-    }
-
-    /**
-     * Indicates whether there is a node with this number in the network.
-     * @param aNumber Number of the node to be checked
-     * @return Is the node in the network
-     */
-    public boolean isNodeInNetwork(int aNumber) {
-        Objects.requireNonNull(aNumber, "Given int is 'null'");
-        return this.nodeMap.containsKey(aNumber);
-    }
-
-    /**
-     * Returns the node that belongs to a certain row and column number of the matrix.
-     * Returns zero if the node is not in the network. Throwing an exception makes it difficult to build a network
-     * @param aNumber Row and column number whose node is requested
-     * @return Node that belongs to the requested column and row number
-     */
-    public NetworkNode getMatrixNode(int aNumber) {
-        Objects.requireNonNull(aNumber, "Given int is 'null'");
-        return this.nodeMap.get(aNumber);
-    }
-
-    /**
-     * Outputs root nodes of the network.
-     * @return root nodes of the network
-     */
-    public List<NetworkNode> getRoots() {
-        List<NetworkNode> tmpNodeList = new ArrayList<>();
-        for(NetworkNode tmpNode : this.nodeMap.values()) {
-            /*Is the parent of the node in the network*/
-            if(tmpNode.getLevel() == 0) {
-                //If the node has no parent, it is a root
-                tmpNodeList.add(tmpNode);
-            }
-        }
-        return tmpNodeList;
     }
 
     /**
@@ -320,7 +130,8 @@ public class ScaffoldNetwork {
             /*Go through each level of the network starting at the root*/
             for(int i = 0; i <= aScaffoldNetwork.getMaxLevel(); i++) {
                 /*Compare all nodes of the old network on this level with all nodes of the new network on this level*/
-                for(NetworkNode tmpOldNetworkNode : this.getAllNodesOnLevel(i)) {
+                for(ScaffoldNodeBase tmpOldNetworkNodeBase : this.getAllNodesOnLevel(i)) {
+                    NetworkNode tmpOldNetworkNode = (NetworkNode) tmpOldNetworkNodeBase;
                     for(Object tmpNewNetworkObject : aScaffoldNetwork.getAllNodesOnLevel(i)) {
                         NetworkNode tmpNewNetworkNode = (NetworkNode) tmpNewNetworkObject;
                         /*Generate the corresponding SMILES of the molecules*/
@@ -338,7 +149,7 @@ public class ScaffoldNetwork {
                                 NetworkNode tmpNewChildNode = (NetworkNode) tmpNewChild;
                                 IAtomContainer tmpNewChildMolecule = (IAtomContainer) tmpNewChildNode.getMolecule();
                                 /*Add the child if it is not already in the network*/
-                                if(!this.isMoleculeInNetwork(tmpNewChildMolecule)) {
+                                if(!this.isMoleculeContained(tmpNewChildMolecule)) {
                                     NetworkNode tmpNewNode = new NetworkNode<>(tmpNewChildMolecule);
                                     tmpNewNode.addParent(tmpOldNetworkNode);
                                     tmpMoleculeList.add(tmpNewChildMolecule);
@@ -356,22 +167,81 @@ public class ScaffoldNetwork {
             }
             /*Add the nodes of the new network that are not yet in the whole network*/
             for(NetworkNode tmpNode : tmpNodesToAdd) {
-                if(!this.isMoleculeInNetwork((IAtomContainer) tmpNode.getMolecule())) {
+                if(!this.isMoleculeContained((IAtomContainer) tmpNode.getMolecule())) {
                     NetworkNode tmpNewNode = new NetworkNode<>((IAtomContainer) tmpNode.getMolecule());
                     this.addNode(tmpNewNode);
                 }
             }
             /*Add the matching parents to the newly added nodes. Childs are automatically set when the parents are set.*/
             for(IAtomContainer tmpMolecule : tmpMoleculeList) {
-                ArrayList<NetworkNode> tmpParentList = (ArrayList<NetworkNode>) aScaffoldNetwork.getNetworkNode(tmpMolecule).getParents();
+                ScaffoldNodeBase tmpChildBase = aScaffoldNetwork.getNode(tmpMolecule);
+                NetworkNode tmpChild = (NetworkNode) tmpChildBase;
+                ArrayList<NetworkNode> tmpParentList = (ArrayList<NetworkNode>) tmpChild.getParents();
                 for(NetworkNode tmpParentNode : tmpParentList) {
                     /*Only molecules that are in the network*/
-                    if(this.isMoleculeInNetwork((IAtomContainer) tmpParentNode.getMolecule())) {
-                        NetworkNode tmpOldParentNode = this.getNetworkNode((IAtomContainer) tmpParentNode.getMolecule());
-                        this.getNetworkNode(tmpMolecule).addParent(tmpOldParentNode);
+                    if(this.isMoleculeContained((IAtomContainer) tmpParentNode.getMolecule())) {
+                        NetworkNode tmpOldParentNode = (NetworkNode) this.getNode((IAtomContainer) tmpParentNode.getMolecule());
+                        NetworkNode tmpOldChild = (NetworkNode) this.getNode(tmpMolecule);
+                        tmpOldChild.addParent(tmpOldParentNode);
                     }
                 }
             }
         }
     }
+
+    //<editor-fold desc="get/set">
+    /**
+     * Outputs an adjacency matrix in which the parent node of each node is marked with a 1.
+     * All others are marked with 0. Each row and column number in the matrix is assigned to a node.
+     * The assignment can be requested with getMatrixNodes/getMatrixNode.
+     * only works with connected networks. Can be checked with isNetworkConnected.
+     * @return the adjacency matrix
+     * @throws IllegalStateException if the network is not connected
+     */
+    public Integer[][] getNetworkAsMatrix() throws IllegalStateException {
+        int tmpSize = this.nodeMap.size();
+        Integer[][] tmpMatrix = new Integer[tmpSize][tmpSize];
+        /*Set all values of the matrix to 0*/
+        for (int tmpRow = 0; tmpRow < tmpMatrix.length; tmpRow++) {
+            for (int tmpCol = 0; tmpCol < tmpMatrix[tmpRow].length; tmpCol++) {
+                tmpMatrix[tmpRow][tmpCol] = 0;
+            }
+        }
+        /*Insert a 1 for each parent node*/
+        int tmpCounter = 0;
+        for (ScaffoldNodeBase tmpNodeBase : this.nodeMap.values()) {
+            NetworkNode tmpNode = (NetworkNode) tmpNodeBase;
+            if (tmpNode.getParents() != null) {
+                for(Object tmpParentNode : tmpNode.getParents()) {
+                    /*Check if a node has been removed*/
+                    if(this.reverseNodeMap.get(tmpParentNode) != null){
+                        //Set a 1 at the level of the parent and at the level of the node
+                        tmpMatrix[tmpCounter][this.getMatrixNodesNumbers().indexOf(this.reverseNodeMap.get(tmpParentNode))] = 1;
+                        //Set a 1 at the level of the node and at the level of the parent
+                        tmpMatrix[this.getMatrixNodesNumbers().indexOf(this.reverseNodeMap.get(tmpParentNode))][tmpCounter] = 1;
+                    }
+                }
+            }
+            tmpCounter++;
+        }
+        return tmpMatrix;
+    }
+
+    /**
+     * Outputs root nodes of the network.
+     * @return root nodes of the network
+     */
+    public List<NetworkNode> getRoots() {
+        List<NetworkNode> tmpNodeList = new ArrayList<>();
+        for(ScaffoldNodeBase tmpNodeBase : this.nodeMap.values()) {
+            NetworkNode tmpNode = (NetworkNode) tmpNodeBase;
+            /*Is the parent of the node in the network*/
+            if(tmpNode.getLevel() == 0) {
+                //If the node has no parent, it is a root
+                tmpNodeList.add(tmpNode);
+            }
+        }
+        return tmpNodeList;
+    }
+    //</editor-fold>
 }
