@@ -19,46 +19,22 @@
 package de.unijena.cheminf.scaffolds;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
 /**
  * The NetworkNodes are nodes from which a Network can be built.
  * It is used to organise the IAtomContainers and enables a relationship between the different objects.
- * As MoleculeType, any data type can be defined. In our scenario, the nodes contain molecules.
- *
- * Inspired by: https://github.com/gt4dev/yet-another-tree-structure
+ * A NetworkNode can have multiple children and parents
+ * @param <MoleculeType> As MoleculeType, any data type can be defined.
+ *                     In our scenario, the nodes contain molecules.
  */
-public class NetworkNode <MoleculeType> {
-
-    /**
-     * Molecule that can be stored in each node
-     */
-    private MoleculeType molecule;
-
-    /**
-     * List of SMILES of the molecules from which this fragment originates.
-     *
-     * If additional information of the origin is needed,
-     * it can be stored in a matrix with the IAtomContainer. The SMILES stored here can then be used as a key.
-     */
-    private ArrayList<String> OriginSmilesList;
+public class NetworkNode <MoleculeType> extends ScaffoldNodeBase<MoleculeType> {
 
     /**
      * parents of the node
      */
-    private List<NetworkNode<MoleculeType>> parents;
-
-    /**
-     * Children of the Node
-     */
-    private List<NetworkNode<MoleculeType>> children;
-
-    /**
-     * List of indices of all elements
-     */
-    private List<NetworkNode<MoleculeType>> elementsIndex;
+    public List<NetworkNode<MoleculeType>> parents;
 
     /**
      * Shows if the node has parents
@@ -69,26 +45,12 @@ public class NetworkNode <MoleculeType> {
     }
 
     /**
-     * Indicates whether it is a leaf, i.e. whether there are deeper nodes
-     * True if there are no deeper nodes
-     * @return Whether it is a leaf
-     */
-    public boolean isLeaf() {
-        return children.size() == 0;
-    }
-
-    /**
      * Creates a NetworkNode
      * @param aMolecule molecule of the NetworkNode
      */
     public NetworkNode(MoleculeType aMolecule) {
-        Objects.requireNonNull(aMolecule, "Given molecule is 'null'");
-        this.molecule = aMolecule;
+        super(aMolecule);
         this.parents =  new ArrayList<NetworkNode<MoleculeType>>();
-        this.children = new LinkedList<NetworkNode<MoleculeType>>();
-        this.OriginSmilesList = new ArrayList<String>();
-        this.elementsIndex = new LinkedList<NetworkNode<MoleculeType>>();
-        this.elementsIndex.add(this);
     }
 
     /**
@@ -104,15 +66,27 @@ public class NetworkNode <MoleculeType> {
     }
 
     /**
-     * Adds another string to the OriginSmilesList if it is not already present.
-     * @param aString String to be added
+     * Add the parents node and add this node as child to the parent node if not already done.
+     * @param aParent parent that are added
      */
-    public void addOriginSmiles(String aString) {
-        Objects.requireNonNull(aString, "Given SMILES of the molecule is 'null'");
-        if(!this.OriginSmilesList.contains(aString)) {
-            OriginSmilesList.add(aString);
+    public void addParent(NetworkNode<MoleculeType> aParent) {
+        Objects.requireNonNull(aParent, "Given NetworkNode is 'null'");
+        /*Add child if not already added*/
+        boolean tmpIsAlreadyChild = false;
+        for(ScaffoldNodeBase<MoleculeType> tmpBaseNode : aParent.getChildren()) {
+            NetworkNode<MoleculeType> tmpNode = (NetworkNode<MoleculeType>) tmpBaseNode;
+            if(tmpNode.getMolecule() == this.getMolecule()){
+                tmpIsAlreadyChild = true;
+            }
         }
+        if(tmpIsAlreadyChild == false) {
+            aParent.addChild(this.getMolecule());
+        }
+        //Add parent
+        this.parents.add(aParent);
     }
+
+    //<editor-fold desc="get/set">
     /**
      * Outputs the level on which the node is located in the entire network
      * @return level of the node in the entire network
@@ -122,24 +96,6 @@ public class NetworkNode <MoleculeType> {
             return 0;
         else
             return parents.get(0).getLevel() + 1;
-    }
-
-    //<editor-fold desc="get/set">
-    /**
-     * Get the node molecule.
-     * @return node molecule
-     */
-    public MoleculeType getMolecule() {
-        return this.molecule;
-    }
-
-    /**
-     * Set the node molecule.
-     * @param aMolecule molecule that are set
-     */
-    public void setMolecule(MoleculeType aMolecule) {
-        Objects.requireNonNull(aMolecule, "Given molecule is 'null'");
-        this.molecule = aMolecule;
     }
 
     /**
@@ -158,58 +114,5 @@ public class NetworkNode <MoleculeType> {
         Objects.requireNonNull(aParents, "Given NetworkNode is 'null'");
         this.parents = aParents;
     }
-
-    /**
-     * Add the parents node and add this node as child to the parent node if not already done.
-     * @param aParent parent that are added
-     */
-    public void addParent(NetworkNode<MoleculeType> aParent) {
-        Objects.requireNonNull(aParent, "Given NetworkNode is 'null'");
-        /*Add child if not already added*/
-        boolean tmpIsAlreadyChild = false;
-        for(NetworkNode tmpNode : aParent.getChildren()) {
-            if(tmpNode.getMolecule() == this.getMolecule()){
-                tmpIsAlreadyChild = true;
-            }
-        }
-        if(tmpIsAlreadyChild == false) {
-            aParent.addChild(this.getMolecule());
-        }
-        //Add parent
-        this.parents.add(aParent);
-    }
-
-    /**
-     * Get the children nodes.
-     * @return children nodes
-     */
-    public List<NetworkNode<MoleculeType>> getChildren() {
-        return this.children;
-    }
-
-    /**
-     * Set the children node.
-     * @param aChildren children that are set
-     */
-    public void setChildren(List<NetworkNode<MoleculeType>> aChildren) {
-        Objects.requireNonNull(aChildren, "Given NetworkNode List is 'null'");
-        this.children = aChildren;
-    }
-
-    /**
-     * Get the OriginSmilesList
-     * @return List of SMILES of the molecules from which this fragment originates
-     */
-    public ArrayList<String> getOriginSmilesList() {
-        return this.OriginSmilesList;
-    }
-
-    /**
-     * Set the entire OriginSmilesList
-     * @param aOriginSmilesList SMILES of molecules that are set
-     */
-    public void setOriginSmilesList(ArrayList<String> aOriginSmilesList) {
-        Objects.requireNonNull(aOriginSmilesList, "Given SMILES of the molecule List is 'null'");
-        this.OriginSmilesList = aOriginSmilesList;
-    }
+    //</editor-fold>
 }
