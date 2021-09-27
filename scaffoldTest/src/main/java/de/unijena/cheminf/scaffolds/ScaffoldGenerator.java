@@ -624,13 +624,11 @@ public class ScaffoldGenerator {
             }
             tmpLevelCounter++; //Increases when a level is completed
         }
-        TreeNodeIter<IAtomContainer> tmpNodeIter = new TreeNodeIter<>(tmpParentNode);
         String tmpOrigin = this.getSmilesGenerator().create(aMolecule);
         /*Add generated nodes to the ScaffoldTree and add the origin to each node */
-        while(tmpNodeIter.hasNext()) { // As long as there are still other molecules in the tree
-            TreeNode<IAtomContainer> tmpMoleculeNode = tmpNodeIter.next(); // Next molecule in tree
-            tmpMoleculeNode.addOriginSmiles(tmpOrigin);
-            tmpScaffoldTree.addNode(tmpMoleculeNode);
+        for(TreeNode tmpTreeNode : tmpAllNodesList) {
+            tmpTreeNode.addOriginSmiles(tmpOrigin);
+            tmpScaffoldTree.addNode(tmpTreeNode);
         }
         return tmpScaffoldTree;
     }
@@ -680,12 +678,13 @@ public class ScaffoldGenerator {
                     //Remove next ring
                     IAtomContainer tmpRingRemoved = this.getScaffoldInternal(this.removeRing(tmpIterMol, tmpRing), false, null);
                     /*The node is not yet in the network and must therefore still be added.*/
-                    if(!tmpScaffoldNetwork.isMoleculeInNetwork(tmpRingRemoved)) {
+                    if(!tmpScaffoldNetwork.isMoleculeContained(tmpRingRemoved)) {
                         tmpIterativeRemovalList.add(tmpRingRemoved);
                         //Create new node
                         NetworkNode tmpNewNode = new NetworkNode<>(tmpRingRemoved);
                         //Add the new node as parent for the old one
-                        tmpScaffoldNetwork.getNetworkNode(tmpIterMol).addParent(tmpNewNode);
+                        NetworkNode tmpNode1 = (NetworkNode) tmpScaffoldNetwork.getNode(tmpIterMol);
+                        tmpNode1.addParent(tmpNewNode);
                         //Add Origin
                         tmpNewNode.addOriginSmiles(tmpFirstNodeSmiles);
                         //Add new child of the node
@@ -695,9 +694,9 @@ public class ScaffoldGenerator {
                         /*The node is already in the network*/
                     }   else {
                         /*Node with the same molecule already in the tree*/
-                        NetworkNode tmpOldNode = tmpScaffoldNetwork.getNetworkNode(tmpRingRemoved);
+                        NetworkNode tmpOldNode = (NetworkNode) tmpScaffoldNetwork.getNode(tmpRingRemoved);
                         //Add parent
-                        NetworkNode tmpNewNode = tmpScaffoldNetwork.getNetworkNode(tmpIterMol);
+                        NetworkNode tmpNewNode = (NetworkNode) tmpScaffoldNetwork.getNode(tmpIterMol);
                         tmpNewNode.addParent(tmpOldNode);
                         /*Add children*/
                         for (Object tmpParentObject : tmpNewNode.getParents()) {
@@ -706,13 +705,13 @@ public class ScaffoldGenerator {
                             for(Object tmpChildObject : tmpParentNode.getChildren()) {
                                 NetworkNode tmpChildNode = (NetworkNode) tmpChildObject;
                                 /*Is children already set*/
-                                if(getSmilesGenerator().create((IAtomContainer) tmpChildNode.getMolecule()).equals(getSmilesGenerator().create((IAtomContainer) tmpScaffoldNetwork.getNetworkNode(tmpIterMol).getMolecule()))) {
+                                if(getSmilesGenerator().create((IAtomContainer) tmpChildNode.getMolecule()).equals(getSmilesGenerator().create((IAtomContainer) tmpScaffoldNetwork.getNode(tmpIterMol).getMolecule()))) {
                                     tmpIsChildrenAlreadySet = true;
                                 }
                             }
                             /*Do not add children already set*/
                             if(!tmpIsChildrenAlreadySet) {
-                                //tmpParentNode.addChild(tmpScaffoldNetwork.getNetworkNode(tmpIterMol).getMolecule());
+                                //tmpParentNode.addChild(tmpScaffoldNetwork.getNode(tmpIterMol).getMolecule());
                             }
                         }
                     }
@@ -1052,7 +1051,8 @@ public class ScaffoldGenerator {
         for(int i = 1; i < tmpAllNodesList.size(); i++) {
             TreeNode tmpNewNode = tmpAllNodesList.get((tmpAllNodesList.size() - 1) - i);
             IAtomContainer tmpTestMol = (IAtomContainer) tmpNewNode.getMolecule();
-            tmpScaffoldTree.getAllNodesOnLevel(i - 1).get(0).addChild(tmpTestMol);
+            TreeNode tmpNode = (TreeNode) tmpScaffoldTree.getAllNodesOnLevel(i - 1).get(0);
+            tmpNode.addChild(tmpTestMol);
             TreeNode tmpTestNode = (TreeNode) tmpScaffoldTree.getAllNodesOnLevel(i - 1).get(0).getChildren().get(0);
             tmpTestNode.addOriginSmiles(tmpSmiles);
             tmpScaffoldTree.addNode(tmpTestNode);

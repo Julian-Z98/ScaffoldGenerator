@@ -55,9 +55,10 @@ public final class GraphStreamUtility {
             Node tmpNode = tmpGraph.getNode(String.valueOf(tmpRow));
             tmpNode.setAttribute("Node", aScaffoldTree.getMatrixNode(tmpRow));
             /*Add a label to each node that corresponds to the position in the matrix*/
-            tmpNode.setAttribute("ui.label", aScaffoldTree.getMatrixNode(tmpRow).getLevel());
+            TreeNode tmpTreeLevelNode = (TreeNode) aScaffoldTree.getMatrixNode(tmpRow);
+            tmpNode.setAttribute("ui.label", tmpTreeLevelNode.getLevel());
             /*Add the images*/
-            TreeNode tmpTreeNode =  aScaffoldTree.getMatrixNode(aScaffoldTree.getMatrixNodesNumbers().get(tmpRow));
+            TreeNode tmpTreeNode = (TreeNode) aScaffoldTree.getMatrixNode(aScaffoldTree.getMatrixNodesNumbers().get(tmpRow));
             IAtomContainer tmpTreeNodeMolecule = (IAtomContainer) tmpTreeNode.getMolecule();
             BufferedImage tmpNodeImg = tmpGenerator.withSize(512,512).depict(tmpTreeNodeMolecule).toImg();
             //The images are stored temporarily, as I have not found a way to use them directly
@@ -107,9 +108,10 @@ public final class GraphStreamUtility {
             Node tmpNode = tmpGraph.getNode(String.valueOf(tmpRow));
             tmpNode.setAttribute("Node", aScaffoldNetwork.getMatrixNode(tmpRow));
             /*Add a label to each node that corresponds to the position in the matrix*/
-            tmpNode.setAttribute("ui.label", aScaffoldNetwork.getMatrixNode(tmpRow).getLevel());
+            NetworkNode tmpNetworkNodeRow = (NetworkNode) aScaffoldNetwork.getMatrixNode(tmpRow);
+            tmpNode.setAttribute("ui.label", tmpNetworkNodeRow.getLevel());
             /*Add the images*/
-            NetworkNode tmpNetworkNode =  aScaffoldNetwork.getMatrixNode(aScaffoldNetwork.getMatrixNodesNumbers().get(tmpRow));
+            NetworkNode tmpNetworkNode = (NetworkNode) aScaffoldNetwork.getMatrixNode(aScaffoldNetwork.getMatrixNodesNumbers().get(tmpRow));
             IAtomContainer tmpNetworkNodeMolecule = (IAtomContainer) tmpNetworkNode.getMolecule();
             BufferedImage tmpNodeImg = tmpGenerator.withSize(512,512).depict(tmpNetworkNodeMolecule).toImg();
             //The images are stored temporarily, as I have not found a way to use them directly

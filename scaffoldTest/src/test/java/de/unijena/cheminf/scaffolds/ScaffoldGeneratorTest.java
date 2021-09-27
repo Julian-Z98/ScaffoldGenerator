@@ -530,10 +530,11 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             ScaffoldTree tmpScaffoldTree = tmpScaffoldGenerator.getRemovalTree(tmpMolecule);
             int tmpCounter = 0;
             /*Go thought all molecules in the tree*/
-            for(TreeNode<IAtomContainer> tmpNode : tmpScaffoldTree.getAllNodes()) {
+            for(ScaffoldNodeBase<IAtomContainer> tmpNodeBase : tmpScaffoldTree.getAllNodes()) {
+                TreeNode tmpNode = (TreeNode) tmpNodeBase;
                 /*Save the picture*/
                 DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
-                BufferedImage tmpSecImgRemove = tmpGenerator.depict(tmpNode.getMolecule()).toImg();
+                BufferedImage tmpSecImgRemove = tmpGenerator.depict((IAtomContainer) tmpNode.getMolecule()).toImg();
                 new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Tree" + "/TreeTest" + tmpCounter  + "Level" + tmpNode.getLevel() + ".png").mkdirs();
                 File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Tree" + "/TreeTest" + tmpCounter +  "Level" + tmpNode.getLevel() + ".png");
                 ImageIO.write(tmpSecImgRemove, "png", tmpSecOutputRemove);
@@ -561,7 +562,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         ScaffoldTree tmpScaffoldTree = tmpScaffoldGenerator.getRemovalTree(tmpMolecule);
         int tmpCounter = 0;
         /*Go thought all molecules in the tree*/
-        for(TreeNode<IAtomContainer> tmpNode : tmpScaffoldTree.getAllNodes()) {
+        for(ScaffoldNodeBase<IAtomContainer> tmpNodeBase : tmpScaffoldTree.getAllNodes()) {
+            TreeNode<IAtomContainer> tmpNode = (TreeNode) tmpNodeBase;
             if(tmpCounter == tmpTestNumber -1){
                 /*Save the picture of the test Node*/
                 DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
@@ -576,7 +578,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
                 ImageIO.write(tmpParentImg, "png", tmpParentFile);
                 /*Save pictures of the children*/
                 int tmpChildCounter = 0;
-                for(TreeNode<IAtomContainer> tmpChildNode : tmpNode.getChildren()) {
+                for(ScaffoldNodeBase<IAtomContainer> tmpChildNodeBase : tmpNode.getChildren()) {
+                    TreeNode<IAtomContainer> tmpChildNode = (TreeNode<IAtomContainer>) tmpChildNodeBase;
                     tmpChildCounter++;
                     BufferedImage tmpChildImg = tmpGenerator.depict(tmpChildNode.getMolecule()).toImg();
                     new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName + "/Tree" + "/ChildNode" + tmpChildCounter + ".png").mkdirs();
@@ -605,16 +608,16 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         /*isMoleculeInTree and getMatrixNode checker*/
         System.out.println("---isMoleculeInTree and getMatrixNode check---");
         /*Should be false*/
-        System.out.println("Is the original molecule in the tree: " + tmpScaffoldTree.isMoleculeInTree(tmpMolecule));
-        assertEquals(false,tmpScaffoldTree.isMoleculeInTree(tmpMolecule));
+        System.out.println("Is the original molecule in the tree: " + tmpScaffoldTree.isMoleculeContained(tmpMolecule));
+        assertEquals(false,tmpScaffoldTree.isMoleculeContained(tmpMolecule));
         /*Should be true*/
-        System.out.println("Is the molecule of node 14 in the tree: " + tmpScaffoldTree.isMoleculeInTree((IAtomContainer) tmpScaffoldTree.getMatrixNode(14).getMolecule()));
-        assertEquals(true, tmpScaffoldTree.isMoleculeInTree((IAtomContainer) tmpScaffoldTree.getMatrixNode(14).getMolecule()));
+        System.out.println("Is the molecule of node 14 in the tree: " + tmpScaffoldTree.isMoleculeContained((IAtomContainer) tmpScaffoldTree.getMatrixNode(14).getMolecule()));
+        assertEquals(true, tmpScaffoldTree.isMoleculeContained((IAtomContainer) tmpScaffoldTree.getMatrixNode(14).getMolecule()));
         /*getTreeNode checker*/
         System.out.println("---getTreeNode check---");
         IAtomContainer tmpTestMolecule = (IAtomContainer) tmpScaffoldTree.getMatrixNode(10).getMolecule();
         System.out.println("Size of the test molecule: " + tmpTestMolecule.getAtomCount());
-        IAtomContainer tmpResultMolecule = (IAtomContainer) tmpScaffoldTree.getTreeNode(tmpTestMolecule).getMolecule();
+        IAtomContainer tmpResultMolecule = (IAtomContainer) tmpScaffoldTree.getNode(tmpTestMolecule).getMolecule();
         System.out.println("Size of the result molecule: " + tmpResultMolecule.getAtomCount()); //Should be the same size
         assertEquals(tmpTestMolecule.getAtomCount(), tmpResultMolecule.getAtomCount());
         /*getAllNodes, getLevel and getMaxLevel checker*/
@@ -644,7 +647,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             }
         }
         /*Store all molecules in the order in which they appear in the matrix as images*/
-        for(TreeNode tmpNode : tmpScaffoldTree.getMatrixNodes().values()) {
+        for(ScaffoldNodeBase tmpNodeBase : tmpScaffoldTree.getMatrixNodes().values()) {
+            TreeNode tmpNode = (TreeNode) tmpNodeBase;
             IAtomContainer tmpNodeMolecule = (IAtomContainer) tmpNode.getMolecule();
             /*Save the picture*/
             DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
@@ -655,7 +659,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             tmpTreeCounter++;
         }
         /*Check that the origin of all nodes has been set correctly*/
-        for(TreeNode tmpTreeNode : tmpScaffoldTree.getAllNodes()) {
+        for(ScaffoldNodeBase tmpTreeNodeBase : tmpScaffoldTree.getAllNodes()) {
+            TreeNode tmpTreeNode = (TreeNode) tmpTreeNodeBase;
             for(Object tmpSmiles : tmpTreeNode.getOriginSmilesList()) {
                 assertEquals("[H]C12SC(C)(C)C(C(=O)O)N2C(=O)C1NC(=O)C=3C(=NOC3C)C=4C(F)=CC=CC4Cl", tmpSmiles);
             }
@@ -663,9 +668,9 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         /*RemoveNode, getRoot, hasOneSingleRootNode and isTreeConnected check*/
         System.out.println("---RemoveNode, getRoot, hasOneSingleRootNode and isTreeConnected check---");
         IAtomContainer tmpRemovedMolecule = (IAtomContainer) tmpScaffoldTree.getMatrixNode(14).getMolecule();
-        tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(14));
+        tmpScaffoldTree.removeNode((TreeNode) tmpScaffoldTree.getMatrixNode(14));
         //Because the molecule occurs twice in the tree, it must still be present after the removal of a single node
-        assertEquals(true, tmpScaffoldTree.isMoleculeInTree(tmpRemovedMolecule));
+        assertEquals(true, tmpScaffoldTree.isMoleculeContained(tmpRemovedMolecule));
         System.out.println("Size of the tree after on Node is removed: "+ tmpScaffoldTree.getAllNodes().size());
         assertEquals(14, tmpScaffoldTree.getAllNodes().size());
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
@@ -696,9 +701,9 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
         ScaffoldTree tmpScaffoldTree = tmpScaffoldGenerator.getRemovalTree(tmpMolecule);
         /*Remove some nodes*/
-        //tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(24));
-        //tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(10));
-        //tmpScaffoldTree.removeNode(tmpScaffoldTree.getMatrixNode(23));
+        //tmpScaffoldTree.removeNode((TreeNode) tmpScaffoldTree.getMatrixNode(24));
+        tmpScaffoldTree.removeNode((TreeNode) tmpScaffoldTree.getMatrixNode(14));
+        //tmpScaffoldTree.removeNode((TreeNode) tmpScaffoldTree.getMatrixNode(23));
         /*Display the tree*/
         GraphStreamUtility.displayTreeWithGraphStream(tmpScaffoldTree);
     }
@@ -720,12 +725,14 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         If nodes are removed in the middle of the tree, it cannot be displayed with Graphstream.*/
         System.out.println(tmpScaffoldNetwork.getAllNodes().size());
         //tmpScaffoldNetwork.removeNode(tmpScaffoldNetwork.getMatrixNode(0));
-        //tmpScaffoldNetwork.removeNode(tmpScaffoldNetwork.getMatrixNode(1));
+        NetworkNode tmpRemoveNode = (NetworkNode) tmpScaffoldNetwork.getMatrixNode(9);
+        tmpScaffoldNetwork.removeNode(tmpRemoveNode);
         System.out.println(tmpScaffoldNetwork.getAllNodes().size());
         /*Print some further information*/
         System.out.println("Root size: " + tmpScaffoldNetwork.getRoots().size());
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
-        for(NetworkNode tmpTestNode : tmpScaffoldNetwork.getAllNodes()) {
+        for(ScaffoldNodeBase tmpTestNodeBase : tmpScaffoldNetwork.getAllNodes()) {
+            NetworkNode tmpTestNode = (NetworkNode) tmpTestNodeBase;
             IAtomContainer tmpTestMolecule = (IAtomContainer) tmpTestNode.getMolecule();
             System.out.println("--- Node: " + tmpSmilesGenerator.create(tmpTestMolecule) + " ---");
             System.out.println("Node on LvL: " + tmpTestNode.getLevel());
@@ -765,7 +772,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         /*Print some further information*/
         System.out.println("Root size: " + tmpScaffoldNetwork.getRoots().size());
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
-        for(NetworkNode tmpTestNode : tmpScaffoldNetwork.getAllNodes()) {
+        for(ScaffoldNodeBase tmpTestNodeBase : tmpScaffoldNetwork.getAllNodes()) {
+            NetworkNode tmpTestNode = (NetworkNode) tmpTestNodeBase;
             IAtomContainer tmpTestMolecule = (IAtomContainer) tmpTestNode.getMolecule();
             System.out.println("--- Node: " + tmpSmilesGenerator.create(tmpTestMolecule) + " ---");
             System.out.println("Node on LvL: " + tmpTestNode.getLevel());
@@ -864,7 +872,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         /*Add edges and nodes*/
         System.out.println("Root size: " + tmpScaffoldNetwork.getRoots().size());
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
-        for(NetworkNode tmpTestNode : tmpScaffoldNetwork.getAllNodes()) {
+        for(ScaffoldNodeBase tmpTestNodeBase : tmpScaffoldNetwork.getAllNodes()) {
+            NetworkNode tmpTestNode = (NetworkNode) tmpTestNodeBase;
             IAtomContainer tmpTestMolecule = (IAtomContainer) tmpTestNode.getMolecule();
             System.out.println("--- Node: " + tmpSmilesGenerator.create(tmpTestMolecule) + " ---");
             System.out.println("Node on LvL: " + tmpTestNode.getLevel());
@@ -891,7 +900,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
      */
     @Ignore
     @Test
-    public void mergeFigure1NetworksTest() throws Exception {
+    public void mergeFigure1NetworkTest() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("CC1=NC=CN1CC2CCC3=C(C2=O)C4=CC=CC=C4N3C");//Ondasetron
@@ -909,7 +918,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         /*Print some further information*/
         System.out.println("Root size: " + tmpScaffoldNetwork.getRoots().size());
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
-        for(NetworkNode tmpTestNode : tmpScaffoldNetwork.getAllNodes()) {
+        for(ScaffoldNodeBase tmpTestNodeBase : tmpScaffoldNetwork.getAllNodes()) {
+            NetworkNode tmpTestNode = (NetworkNode) tmpTestNodeBase;
             IAtomContainer tmpTestMolecule = (IAtomContainer) tmpTestNode.getMolecule();
             System.out.println("--- Node: " + tmpSmilesGenerator.create(tmpTestMolecule) + " ---");
             System.out.println("Node on LvL: " + tmpTestNode.getLevel());
@@ -975,7 +985,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
         System.out.println("I am Root: " + tmpSmilesGenerator.create(tmpRootMolecule));
         System.out.println("Size" + tmpScaffoldTree.getRoot().getOriginSmilesList().size());
-        for(TreeNode tmpTreeNode : tmpScaffoldTree.getAllNodes()) {
+        for(ScaffoldNodeBase tmpTreeNodeBase : tmpScaffoldTree.getAllNodes()) {
+            TreeNode tmpTreeNode = (TreeNode) tmpTreeNodeBase;
             System.out.println("---Node: " + tmpSmilesGenerator.create((IAtomContainer) tmpTreeNode.getMolecule()));
             for(Object tmpSmiles : tmpTreeNode.getOriginSmilesList()) {
                 System.out.println("Origin of the Node: " + tmpSmiles);
@@ -1163,7 +1174,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.MURCKO_FRAMEWORK);
             IAtomContainer tmpScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule);
             System.out.println("Root:" + tmpSmilesGenerator.create((IAtomContainer) tmpTestTree.getRoot().getMolecule()));
-            for(TreeNode tmpNode : tmpTestTree.getAllNodes()) {
+            for(ScaffoldNodeBase tmpNodeBase : tmpTestTree.getAllNodes()) {
+                TreeNode tmpNode = (TreeNode) tmpNodeBase;
                 System.out.println("Molecules:" + tmpSmilesGenerator.create((IAtomContainer) tmpNode.getMolecule()));
             }
         }
@@ -1203,7 +1215,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             IAtomContainer tmpScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule);
             System.out.println("Root:" + tmpSmilesGenerator.create((IAtomContainer) tmpTestTree.getRoot().getMolecule()));
             System.out.println("Scaffold:" + tmpSmilesGenerator.create(tmpScaffold));
-            for(TreeNode tmpNode : tmpTestTree.getAllNodes()) {
+            for(ScaffoldNodeBase tmpNodeBase : tmpTestTree.getAllNodes()) {
+                TreeNode tmpNode = (TreeNode) tmpNodeBase;
                 System.out.println("Molecules:" + tmpSmilesGenerator.create((IAtomContainer) tmpNode.getMolecule()));
             }
         }
