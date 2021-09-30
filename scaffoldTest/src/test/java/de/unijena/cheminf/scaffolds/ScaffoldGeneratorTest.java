@@ -797,11 +797,11 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         /*isMoleculeInTree and getMatrixNode checker*/
         System.out.println("---isMoleculeInTree and getMatrixNode check---");
         /*Should be false*/
-        System.out.println("Is the original molecule in the tree: " + tmpScaffoldTree.isMoleculeContained(tmpMolecule));
-        assertEquals(false,tmpScaffoldTree.isMoleculeContained(tmpMolecule));
+        System.out.println("Is the original molecule in the tree: " + tmpScaffoldTree.containsMolecule(tmpMolecule));
+        assertEquals(false,tmpScaffoldTree.containsMolecule(tmpMolecule));
         /*Should be true*/
-        System.out.println("Is the molecule of node 14 in the tree: " + tmpScaffoldTree.isMoleculeContained((IAtomContainer) tmpScaffoldTree.getMatrixNode(14).getMolecule()));
-        assertEquals(true, tmpScaffoldTree.isMoleculeContained((IAtomContainer) tmpScaffoldTree.getMatrixNode(14).getMolecule()));
+        System.out.println("Is the molecule of node 14 in the tree: " + tmpScaffoldTree.containsMolecule((IAtomContainer) tmpScaffoldTree.getMatrixNode(14).getMolecule()));
+        assertEquals(true, tmpScaffoldTree.containsMolecule((IAtomContainer) tmpScaffoldTree.getMatrixNode(14).getMolecule()));
         /*getTreeNode checker*/
         System.out.println("---getTreeNode check---");
         IAtomContainer tmpTestMolecule = (IAtomContainer) tmpScaffoldTree.getMatrixNode(10).getMolecule();
@@ -820,8 +820,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         /*Matrix check*/
         System.out.println("---getTreeAsMatrix check---");
         int tmpTreeCounter = 0;
-        System.out.println("Is tree connected: " + tmpScaffoldTree.isTreeConnected());
-        Integer[][] tmpMatrix = tmpScaffoldTree.getTreeAsMatrix();
+        System.out.println("Is tree valid: " + tmpScaffoldTree.isValid());
+        Integer[][] tmpMatrix = tmpScaffoldTree.getMatrix();
         for(int tmpRow = 0; tmpRow < tmpMatrix.length; tmpRow++) {
             for(int tmpCol = 0; tmpCol < tmpMatrix[tmpRow].length; tmpCol++) {
                 System.out.print(tmpMatrix[tmpRow][tmpCol] + " ");
@@ -854,26 +854,22 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
                 assertEquals("[H]C12SC(C)(C)C(C(=O)O)N2C(=O)C1NC(=O)C=3C(=NOC3C)C=4C(F)=CC=CC4Cl", tmpSmiles);
             }
         }
-        /*RemoveNode, getRoot, hasOneSingleRootNode and isTreeConnected check*/
-        System.out.println("---RemoveNode, getRoot, hasOneSingleRootNode and isTreeConnected check---");
+        /*RemoveNode, getRoot, hasOneSingleRootNode and isConnected check*/
+        System.out.println("---RemoveNode, getRoot, hasOneSingleRootNode and isConnected check---");
         IAtomContainer tmpRemovedMolecule = (IAtomContainer) tmpScaffoldTree.getMatrixNode(14).getMolecule();
         tmpScaffoldTree.removeNode((TreeNode) tmpScaffoldTree.getMatrixNode(14));
         //Because the molecule occurs twice in the tree, it must still be present after the removal of a single node
-        assertEquals(true, tmpScaffoldTree.isMoleculeContained(tmpRemovedMolecule));
+        assertEquals(true, tmpScaffoldTree.containsMolecule(tmpRemovedMolecule));
         System.out.println("Size of the tree after on Node is removed: "+ tmpScaffoldTree.getAllNodes().size());
         assertEquals(14, tmpScaffoldTree.getAllNodes().size());
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
         System.out.println("Root of the tree: " + tmpSmilesGenerator.create((IAtomContainer) tmpScaffoldTree.getRoot().getMolecule()));
         assertEquals(22,  ((IAtomContainer) tmpScaffoldTree.getRoot().getMolecule()).getAtomCount());
-        System.out.println("Is tree connected: " + tmpScaffoldTree.isTreeConnected());
-        assertEquals(true, tmpScaffoldTree.isTreeConnected());
-        System.out.println("Has the tree one single root Node: " + tmpScaffoldTree.hasOneSingleRootNode());
-        assertEquals(true, tmpScaffoldTree.hasOneSingleRootNode());
+        System.out.println("Is tree valid: " + tmpScaffoldTree.isValid());
+        assertEquals(true, tmpScaffoldTree.isValid());
         tmpScaffoldTree.removeNode(tmpScaffoldTree.getRoot()); //Remove one node
-        System.out.println("Is the tree connected after the root has been removed: " + tmpScaffoldTree.isTreeConnected());
-        assertEquals(false, tmpScaffoldTree.isTreeConnected());
-        System.out.println("Has the tree one single root node after the root has been removed: " + tmpScaffoldTree.hasOneSingleRootNode());
-        assertEquals(false, tmpScaffoldTree.hasOneSingleRootNode());
+        System.out.println("Is the tree valid after the root has been removed: " + tmpScaffoldTree.isValid());
+        assertEquals(false, tmpScaffoldTree.isValid());
     }
 
     /**
@@ -892,7 +888,6 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         /*Remove some nodes*/
         //tmpScaffoldTree.removeNode((TreeNode) tmpScaffoldTree.getMatrixNode(24));
         tmpScaffoldTree.removeNode((TreeNode) tmpScaffoldTree.getMatrixNode(14));
-        //tmpScaffoldTree.removeNode((TreeNode) tmpScaffoldTree.getMatrixNode(23));
         /*Display the tree*/
         GraphStreamUtility.displayTreeWithGraphStream(tmpScaffoldTree);
     }
@@ -1173,7 +1168,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         IAtomContainer tmpRootMolecule = (IAtomContainer) tmpScaffoldTree.getRoot().getMolecule();
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
         System.out.println("I am Root: " + tmpSmilesGenerator.create(tmpRootMolecule));
-        System.out.println("Size" + tmpScaffoldTree.getRoot().getOriginSmilesList().size());
+        System.out.println("Number of Origins: " + tmpScaffoldTree.getRoot().getOriginCount());
         for(ScaffoldNodeBase tmpTreeNodeBase : tmpScaffoldTree.getAllNodes()) {
             TreeNode tmpTreeNode = (TreeNode) tmpTreeNodeBase;
             System.out.println("---Node: " + tmpSmilesGenerator.create((IAtomContainer) tmpTreeNode.getMolecule()));

@@ -121,7 +121,7 @@ public class ScaffoldGenerator {
      * Default setting for which SmilesGenerator should be used.
      * By default, unique SMILES are used.
      */
-    public static final SmilesGenerator SMILES_GENERATOR_SETTING_DEFAULT = new SmilesGenerator(SmiFlavor.Unique);
+    public static final SmilesGenerator SMILES_GENERATOR_SETTING_DEFAULT = new SmilesGenerator(SmiFlavor.Unique | SmiFlavor.UseAromaticSymbols);
 
     /**
      * Default setting for whether rule 7 should be applied. By default, rule 7 is applied.
@@ -582,7 +582,7 @@ public class ScaffoldGenerator {
                 if(this.isRingTerminal(tmpIterMol, tmpRing) && this.isRingRemovable(tmpRing, tmpAllRingsList, tmpIterMol)) { //Consider all terminal rings
                     boolean tmpIsInList = false;
                     IAtomContainer tmpRingRemoved = this.getScaffoldInternal(this.removeRing(tmpIterMol, true, tmpRing), true, false, null, this.scaffoldModeSetting); //Remove next ring
-                    String tmpRingRemovedSMILES = this.getSmilesGenerator().create(tmpRingRemoved); //Generate unique SMILES
+                    String tmpRingRemovedSMILES = this.getSmilesGenerator().create(tmpRingRemoved); //Generate SMILES
                     if(tmpAddedSMILESList.contains(tmpRingRemovedSMILES)) { //Check if the molecule has already been added to the list
                         tmpIsInList = true;
                     }
@@ -689,7 +689,7 @@ public class ScaffoldGenerator {
                     //Remove next ring
                     IAtomContainer tmpRingRemoved = this.getScaffoldInternal(this.removeRing(tmpIterMol, true, tmpRing), true, false, null, this.scaffoldModeSetting);
                     /*The node is not yet in the network and must therefore still be added.*/
-                    if(!tmpScaffoldNetwork.isMoleculeContained(tmpRingRemoved)) {
+                    if(!tmpScaffoldNetwork.containsMolecule(tmpRingRemoved)) {
                         tmpIterativeRemovalList.add(tmpRingRemoved);
                         //Create new node
                         NetworkNode tmpNewNode = new NetworkNode<>(tmpRingRemoved);
@@ -2418,8 +2418,8 @@ public class ScaffoldGenerator {
     /**
      * Remove a ring according to the thirteenth Schuffenhauer rule.
      * Based on rule number 13 from the "The Scaffold Tree" Paper by Schuffenhauer et al.
-     * In contrast to the paper, unique SMILES are used here instead of canonical SMILES.
-     * The entered rings are sorted alphabetically by their unique SMILES. The last ring of this sort is returned.
+     * In contrast to the paper, different types of SMILES can be used here instead of canonical SMILES.
+     * The entered rings are sorted alphabetically by their SMILES. The last ring of this sort is returned.
      * If two structures are the same, one is selected arbitrary.
      * @param aRings Removable rings of the molecule to which the rule is applied
      * @param aMolecule Molecule from which a ring is to be removed
