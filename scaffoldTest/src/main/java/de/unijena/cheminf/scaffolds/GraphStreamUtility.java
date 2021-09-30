@@ -31,6 +31,8 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Contains useful functions such as visualisation with Graphstream.
+ *
+ * @version 1.0
  */
 public final class GraphStreamUtility {
     /**
@@ -48,7 +50,7 @@ public final class GraphStreamUtility {
         /*Add edges and nodes*/
         int tmpEdgeCount = 0;
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
-        Integer[][] tmpMatrix = aScaffoldTree.getTreeAsMatrix(); //Create the adjacency matrix
+        Integer[][] tmpMatrix = aScaffoldTree.getMatrix(); //Create the adjacency matrix
         for(int tmpRow = 0; tmpRow < tmpMatrix.length; tmpRow++) { //Create a node for each row
             /*Add the ScaffoldTree nodes to the graph*/
             tmpGraph.addNode(String.valueOf(tmpRow));
@@ -101,7 +103,7 @@ public final class GraphStreamUtility {
         /*Add edges and nodes*/
         int tmpEdgeCount = 0;
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
-        Integer[][] tmpMatrix = aScaffoldNetwork.getNetworkAsMatrix(); //Create the adjacency matrix
+        Integer[][] tmpMatrix = aScaffoldNetwork.getMatrix(); //Create the adjacency matrix
         for(int tmpRow = 0; tmpRow < tmpMatrix.length; tmpRow++) { //Create a node for each row
             /*Add the ScaffoldNetwork nodes to the graph*/
             tmpGraph.addNode(String.valueOf(tmpRow));
