@@ -51,22 +51,29 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
      * @param aNode TreeNode to be added
      * @throws CDKException In case of a problem with the SmilesGenerator
      */
-    public void addNode(TreeNode aNode) throws CDKException {
+    @Override
+    public void addNode(ScaffoldNodeBase aNode) throws CDKException {
         Objects.requireNonNull(aNode, "Given TreeNode is 'null'");
-        Objects.requireNonNull(aNode.getMolecule(), "Given Data is 'null'");
+        TreeNode tmpNode = null;
+        try {
+            tmpNode = (TreeNode) aNode;
+        } catch(Exception e) {
+            e.printStackTrace();
+            System.out.println("Node cant be added to ScaffoldTree");
+            System.out.println("Parameter must be a TreeNode");
+        }
         //Add to nodeMap
-        this.nodeMap.put(this.nodeCounter, aNode);
+        this.nodeMap.put(this.nodeCounter, tmpNode);
         //Add to reverseNodeMap
-        this.reverseNodeMap.put(aNode, this.nodeCounter);
+        this.reverseNodeMap.put(tmpNode, this.nodeCounter);
         /*Add to smilesMap*/
-        IAtomContainer tmpMolecule = (IAtomContainer) aNode.getMolecule();
+        IAtomContainer tmpMolecule = (IAtomContainer) tmpNode.getMolecule();
         String tmpSmiles = this.smilesGenerator.create(tmpMolecule); //Convert molecule to SMILES
-        this.smilesMap.put(tmpSmiles, aNode);
+        this.smilesMap.put(tmpSmiles, tmpNode);
         //Add to levelMap
-        this.levelMap.put(aNode.getLevel(), aNode);
+        this.levelMap.put(tmpNode.getLevel(), tmpNode);
         /*Add origins from the new node to parent nodes*/
-        TreeNode tmpNode = aNode;
-        for(int tmpCount = 0; tmpCount < aNode.getLevel(); tmpCount++) {
+        for(int tmpCount = 0; tmpCount < tmpNode.getLevel(); tmpCount++) {
             TreeNode tmpNextNode = tmpNode.getParent();
             for(Object tmpString : tmpNode.getOriginSmilesList()) {
                 tmpNextNode.addOriginSmiles((String) tmpString);
@@ -83,20 +90,29 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
      * @throws CDKException In case of a problem with the SmilesGenerator
      * @throws IllegalArgumentException if the node is not in the Scaffold
      */
-    public void removeNode(TreeNode aNode) throws CDKException, IllegalArgumentException {
+    @Override
+    public void removeNode(ScaffoldNodeBase aNode) throws CDKException, IllegalArgumentException {
         Objects.requireNonNull(aNode, "Given ScaffoldNode is 'null'");
-        if(!this.reverseNodeMap.containsKey(aNode)) { //Check if the node exists in the Scaffold
+        TreeNode tmpNode = null;
+        try {
+            tmpNode = (TreeNode) aNode;
+        } catch(Exception e) {
+            e.printStackTrace();
+            System.out.println("Node cant be removed from the ScaffoldTree");
+            System.out.println("Parameter must be a TreeNode");
+        }
+        if(!this.reverseNodeMap.containsKey(tmpNode)) { //Check if the node exists in the Scaffold
             throw new IllegalArgumentException("Node is not in Scaffold");
         }
         /*Remove from nodeMap and reverseNodeMap*/
-        int tmpNumberInNodeMap = this.reverseNodeMap.get(aNode); //get number in nodeMap
+        int tmpNumberInNodeMap = this.reverseNodeMap.get(tmpNode); //get number in nodeMap
         this.nodeMap.remove(tmpNumberInNodeMap);
-        this.reverseNodeMap.remove(aNode);
+        this.reverseNodeMap.remove(tmpNode);
         /*Remove from smilesMap*/
-        String tmpSmiles = this.smilesGenerator.create((IAtomContainer) aNode.getMolecule()); //Convert molecule to SMILES
-        this.smilesMap.remove(tmpSmiles, aNode);
+        String tmpSmiles = this.smilesGenerator.create((IAtomContainer) tmpNode.getMolecule()); //Convert molecule to SMILES
+        this.smilesMap.remove(tmpSmiles, tmpNode);
         /*Remove from levelMap*/
-        levelMap.remove(aNode.getLevel(), aNode);
+        levelMap.remove(tmpNode.getLevel(), tmpNode);
     }
 
     /**
@@ -104,7 +120,7 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
      * If this is not the case, the tree is disjointed. Then it is actually more than one tree.
      * @return whether the tree is connected
      */
-    public boolean isTreeConnected() {
+    private boolean isConnected() {
         int tmpCounter = 0;
         boolean tmpIsTreeConnected = true;
         for(ScaffoldNodeBase tmpNodeBase : this.nodeMap.values()) {
@@ -125,9 +141,10 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
 
     /**
      * Checks whether the tree has a single root. Returns false in any other case.
+     * If false, the tree is incorrect or not yet complete.
      * @return Whether the tree has only one root
      */
-    public boolean hasOneSingleRootNode() {
+    private boolean hasOneSingleRootNode() {
         int tmpRootCounter = 0;
         for(ScaffoldNodeBase tmpNodeBase : this.nodeMap.values()) {
             TreeNode tmpNode = (TreeNode) tmpNodeBase;
@@ -147,6 +164,19 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
     }
 
     /**
+     * Tests whether the tree is valid, i.e. has only one root and all nodes are connected.
+     * For the transfer of the tree into the matrix, the tree must be valid.
+     * @return true if tree has only one root and all nodes are connected
+     */
+    public boolean isValid() {
+        if(this.hasOneSingleRootNode() && this.isConnected()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * Adds another ScaffoldTree to the existing one if possible.
      * The new tree is inserted at the node that both trees have in common.
      * All children of the new tree at this node are taken over if they do not already exist.
@@ -161,6 +191,7 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
      * @throws CDKException In case of a problem with the SmilesGenerator
      */
     public boolean mergeTree(ScaffoldTree aScaffoldTree) throws CDKException {
+        Objects.requireNonNull(aScaffoldTree, "Given ScaffoldTree is 'null'");
         /*If the old ScaffoldTree is empty, transfer the new ScaffoldTree to be added.*/
         if(this.hasOneSingleRootNode() == false) {
             for(ScaffoldNodeBase tmpBaseNode : aScaffoldTree.getAllNodes()) {
@@ -197,7 +228,7 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
                                 TreeNode tmpNewChildNode = (TreeNode) tmpNewChild;
                                 IAtomContainer tmpNewChildMolecule = (IAtomContainer) tmpNewChildNode.getMolecule();
                                 /*Add the child if it is not already in the tree*/
-                                if(!this.isMoleculeContained(tmpNewChildMolecule)) {
+                                if(!this.containsMolecule(tmpNewChildMolecule)) {
                                     int tmpChildrenNumber = tmpOldTreeNode.getChildren().size();
                                     tmpOldTreeNode.addChild(tmpNewChildMolecule);
                                     TreeNode tmpAddedNode = (TreeNode) tmpOldTreeNode.getChildren().get(tmpChildrenNumber);
@@ -228,15 +259,16 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
      * Outputs an adjacency matrix in which the parent node of each node is marked with a 1.
      * All others are marked with 0. Each row and column number in the matrix is assigned to a node.
      * The assignment can be requested with getMatrixNodes/getMatrixNode.
-     * only works with connected trees. Can be checked with isTreeConnected.
+     * only works with valid trees. Can be checked with {@link ScaffoldTree#isValid()}.
      * @return the adjacency matrix
      * @throws IllegalStateException if the tree is not connected
      */
-    public Integer[][] getTreeAsMatrix() throws IllegalStateException {
+    @Override
+    public Integer[][] getMatrix() throws IllegalStateException {
         int tmpSize = this.nodeMap.size();
         Integer[][] tmpMatrix = new Integer[tmpSize][tmpSize];
-        if(!this.isTreeConnected()) { //Only a connected matrix is calculated
-            throw new IllegalStateException("Tree is not connected");
+        if(!this.isValid()) { //Only a valid matrix is calculated
+            throw new IllegalStateException("Tree is not valid");
         }
         /*Set all values of the matrix to 0*/
         for (int tmpRow = 0; tmpRow < tmpMatrix.length; tmpRow++) {

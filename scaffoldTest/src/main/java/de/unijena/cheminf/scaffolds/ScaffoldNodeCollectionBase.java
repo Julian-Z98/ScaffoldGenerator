@@ -32,40 +32,38 @@ import java.util.*;
  * Top-level class to organise the ScaffoldNodeBase objects.
  *
  */
-public class ScaffoldNodeCollectionBase {
+public abstract class ScaffoldNodeCollectionBase {
 
     /**
      * Saves all ScaffoldNodes and numbers them in ascending order. Starts at 0. Key:Number, Value:ScaffoldNode
      */
-    public HashMap<Integer, ScaffoldNodeBase> nodeMap;
+    protected HashMap<Integer, ScaffoldNodeBase> nodeMap;
 
     /**
      * Saves all ScaffoldNodes and numbers them in ascending order. Starts at 0.
      * nodeMap with key and value swapped. Key:ScaffoldNode, Value:Number
      */
-    public HashMap<ScaffoldNodeBase, Integer> reverseNodeMap;
+    protected HashMap<ScaffoldNodeBase, Integer> reverseNodeMap;
 
     /**
-     * Saves all ScaffoldNodes according to their Unique SMILES. Key:SMILES, Value:ScaffoldNode
+     * Saves all ScaffoldNodes according to their SMILES. Key:SMILES, Value:ScaffoldNode
      */
-    public ListMultimap<String, ScaffoldNodeBase> smilesMap;
+    protected ListMultimap<String, ScaffoldNodeBase> smilesMap;
 
     /**
      * Saves all ScaffoldNodes according to their level. Key:Level, Value:ScaffoldNode
      */
-    public ListMultimap<Integer, ScaffoldNodeBase> levelMap;
+    protected ListMultimap<Integer, ScaffoldNodeBase> levelMap;
 
     /**
-     * Generator for the creation of Unique SMILES
-     * Unique SMILES: canonical SMILES string, different atom ordering produces the same (apart from rare exceptions) SMILES.
-     *                No isotope or stereochemistry encoded.
+     * Generator for the creation of SMILES
      */
-    public SmilesGenerator smilesGenerator;
+    protected SmilesGenerator smilesGenerator;
 
     /**
      * Shows how many nodes have been added so far. Removing nodes has no effect on it.
      */
-    public int nodeCounter;
+    protected int nodeCounter;
 
     /**
      * Constructor
@@ -84,19 +82,32 @@ public class ScaffoldNodeCollectionBase {
      * Default Constructor
      */
     public ScaffoldNodeCollectionBase() {
-        this(new SmilesGenerator(SmiFlavor.Unique));
+        this(new SmilesGenerator(SmiFlavor.Unique | SmiFlavor.UseAromaticSymbols));
     }
 
     /**
+     * Add ScaffoldNodeBase to the ScaffoldNodeCollectionBase
+     * @param aNode Node to be added. Must match the tree object. For example, a ScaffoldTree requires a TreeNode.
+     * @throws CDKException In case of a problem with the SmilesGenerator
+     */
+    public abstract void addNode(ScaffoldNodeBase aNode) throws CDKException;
+
+    /**
+     * Removes a Node. This does not change the order. The numbering does not move up.
+     * @param aNode Node to remove. Must match the tree object. For example, a ScaffoldTree requires a TreeNode.
+     * @throws CDKException In case of a problem with the SmilesGenerator
+     * @throws IllegalArgumentException if the node is not in the Scaffold
+     */
+    public abstract void removeNode(ScaffoldNodeBase aNode) throws CDKException, IllegalArgumentException;
+
+    /**
      * Checks whether the molecule is already present in the Scaffold Collection
-     * Check whether it is the same molecule using the Unique SMILES.
-     * Unique SMILES: canonical SMILES string, different atom ordering produces the same (apart from rare exceptions) SMILES.
-     *                No isotope or stereochemistry encoded.
+     * Check whether it is the same molecule using the SMILES string.
      * @param aMolecule Molecule to check
      * @return Whether the molecule is located in the Scaffold Collection
      * @throws CDKException In case of a problem with the SmilesGenerator
      */
-    public boolean isMoleculeContained(IAtomContainer aMolecule) throws CDKException {
+    public boolean containsMolecule(IAtomContainer aMolecule) throws CDKException {
         Objects.requireNonNull(aMolecule, "Given atom container is 'null'");
         //Generate SMILES
         String tmpSmiles = this.smilesGenerator.create(aMolecule);
@@ -121,10 +132,8 @@ public class ScaffoldNodeCollectionBase {
     //<editor-fold desc="get/set">
     /**
      * Return the ScaffoldNode that belongs to a specific molecule.
-     * Check whether it is the same molecule using the Unique SMILES.
+     * Check whether it is the same molecule using the SMILES.
      * If a molecule occurs more than once in the Scaffold, only one corresponding ScaffoldNode is returned.
-     * Unique SMILES: canonical SMILES string, different atom ordering produces the same (apart from rare exceptions) SMILES.
-     *                No isotope or stereochemistry encoded.
      * @param aMolecule molecule that is being searched for
      * @return ScaffoldNode of the searched molecule
      * @throws CDKException In case of a problem with the SmilesGenerator
@@ -132,7 +141,7 @@ public class ScaffoldNodeCollectionBase {
      */
     public ScaffoldNodeBase getNode(IAtomContainer aMolecule) throws CDKException, IllegalArgumentException {
         Objects.requireNonNull(aMolecule, "Given atom container is 'null'");
-        if(!this.isMoleculeContained(aMolecule)) { //Check if the molecule exists in the ScaffoldCollection
+        if(!this.containsMolecule(aMolecule)) { //Check if the molecule exists in the ScaffoldCollection
             throw new IllegalArgumentException("Molecule is not in ScaffoldCollection");
         }
         return this.smilesMap.get(this.smilesGenerator.create(aMolecule)).get(0);
@@ -161,6 +170,15 @@ public class ScaffoldNodeCollectionBase {
         }
         throw new IllegalArgumentException("Level does not exist: " + aLevel);
     }
+
+    /**
+     * Outputs an adjacency matrix in which the parent node of each node is marked with a 1.
+     * All others are marked with 0. Each row and column number in the matrix is assigned to a node.
+     * The assignment can be requested with getMatrixNodes/getMatrixNode.
+     * @return the adjacency matrix
+     * @throws IllegalStateException if the tree is not connected
+     */
+    public abstract Integer[][] getMatrix() throws IllegalStateException;
 
     /**
      * Returns the number of the nodes and the nodes of the matrix in ascending order.

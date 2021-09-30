@@ -54,29 +54,37 @@ public class ScaffoldNetwork extends ScaffoldNodeCollectionBase {
      * @param aNode NetworkNode to be added
      * @throws CDKException In case of a problem with the SmilesGenerator
      */
-    public NetworkNode addNode(NetworkNode aNode) throws CDKException {
+    @Override
+    public void addNode(ScaffoldNodeBase aNode) throws CDKException {
         Objects.requireNonNull(aNode, "Given NetworkNode is 'null'");
-        Objects.requireNonNull(aNode.getMolecule(), "Given Data is 'null'");
+        NetworkNode tmpNode = null;
+        try {
+            tmpNode = (NetworkNode) aNode;
+        } catch(Exception e) {
+            e.printStackTrace();
+            System.out.println("Node cant be added to NetworkTree");
+            System.out.println("Parameter must be a NetworkNode");
+        }
         //Add to nodeMap
-        this.nodeMap.put(this.nodeCounter, aNode);
+        this.nodeMap.put(this.nodeCounter, tmpNode);
         //Add to reverseNodeMap
-        this.reverseNodeMap.put(aNode, this.nodeCounter);
+        this.reverseNodeMap.put(tmpNode, this.nodeCounter);
         /*Add to smilesMap*/
-        IAtomContainer tmpMolecule = (IAtomContainer) aNode.getMolecule();
+        IAtomContainer tmpMolecule = (IAtomContainer) tmpNode.getMolecule();
         String tmpSmiles = this.smilesGenerator.create(tmpMolecule); //Convert molecule to SMILES
-        this.smilesMap.put(tmpSmiles, aNode);
+        this.smilesMap.put(tmpSmiles, tmpNode);
         /*Since the network is built from the leaves to the root,
          the levels of all nodes in the network must be re-determined for every node added.*/
-        this.levelMap.put(aNode.getLevel(), aNode);
+        this.levelMap.put(tmpNode.getLevel(), tmpNode);
         ListMultimap<Integer, ScaffoldNodeBase> tmpLevelMap = ArrayListMultimap.create();
         for(ScaffoldNodeBase tmpNodeBase : this.getAllNodes()) {
-            NetworkNode tmpNode = (NetworkNode) tmpNodeBase;
-            tmpLevelMap.put(tmpNode.getLevel(), tmpNode);
+            NetworkNode tmpNetworkNode = (NetworkNode) tmpNodeBase;
+            tmpLevelMap.put(tmpNode.getLevel(), tmpNetworkNode);
         }
         this.levelMap = tmpLevelMap;
         //Increase nodeCounter
         this.nodeCounter++;
-        return (NetworkNode) this.getNode((IAtomContainer) aNode.getMolecule());
+        //return (NetworkNode) this.getNode((IAtomContainer) aNode.getMolecule());
     }
 
     /**
@@ -85,20 +93,29 @@ public class ScaffoldNetwork extends ScaffoldNodeCollectionBase {
      * @throws CDKException In case of a problem with the SmilesGenerator
      * @throws IllegalArgumentException if the node is not in the Scaffold
      */
-    public void removeNode(NetworkNode aNode) throws CDKException, IllegalArgumentException {
+    @Override
+    public void removeNode(ScaffoldNodeBase aNode) throws CDKException, IllegalArgumentException {
         Objects.requireNonNull(aNode, "Given ScaffoldNode is 'null'");
-        if(!this.reverseNodeMap.containsKey(aNode)) { //Check if the node exists in the Scaffold
+        NetworkNode tmpNode = null;
+        try {
+            tmpNode = (NetworkNode) aNode;
+        } catch(Exception e) {
+            e.printStackTrace();
+            System.out.println("Node cant be removed to NetworkTree");
+            System.out.println("Parameter must be a NetworkNode");
+        }
+        if(!this.reverseNodeMap.containsKey(tmpNode)) { //Check if the node exists in the Scaffold
             throw new IllegalArgumentException("Node is not in Scaffold");
         }
         /*Remove from nodeMap and reverseNodeMap*/
-        int tmpNumberInNodeMap = this.reverseNodeMap.get(aNode); //get number in nodeMap
+        int tmpNumberInNodeMap = this.reverseNodeMap.get(tmpNode); //get number in nodeMap
         this.nodeMap.remove(tmpNumberInNodeMap);
-        this.reverseNodeMap.remove(aNode);
+        this.reverseNodeMap.remove(tmpNode);
         /*Remove from smilesMap*/
-        String tmpSmiles = this.smilesGenerator.create((IAtomContainer) aNode.getMolecule()); //Convert molecule to SMILES
-        this.smilesMap.remove(tmpSmiles, aNode);
+        String tmpSmiles = this.smilesGenerator.create((IAtomContainer) tmpNode.getMolecule()); //Convert molecule to SMILES
+        this.smilesMap.remove(tmpSmiles, tmpNode);
         /*Remove from levelMap*/
-        levelMap.remove(aNode.getLevel(), aNode);
+        levelMap.remove(tmpNode.getLevel(), tmpNode);
     }
 
     /**
@@ -149,7 +166,7 @@ public class ScaffoldNetwork extends ScaffoldNodeCollectionBase {
                                 NetworkNode tmpNewChildNode = (NetworkNode) tmpNewChild;
                                 IAtomContainer tmpNewChildMolecule = (IAtomContainer) tmpNewChildNode.getMolecule();
                                 /*Add the child if it is not already in the network*/
-                                if(!this.isMoleculeContained(tmpNewChildMolecule)) {
+                                if(!this.containsMolecule(tmpNewChildMolecule)) {
                                     NetworkNode tmpNewNode = new NetworkNode<>(tmpNewChildMolecule);
                                     tmpNewNode.addParent(tmpOldNetworkNode);
                                     tmpMoleculeList.add(tmpNewChildMolecule);
@@ -167,7 +184,7 @@ public class ScaffoldNetwork extends ScaffoldNodeCollectionBase {
             }
             /*Add the nodes of the new network that are not yet in the whole network*/
             for(NetworkNode tmpNode : tmpNodesToAdd) {
-                if(!this.isMoleculeContained((IAtomContainer) tmpNode.getMolecule())) {
+                if(!this.containsMolecule((IAtomContainer) tmpNode.getMolecule())) {
                     NetworkNode tmpNewNode = new NetworkNode<>((IAtomContainer) tmpNode.getMolecule());
                     this.addNode(tmpNewNode);
                 }
@@ -179,7 +196,7 @@ public class ScaffoldNetwork extends ScaffoldNodeCollectionBase {
                 ArrayList<NetworkNode> tmpParentList = (ArrayList<NetworkNode>) tmpChild.getParents();
                 for(NetworkNode tmpParentNode : tmpParentList) {
                     /*Only molecules that are in the network*/
-                    if(this.isMoleculeContained((IAtomContainer) tmpParentNode.getMolecule())) {
+                    if(this.containsMolecule((IAtomContainer) tmpParentNode.getMolecule())) {
                         NetworkNode tmpOldParentNode = (NetworkNode) this.getNode((IAtomContainer) tmpParentNode.getMolecule());
                         NetworkNode tmpOldChild = (NetworkNode) this.getNode(tmpMolecule);
                         tmpOldChild.addParent(tmpOldParentNode);
@@ -194,11 +211,12 @@ public class ScaffoldNetwork extends ScaffoldNodeCollectionBase {
      * Outputs an adjacency matrix in which the parent node of each node is marked with a 1.
      * All others are marked with 0. Each row and column number in the matrix is assigned to a node.
      * The assignment can be requested with getMatrixNodes/getMatrixNode.
-     * only works with connected networks. Can be checked with isNetworkConnected.
+     * only works with connected networks. Can be checked with isConnected.
      * @return the adjacency matrix
      * @throws IllegalStateException if the network is not connected
      */
-    public Integer[][] getNetworkAsMatrix() throws IllegalStateException {
+    @Override
+    public Integer[][] getMatrix() throws IllegalStateException {
         int tmpSize = this.nodeMap.size();
         Integer[][] tmpMatrix = new Integer[tmpSize][tmpSize];
         /*Set all values of the matrix to 0*/
