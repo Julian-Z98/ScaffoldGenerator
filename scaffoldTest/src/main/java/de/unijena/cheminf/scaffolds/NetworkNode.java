@@ -34,12 +34,13 @@ public class NetworkNode <MoleculeType> extends ScaffoldNodeBase<MoleculeType> {
     /**
      * parents of the node
      */
-    public List<NetworkNode<MoleculeType>> parents;
+    private List<NetworkNode<MoleculeType>> parents;
 
     /**
      * Shows if the node has parents
      * @return Whether the node has parents
      */
+    @Override
     public boolean isOrphan() {
         return parents.isEmpty();
     }
@@ -58,6 +59,7 @@ public class NetworkNode <MoleculeType> extends ScaffoldNodeBase<MoleculeType> {
      * @param aMolecule Molecule of the child leave
      * @return Node of the child leave
      */
+    @Override
     public NetworkNode<MoleculeType> addChild(MoleculeType aMolecule) {
         Objects.requireNonNull(aMolecule, "Given molecule is 'null'");
         NetworkNode<MoleculeType> tmpChildNode = new NetworkNode<MoleculeType>(aMolecule);
@@ -91,6 +93,7 @@ public class NetworkNode <MoleculeType> extends ScaffoldNodeBase<MoleculeType> {
      * Outputs the level on which the node is located in the entire network
      * @return level of the node in the entire network
      */
+    @Override
     public int getLevel() {
         if (this.isOrphan())
             return 0;
@@ -99,7 +102,7 @@ public class NetworkNode <MoleculeType> extends ScaffoldNodeBase<MoleculeType> {
     }
 
     /**
-     * Get the parents node.
+     * Get the parents of the node.
      * @return parents node
      */
     public List<NetworkNode<MoleculeType>> getParents() {
@@ -107,7 +110,7 @@ public class NetworkNode <MoleculeType> extends ScaffoldNodeBase<MoleculeType> {
     }
 
     /**
-     * Set the parents node.
+     * Set the parents of the node.
      * @param aParents parents that are set
      */
     public void setParents(List<NetworkNode<MoleculeType>> aParents) {

@@ -40,6 +40,7 @@ public class TreeNode<MoleculeType> extends ScaffoldNodeBase<MoleculeType> {
      * Shows if the node has parents
      * @return Whether the node has parents
      */
+    @Override
     public boolean isOrphan() {
         return parent == null;
     }
@@ -57,6 +58,7 @@ public class TreeNode<MoleculeType> extends ScaffoldNodeBase<MoleculeType> {
      * @param aMolecule Molecule of the child leave
      * @return Node of the child leave
      */
+    @Override
     public TreeNode<MoleculeType> addChild(MoleculeType aMolecule) {
         Objects.requireNonNull(aMolecule, "Given molecule is 'null'");
         TreeNode<MoleculeType> tmpChildNode = new TreeNode<MoleculeType>(aMolecule);
@@ -70,6 +72,7 @@ public class TreeNode<MoleculeType> extends ScaffoldNodeBase<MoleculeType> {
      * Outputs the level on which the node is located in the entire tree
      * @return level of the node in the entire tree
      */
+    @Override
     public int getLevel() {
         if (this.isOrphan())
             return 0;

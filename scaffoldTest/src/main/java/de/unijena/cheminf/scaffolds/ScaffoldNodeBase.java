@@ -32,12 +32,12 @@ import java.util.Objects;
  *
  * Inspired by: https://github.com/gt4dev/yet-another-tree-structure
  */
-public class ScaffoldNodeBase<MoleculeType> {
+public abstract class ScaffoldNodeBase<MoleculeType> {
 
     /**
      * Molecule that can be stored in each node
      */
-    public MoleculeType molecule;
+    protected MoleculeType molecule;
 
     /**
      * List of SMILES of the molecules from which this fragment originates.
@@ -45,26 +45,31 @@ public class ScaffoldNodeBase<MoleculeType> {
      * If additional information of the origin is needed,
      * it can be stored in a matrix with the IAtomContainer. The SMILES stored here can then be used as a key.
      */
-    public ArrayList<String> OriginSmilesList;
+    protected ArrayList<String> OriginSmilesList;
 
     /**
      * Child of the Node
      */
-    public List<ScaffoldNodeBase<MoleculeType>> children;
+    protected List<ScaffoldNodeBase<MoleculeType>> children;
 
     /**
      * List of indices of all elements
      */
-    public List<ScaffoldNodeBase<MoleculeType>> elementsIndex;
+    protected List<ScaffoldNodeBase<MoleculeType>> elementsIndex;
 
     /**
-     * Indicates whether it is a leaf, i.e. whether there are deeper nodes
-     * True if there are no deeper nodes
-     * @return Whether it is a leaf
+     * Indicates whether it has children
+     * @return true if it has no children
      */
     public boolean isLeaf() {
         return children.size() == 0;
     }
+
+    /**
+     * Shows if the node has parents
+     * @return Whether the node has parents
+     */
+    public abstract boolean isOrphan();
 
     /**
      * Constructor
@@ -80,6 +85,13 @@ public class ScaffoldNodeBase<MoleculeType> {
     }
 
     /**
+     * Adds a child to the ScaffoldNodeBase, i.e. links it to a ScaffoldNodeBase on the level below
+     * @param aMolecule Molecule of the child leave
+     * @return Node of the child leave
+     */
+    public abstract ScaffoldNodeBase<MoleculeType> addChild(MoleculeType aMolecule);
+
+    /**
      * Adds another string to the OriginSmilesList if it is not already present.
      * @param aString String to be added
      */
@@ -91,6 +103,12 @@ public class ScaffoldNodeBase<MoleculeType> {
     }
 
     //<editor-fold desc="get/set">
+    /**
+     * Outputs the level on which the node is located in the entire tree
+     * @return level of the node in the entire tree
+     */
+    public abstract int getLevel();
+
     /**
      * Get the node molecule.
      * @return node molecule
@@ -133,6 +151,13 @@ public class ScaffoldNodeBase<MoleculeType> {
         return this.OriginSmilesList;
     }
 
+    /**
+     * Get the size of the OriginSmilesList
+     * @return size of the OriginSmilesList
+     */
+    public Integer getOriginCount() {
+        return this.OriginSmilesList.size();
+    }
     /**
      * Set the entire OriginSmilesList
      * @param aOriginSmilesList SMILES of molecules that are set
