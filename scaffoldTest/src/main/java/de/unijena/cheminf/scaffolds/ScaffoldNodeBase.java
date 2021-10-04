@@ -25,15 +25,18 @@ import java.util.Objects;
 
 /**
  * Base class of node objects.
- * Contains the basic functionality of nodes needed for a tree or a network.
+ * Contains the basic functionality of nodes needed for a {@link ScaffoldTree} or {@link ScaffoldNetwork}.
  *
  * @param <MoleculeType> As MoleculeType, any data type can be defined.
  *                      In our scenario, the nodes contain molecules.
  *
  * Inspired by: https://github.com/gt4dev/yet-another-tree-structure
+ *
+ * @version 1.0
  */
 public abstract class ScaffoldNodeBase<MoleculeType> {
 
+    //<editor-fold desc="Protected variables">
     /**
      * Molecule that can be stored in each node
      */
@@ -45,10 +48,10 @@ public abstract class ScaffoldNodeBase<MoleculeType> {
      * If additional information of the origin is needed,
      * it can be stored in a matrix with the IAtomContainer. The SMILES stored here can then be used as a key.
      */
-    protected ArrayList<String> OriginSmilesList;
+    protected ArrayList<String> originSmilesList;
 
     /**
-     * Child of the Node
+     * Children of the Node
      */
     protected List<ScaffoldNodeBase<MoleculeType>> children;
 
@@ -56,7 +59,24 @@ public abstract class ScaffoldNodeBase<MoleculeType> {
      * List of indices of all elements
      */
     protected List<ScaffoldNodeBase<MoleculeType>> elementsIndex;
+    //</editor-fold>
 
+    //<editor-fold desc="Constructor">
+    /**
+     * Constructor
+     * @param aMolecule molecule of the ScaffoldNodeBase
+     */
+    public ScaffoldNodeBase(MoleculeType aMolecule) {
+        Objects.requireNonNull(aMolecule, "Given molecule is 'null'");
+        this.molecule = aMolecule;
+        this.children = new LinkedList<ScaffoldNodeBase<MoleculeType>>();
+        this.originSmilesList = new ArrayList<String>();
+        this.elementsIndex = new LinkedList<ScaffoldNodeBase<MoleculeType>>();
+        this.elementsIndex.add(this);
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="Public variables">
     /**
      * Indicates whether it has children
      * @return true if it has no children
@@ -72,19 +92,6 @@ public abstract class ScaffoldNodeBase<MoleculeType> {
     public abstract boolean isOrphan();
 
     /**
-     * Constructor
-     * @param aMolecule molecule of the ScaffoldNodeBase
-     */
-    public ScaffoldNodeBase(MoleculeType aMolecule) {
-        Objects.requireNonNull(aMolecule, "Given molecule is 'null'");
-        this.molecule = aMolecule;
-        this.children = new LinkedList<ScaffoldNodeBase<MoleculeType>>();
-        this.OriginSmilesList = new ArrayList<String>();
-        this.elementsIndex = new LinkedList<ScaffoldNodeBase<MoleculeType>>();
-        this.elementsIndex.add(this);
-    }
-
-    /**
      * Adds a child to the ScaffoldNodeBase, i.e. links it to a ScaffoldNodeBase on the level below
      * @param aMolecule Molecule of the child leave
      * @return Node of the child leave
@@ -97,15 +104,15 @@ public abstract class ScaffoldNodeBase<MoleculeType> {
      */
     public void addOriginSmiles(String aString) {
         Objects.requireNonNull(aString, "Given SMILES of the molecule is 'null'");
-        if(!this.OriginSmilesList.contains(aString)) {
-            OriginSmilesList.add(aString);
+        if(!this.originSmilesList.contains(aString)) {
+            originSmilesList.add(aString);
         }
     }
-
     //<editor-fold desc="get/set">
+
     /**
-     * Outputs the level on which the node is located in the entire tree
-     * @return level of the node in the entire tree
+     * Outputs the level on which the node is located in the entire collection
+     * @return level of the node in the entire collection
      */
     public abstract int getLevel();
 
@@ -144,27 +151,28 @@ public abstract class ScaffoldNodeBase<MoleculeType> {
     }
 
     /**
-     * Get the OriginSmilesList
+     * Get the originSmilesList
      * @return List of SMILES of the molecules from which this fragment originates
      */
     public ArrayList<String> getOriginSmilesList() {
-        return this.OriginSmilesList;
+        return this.originSmilesList;
     }
 
     /**
-     * Get the size of the OriginSmilesList
-     * @return size of the OriginSmilesList
+     * Get the size of the originSmilesList
+     * @return size of the originSmilesList
      */
     public Integer getOriginCount() {
-        return this.OriginSmilesList.size();
+        return this.originSmilesList.size();
     }
     /**
-     * Set the entire OriginSmilesList
+     * Set the entire originSmilesList
      * @param aOriginSmilesList SMILES of molecules that are set
      */
     public void setOriginSmilesList(ArrayList<String> aOriginSmilesList) {
         Objects.requireNonNull(aOriginSmilesList, "Given SMILES of the molecule List is 'null'");
-        this.OriginSmilesList = aOriginSmilesList;
+        this.originSmilesList = aOriginSmilesList;
     }
+    //</editor-fold>
     //</editor-fold>
 }

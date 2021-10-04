@@ -53,6 +53,8 @@ import static junit.framework.TestCase.assertEquals;
 
 /**
  * JUnit test class for the ScaffoldGenerator
+ *
+ * @version 1.0
  */
 public class ScaffoldGeneratorTest extends ScaffoldGenerator {
 
@@ -1226,7 +1228,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         tmpTreeList.add(tmpMolecule10);
         List<ScaffoldTree> tmpFinalForrest = tmpScaffoldGenerator.mergeMoleculesToForrest(tmpTreeList);
         System.out.println("Forrest size: " + tmpFinalForrest.size());
-        ScaffoldTree tmpScaffoldTree = tmpFinalForrest.get(0);
+        ScaffoldTree tmpScaffoldTree = tmpFinalForrest.get(1);
         IAtomContainer tmpRootMolecule = (IAtomContainer) tmpScaffoldTree.getRoot().getMolecule();
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
         System.out.println("I am Root: " + tmpSmilesGenerator.create(tmpRootMolecule));
@@ -3447,7 +3449,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
      * getScaffold() and getRings() must also be executed for all molecules.
      * Skips all molecules with more than 1000 rings.
      * In this case, these are the molecules with the COCONUT IDs: CNP0022608, CNP0029543, CNP0065312 and CNP0103752.
-     * Runtime
+     * RuntimegetRemovalNetwork
      * @throws Exception if anything goes wrong
      */
     @Ignore

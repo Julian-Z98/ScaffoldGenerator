@@ -26,14 +26,18 @@ import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.smiles.SmilesGenerator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
 /**
  * Top-level class to organise the NetworkNodes
+ *
+ * @version 1.0
  */
 public class ScaffoldNetwork extends ScaffoldNodeCollectionBase {
 
+    //<editor-fold desc="Constructors">
     /**
      * Constructor
      * @param aSmilesGenerator Used SMILES Generator
@@ -48,7 +52,9 @@ public class ScaffoldNetwork extends ScaffoldNodeCollectionBase {
     public ScaffoldNetwork() {
         this(new SmilesGenerator(SmiFlavor.Unique));
     }
+    //</editor-fold>
 
+    //<editor-fold desc="Public methods">
     /**
      * Add a new NetworkNode to the ScaffoldNetwork
      * @param aNode NetworkNode to be added
@@ -56,6 +62,7 @@ public class ScaffoldNetwork extends ScaffoldNodeCollectionBase {
      */
     @Override
     public void addNode(ScaffoldNodeBase aNode) throws CDKException {
+        /*Parameter checks*/
         Objects.requireNonNull(aNode, "Given NetworkNode is 'null'");
         NetworkNode tmpNode = null;
         try {
@@ -84,17 +91,17 @@ public class ScaffoldNetwork extends ScaffoldNodeCollectionBase {
         this.levelMap = tmpLevelMap;
         //Increase nodeCounter
         this.nodeCounter++;
-        //return (NetworkNode) this.getNode((IAtomContainer) aNode.getMolecule());
     }
 
     /**
-     * Removes a Node. This does not change the order. The numbering does not move up.
+     * Removes a Node. This does not change the order. The numbering does not change.
      * @param aNode Node to remove
      * @throws CDKException In case of a problem with the SmilesGenerator
      * @throws IllegalArgumentException if the node is not in the Scaffold
      */
     @Override
     public void removeNode(ScaffoldNodeBase aNode) throws CDKException, IllegalArgumentException {
+        /*Parameter checks*/
         Objects.requireNonNull(aNode, "Given ScaffoldNode is 'null'");
         NetworkNode tmpNode = null;
         try {
@@ -126,15 +133,15 @@ public class ScaffoldNetwork extends ScaffoldNodeCollectionBase {
      * The new network is simply taken over if the existing network is empty.
      * If there is no match between the two networks the new network is inserted without linkages.
      *
-     * If a molecule does not generate a SchuffenhauerScaffold, it is stored as a node with empty SMILES and is treated normally.
+     * If a molecule generates an empty scaffold, it is stored as a node with empty SMILES and is treated normally.
      * All other empty nodes are then added to this network accordingly.
+     * By querying the origins of this node, all molecules that do not produce a scaffold can be returned.
      * @param aScaffoldNetwork network to be inserted into the existing ScaffoldNetwork.
-     * @return false if the new network has nodes and cannot be inserted because the two networks have no common nodes.
      * @throws CDKException In case of a problem with the SmilesGenerator
      */
     public void mergeNetwork(ScaffoldNetwork aScaffoldNetwork) throws CDKException {
         /*If the old ScaffoldNetwork is empty, transfer the new ScaffoldNetwork to be added.*/
-        if(this.getRoots().isEmpty()) {
+        if(this.getAllNodes().size() == 0  || this.getAllNodes().isEmpty()) {
             for(Object tmpNode : aScaffoldNetwork.getAllNodes()) {
                 this.addNode((NetworkNode) tmpNode);
             }
@@ -189,7 +196,7 @@ public class ScaffoldNetwork extends ScaffoldNodeCollectionBase {
                     this.addNode(tmpNewNode);
                 }
             }
-            /*Add the matching parents to the newly added nodes. Childs are automatically set when the parents are set.*/
+            /*Add the matching parents to the newly added nodes. Children are automatically set when the parents are set.*/
             for(IAtomContainer tmpMolecule : tmpMoleculeList) {
                 ScaffoldNodeBase tmpChildBase = aScaffoldNetwork.getNode(tmpMolecule);
                 NetworkNode tmpChild = (NetworkNode) tmpChildBase;
@@ -221,9 +228,7 @@ public class ScaffoldNetwork extends ScaffoldNodeCollectionBase {
         Integer[][] tmpMatrix = new Integer[tmpSize][tmpSize];
         /*Set all values of the matrix to 0*/
         for (int tmpRow = 0; tmpRow < tmpMatrix.length; tmpRow++) {
-            for (int tmpCol = 0; tmpCol < tmpMatrix[tmpRow].length; tmpCol++) {
-                tmpMatrix[tmpRow][tmpCol] = 0;
-            }
+            Arrays.fill(tmpMatrix[tmpRow], 0);
         }
         /*Insert a 1 for each parent node*/
         int tmpCounter = 0;
@@ -261,5 +266,6 @@ public class ScaffoldNetwork extends ScaffoldNodeCollectionBase {
         }
         return tmpNodeList;
     }
+    //</editor-fold>
     //</editor-fold>
 }

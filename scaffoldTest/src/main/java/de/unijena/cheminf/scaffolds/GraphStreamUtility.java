@@ -56,20 +56,19 @@ public final class GraphStreamUtility {
             tmpGraph.addNode(String.valueOf(tmpRow));
             Node tmpNode = tmpGraph.getNode(String.valueOf(tmpRow));
             tmpNode.setAttribute("Node", aScaffoldTree.getMatrixNode(tmpRow));
-            /*Add a label to each node that corresponds to the position in the matrix*/
+            /*Add a label to each node that corresponds to the level in the tree. 0 is the root.*/
             TreeNode tmpTreeLevelNode = (TreeNode) aScaffoldTree.getMatrixNode(tmpRow);
             tmpNode.setAttribute("ui.label", tmpTreeLevelNode.getLevel());
             /*Add the images*/
             TreeNode tmpTreeNode = (TreeNode) aScaffoldTree.getMatrixNode(aScaffoldTree.getMatrixNodesNumbers().get(tmpRow));
             IAtomContainer tmpTreeNodeMolecule = (IAtomContainer) tmpTreeNode.getMolecule();
             BufferedImage tmpNodeImg = tmpGenerator.withSize(512,512).depict(tmpTreeNodeMolecule).toImg();
-            //The images are stored temporarily, as I have not found a way to use them directly
+            /*The images are stored temporarily*/
             new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png").mkdirs();
             File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png");
             ImageIO.write(tmpNodeImg, "png", tmpSecOutputRemove);
             //set the images
             tmpNode.setAttribute("ui.style", "fill-mode: image-scaled-ratio-max;" + "fill-image: url('GraphStream" + tmpRow + ".png');");
-            //tmpNode.setAttribute("ui.stylesheet", "padding: 40, 10;");
             /*Add edges*/
             for(int tmpCol = 0; tmpCol < tmpMatrix[tmpRow].length; tmpCol++) { //Go through each column of the row
                 if(tmpRow < tmpCol) { //Skip a diagonal half to get edges in one direction only.
@@ -82,7 +81,6 @@ public final class GraphStreamUtility {
             }
         }
         /*Display graph*/
-        //tmpGraph.setAttribute("ui.stylesheet", "node {size-mode: fit; padding: 40, 40;}");
         System.setProperty("org.graphstream.ui", "swing");
         tmpGraph.display();
         TimeUnit.SECONDS.sleep(300);
@@ -109,20 +107,19 @@ public final class GraphStreamUtility {
             tmpGraph.addNode(String.valueOf(tmpRow));
             Node tmpNode = tmpGraph.getNode(String.valueOf(tmpRow));
             tmpNode.setAttribute("Node", aScaffoldNetwork.getMatrixNode(tmpRow));
-            /*Add a label to each node that corresponds to the position in the matrix*/
+            /*Add a label to each node that corresponds to the level in the tree. 0 is the root*/
             NetworkNode tmpNetworkNodeRow = (NetworkNode) aScaffoldNetwork.getMatrixNode(tmpRow);
             tmpNode.setAttribute("ui.label", tmpNetworkNodeRow.getLevel());
             /*Add the images*/
             NetworkNode tmpNetworkNode = (NetworkNode) aScaffoldNetwork.getMatrixNode(aScaffoldNetwork.getMatrixNodesNumbers().get(tmpRow));
             IAtomContainer tmpNetworkNodeMolecule = (IAtomContainer) tmpNetworkNode.getMolecule();
             BufferedImage tmpNodeImg = tmpGenerator.withSize(512,512).depict(tmpNetworkNodeMolecule).toImg();
-            //The images are stored temporarily, as I have not found a way to use them directly
+            /*The images are stored temporarily*/
             new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png").mkdirs();
             File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png");
             ImageIO.write(tmpNodeImg, "png", tmpSecOutputRemove);
             //set the images
             tmpNode.setAttribute("ui.style", "fill-mode: image-scaled-ratio-max;" + "fill-image: url('GraphStream" + tmpRow + ".png');");
-            //tmpNode.setAttribute("ui.stylesheet", "padding: 40, 10;");
             /*Add edges*/
             for(int tmpCol = 0; tmpCol < tmpMatrix[tmpRow].length; tmpCol++) { //Go through each column of the row
                 if(tmpRow < tmpCol) { //Skip a diagonal half to get edges in one direction only.
@@ -135,7 +132,6 @@ public final class GraphStreamUtility {
             }
         }
         /*Display graph*/
-        //tmpGraph.setAttribute("ui.stylesheet", "node {size-mode: fit; padding: 40, 40;}");
         System.setProperty("org.graphstream.ui", "swing");
         tmpGraph.display();
         TimeUnit.SECONDS.sleep(300);

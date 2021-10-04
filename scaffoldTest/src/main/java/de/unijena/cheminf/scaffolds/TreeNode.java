@@ -22,20 +22,35 @@ package de.unijena.cheminf.scaffolds;
 import java.util.Objects;
 
 /**
- * The TreeNodes are nodes from which a tree can be built.
+ * The TreeNodes are nodes from which a {@link ScaffoldTree} can be built.
  * It is used to organise the IAtomContainers and enables a relationship between the different objects.
  * A TreeNode can have different children but only one parent.
  *
  * @param <MoleculeType> As MoleculeType, any data type can be defined.
  *                      In our scenario, the nodes contain molecules.
+ *
+ * @version 1.0
  */
 public class TreeNode<MoleculeType> extends ScaffoldNodeBase<MoleculeType> {
 
+    //<editor-fold desc="Public variables">
     /**
      * Parent of the node
      */
     private TreeNode<MoleculeType> parent;
+    //</editor-fold>
 
+    //<editor-fold desc="Constructor">
+    /**
+     * Constructor
+     * @param aMolecule molecule of the TreeNode
+     */
+    public TreeNode(MoleculeType aMolecule) {
+        super(aMolecule);
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="Public variables">
     /**
      * Shows if the node has parents
      * @return Whether the node has parents
@@ -46,17 +61,9 @@ public class TreeNode<MoleculeType> extends ScaffoldNodeBase<MoleculeType> {
     }
 
     /**
-     * Constructor
-     * @param aMolecule molecule of the TreeNode
-     */
-    public TreeNode(MoleculeType aMolecule) {
-        super(aMolecule);
-    }
-
-    /**
      * Adds a child to the TreeNode, i.e. links it to a TreeNode on the level below
-     * @param aMolecule Molecule of the child leave
-     * @return Node of the child leave
+     * @param aMolecule Molecule of the child leaf
+     * @return Node of the child leaf
      */
     @Override
     public TreeNode<MoleculeType> addChild(MoleculeType aMolecule) {
@@ -96,5 +103,6 @@ public class TreeNode<MoleculeType> extends ScaffoldNodeBase<MoleculeType> {
         Objects.requireNonNull(aParent, "Given TreeNode is 'null'");
         this.parent = aParent;
     }
+    //</editor-fold>
     //</editor-fold>
 }

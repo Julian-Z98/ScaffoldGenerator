@@ -31,27 +31,30 @@ import java.util.*;
  * Base class of node collection objects.
  * Top-level class to organise the ScaffoldNodeBase objects.
  *
+ * @version 1.0
  */
 public abstract class ScaffoldNodeCollectionBase {
 
+    //<editor-fold desc="Protected variables">
     /**
-     * Saves all ScaffoldNodes and numbers them in ascending order. Starts at 0. Key:Number, Value:ScaffoldNode
+     * Saves all ScaffoldNodes and numbers them in ascending order. Starts at 0.
+     * reverseNodeMap with key and value swapped. Key:Number, Value:ScaffoldNodeBase
      */
     protected HashMap<Integer, ScaffoldNodeBase> nodeMap;
 
     /**
      * Saves all ScaffoldNodes and numbers them in ascending order. Starts at 0.
-     * nodeMap with key and value swapped. Key:ScaffoldNode, Value:Number
+     * nodeMap with key and value swapped. Key:ScaffoldNodeBase, Value:Number
      */
     protected HashMap<ScaffoldNodeBase, Integer> reverseNodeMap;
 
     /**
-     * Saves all ScaffoldNodes according to their SMILES. Key:SMILES, Value:ScaffoldNode
+     * Saves all ScaffoldNodes according to their SMILES. Key:SMILES, Value:ScaffoldNodeBase
      */
     protected ListMultimap<String, ScaffoldNodeBase> smilesMap;
 
     /**
-     * Saves all ScaffoldNodes according to their level. Key:Level, Value:ScaffoldNode
+     * Saves all ScaffoldNodes according to their level. Key:Level, Value:ScaffoldNodeBase
      */
     protected ListMultimap<Integer, ScaffoldNodeBase> levelMap;
 
@@ -64,7 +67,9 @@ public abstract class ScaffoldNodeCollectionBase {
      * Shows how many nodes have been added so far. Removing nodes has no effect on it.
      */
     protected int nodeCounter;
+    //</editor-fold>
 
+    //<editor-fold desc="Constructor">
     /**
      * Constructor
      * @param aSmilesGenerator Used SMILES Generator
@@ -77,7 +82,9 @@ public abstract class ScaffoldNodeCollectionBase {
         this.smilesGenerator = aSmilesGenerator;
         this.nodeCounter = 0;
     }
+    //</editor-fold>
 
+    //<editor-fold desc="public Methods">
     /**
      * Default Constructor
      */
@@ -93,7 +100,7 @@ public abstract class ScaffoldNodeCollectionBase {
     public abstract void addNode(ScaffoldNodeBase aNode) throws CDKException;
 
     /**
-     * Removes a Node. This does not change the order. The numbering does not move up.
+     * Removes a Node. This does not change the order. The numbering does not change.
      * @param aNode Node to remove. Must match the tree object. For example, a ScaffoldTree requires a TreeNode.
      * @throws CDKException In case of a problem with the SmilesGenerator
      * @throws IllegalArgumentException if the node is not in the Scaffold
@@ -101,8 +108,7 @@ public abstract class ScaffoldNodeCollectionBase {
     public abstract void removeNode(ScaffoldNodeBase aNode) throws CDKException, IllegalArgumentException;
 
     /**
-     * Checks whether the molecule is already present in the Scaffold Collection
-     * Check whether it is the same molecule using the SMILES string.
+     * Checks with the SMILES string whether the molecule is already present in the Scaffold Collection.
      * @param aMolecule Molecule to check
      * @return Whether the molecule is located in the Scaffold Collection
      * @throws CDKException In case of a problem with the SmilesGenerator
@@ -182,7 +188,7 @@ public abstract class ScaffoldNodeCollectionBase {
 
     /**
      * Returns the number of the nodes and the nodes of the matrix in ascending order.
-     * @return HashMap with the number of the nodes and the nodes in the order they appear in the matrix
+     * @return HashMap with the number of the nodes and the ScaffoldNodes in the order they appear in the matrix
      */
     public HashMap<Integer, ScaffoldNodeBase> getMatrixNodes() {
         return this.nodeMap;
@@ -190,7 +196,7 @@ public abstract class ScaffoldNodeCollectionBase {
 
     /**
      * Returns the node that belongs to a certain row and column number of the matrix.
-     * Returns zero if the node is not in the ScaffoldCollection. Throwing an exception makes it difficult to build a ScaffoldCollection
+     * Returns zero if the node is not in the ScaffoldCollection.
      * @param aNumber Row and column number whose node is requested
      * @return Node that belongs to the requested column and row number
      */
@@ -210,7 +216,8 @@ public abstract class ScaffoldNodeCollectionBase {
     }
 
     /**
-     * Gives the number of nodes as they occur in the matrix. Missing numbers have been removed.
+     * Gives the number of nodes as they occur in the matrix.
+     * Number of missing Nodes have been removed.
      * @return List with all node numbers of the matrix
      */
     public List<Integer> getMatrixNodesNumbers() {
@@ -218,5 +225,6 @@ public abstract class ScaffoldNodeCollectionBase {
         tmpList.addAll(this.nodeMap.keySet());
         return tmpList;
     }
+    //</editor-fold>
     //</editor-fold>
 }

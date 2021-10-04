@@ -27,10 +27,14 @@ import java.util.Objects;
 
 
 /**
- * Top-level class to organise the TreeNodes
+ * Top-level class to organise the TreeNodes as a tree.
+ * A tree can have several children but only one parent.
+ *
+ * @version 1.0
  */
 public class ScaffoldTree extends ScaffoldNodeCollectionBase {
 
+    //<editor-fold desc="Constructors">
     /**
      * Constructor
      * @param aSmilesGenerator Used SMILES Generator
@@ -45,7 +49,9 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
     public ScaffoldTree() {
         this(new SmilesGenerator(SmiFlavor.Unique));
     }
+    //</editor-fold>
 
+    //<editor-fold desc="Public variables">
     /**
      * Add TreeNode to the ScaffoldTree
      * @param aNode TreeNode to be added
@@ -53,6 +59,7 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
      */
     @Override
     public void addNode(ScaffoldNodeBase aNode) throws CDKException {
+        /*Parameter checks*/
         Objects.requireNonNull(aNode, "Given TreeNode is 'null'");
         TreeNode tmpNode = null;
         try {
@@ -85,13 +92,14 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
     }
 
     /**
-     * Removes a Node. This does not change the order. The numbering does not move up.
+     * Removes a Node. This does not change the order. The numbering does not change.
      * @param aNode Node to remove
      * @throws CDKException In case of a problem with the SmilesGenerator
      * @throws IllegalArgumentException if the node is not in the Scaffold
      */
     @Override
     public void removeNode(ScaffoldNodeBase aNode) throws CDKException, IllegalArgumentException {
+        /*Parameter checks*/
         Objects.requireNonNull(aNode, "Given ScaffoldNode is 'null'");
         TreeNode tmpNode = null;
         try {
@@ -184,8 +192,9 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
      * The new tree is simply taken over if the existing tree is empty.
      * If there is no match between the two trees, false is returned and the old tree is not changed.
      *
-     * If a molecule does not generate a SchuffenhauerScaffold, it is stored as a node with empty SMILES and is treated normally.
+     * If a molecule does generate an empty scaffold, it is stored as a node with empty SMILES and is treated normally.
      * All other empty nodes are then added to this tree accordingly.
+     * By querying the origins of this node, all molecules that do not produce a scaffold can be returned.
      * @param aScaffoldTree tree to be inserted into the existing ScaffoldTree.
      * @return false if the new tree has nodes and cannot be inserted because the two trees have no common nodes.
      * @throws CDKException In case of a problem with the SmilesGenerator
@@ -193,7 +202,7 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
     public boolean mergeTree(ScaffoldTree aScaffoldTree) throws CDKException {
         Objects.requireNonNull(aScaffoldTree, "Given ScaffoldTree is 'null'");
         /*If the old ScaffoldTree is empty, transfer the new ScaffoldTree to be added.*/
-        if(this.hasOneSingleRootNode() == false) {
+        if(this.getAllNodes().size() == 0  || this.getAllNodes().isEmpty()) {
             for(ScaffoldNodeBase tmpBaseNode : aScaffoldTree.getAllNodes()) {
                 TreeNode tmpNode = (TreeNode) tmpBaseNode;
                 this.addNode(tmpNode);
@@ -203,7 +212,7 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
         }
         /*If the old Scaffold tree is not empty*/
         else {
-            boolean tmpAreTreesOverlapping = true;
+            boolean tmpAreTreesOverlapping;
             /*Go through each level of the tree starting at the root*/
             for(int i = 0; i <= aScaffoldTree.getMaxLevel(); i++) {
                 tmpAreTreesOverlapping = false;
@@ -221,7 +230,7 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
                             for(Object tmpOriginSmiles : tmpNewTreeNode.getOriginSmilesList()) {
                                 tmpOldTreeNode.addOriginSmiles((String) tmpOriginSmiles);
                             }
-                            /*Trees are overlapping if a fragment occurs in both trees*/
+                            //Trees are overlapping if a fragment occurs in both trees
                             tmpAreTreesOverlapping = true;
                             /*Get the children of the overlapping node*/
                             for(Object tmpNewChild : tmpNewTreeNode.getChildren()) {
@@ -296,7 +305,7 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
      * @return root node of the tree
      * @throws IllegalStateException if the tree has no clear root
      */
-    public TreeNode getRoot()  throws IllegalStateException {
+    public TreeNode getRoot() throws IllegalStateException {
         if(!this.hasOneSingleRootNode()) { //Checks whether the tree has a single root
             throw new IllegalStateException("Tree has no clear root");
         }
@@ -309,5 +318,6 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
         }
         throw new IllegalStateException("Tree has no clear root");
     }
+    //</editor-fold>
     //</editor-fold>
 }

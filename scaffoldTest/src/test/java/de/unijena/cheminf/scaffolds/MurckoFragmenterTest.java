@@ -42,6 +42,8 @@ import java.io.IOException;
 
 /**
   * JUnit test class for the org.openscience.cdk.fragment.MurckoFragmenter
+  *
+  * @version 1.0
   */
 public class MurckoFragmenterTest {
     private MurckoFragmenter fragmenter;

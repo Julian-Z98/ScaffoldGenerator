@@ -23,19 +23,35 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * The NetworkNodes are nodes from which a Network can be built.
+ * The NetworkNodes are nodes from which a {@link ScaffoldNetwork} can be built.
  * It is used to organise the IAtomContainers and enables a relationship between the different objects.
  * A NetworkNode can have multiple children and parents
  * @param <MoleculeType> As MoleculeType, any data type can be defined.
  *                     In our scenario, the nodes contain molecules.
+ *
+ * @version 1.0
  */
 public class NetworkNode <MoleculeType> extends ScaffoldNodeBase<MoleculeType> {
 
+    //<editor-fold desc="Private variables">
     /**
      * parents of the node
      */
     private List<NetworkNode<MoleculeType>> parents;
+    //</editor-fold>
 
+    //<editor-fold desc="Constructor">
+    /**
+     * Creates a NetworkNode
+     * @param aMolecule molecule of the NetworkNode
+     */
+    public NetworkNode(MoleculeType aMolecule) {
+        super(aMolecule);
+        this.parents =  new ArrayList<NetworkNode<MoleculeType>>();
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="Public methods">
     /**
      * Shows if the node has parents
      * @return Whether the node has parents
@@ -46,18 +62,9 @@ public class NetworkNode <MoleculeType> extends ScaffoldNodeBase<MoleculeType> {
     }
 
     /**
-     * Creates a NetworkNode
-     * @param aMolecule molecule of the NetworkNode
-     */
-    public NetworkNode(MoleculeType aMolecule) {
-        super(aMolecule);
-        this.parents =  new ArrayList<NetworkNode<MoleculeType>>();
-    }
-
-    /**
-     * Adds a child to the NetworkNode, i.e. links it to a NetworkNode on the level below
-     * @param aMolecule Molecule of the child leave
-     * @return Node of the child leave
+     * Adds a child to the NetworkNode, i.e. links it to a NetworkNode on the level below.
+     * @param aMolecule Molecule of the child leaf
+     * @return Node of the child leaf
      */
     @Override
     public NetworkNode<MoleculeType> addChild(MoleculeType aMolecule) {
@@ -73,22 +80,23 @@ public class NetworkNode <MoleculeType> extends ScaffoldNodeBase<MoleculeType> {
      */
     public void addParent(NetworkNode<MoleculeType> aParent) {
         Objects.requireNonNull(aParent, "Given NetworkNode is 'null'");
-        /*Add child if not already added*/
         boolean tmpIsAlreadyChild = false;
+        /*Check if the child is not already set*/
         for(ScaffoldNodeBase<MoleculeType> tmpBaseNode : aParent.getChildren()) {
             NetworkNode<MoleculeType> tmpNode = (NetworkNode<MoleculeType>) tmpBaseNode;
             if(tmpNode.getMolecule() == this.getMolecule()){
                 tmpIsAlreadyChild = true;
             }
         }
-        if(tmpIsAlreadyChild == false) {
+        /*Add child if not already added*/
+        if(!tmpIsAlreadyChild) {
             aParent.addChild(this.getMolecule());
         }
         //Add parent
         this.parents.add(aParent);
     }
-
     //<editor-fold desc="get/set">
+
     /**
      * Outputs the level on which the node is located in the entire network
      * @return level of the node in the entire network
@@ -117,5 +125,6 @@ public class NetworkNode <MoleculeType> extends ScaffoldNodeBase<MoleculeType> {
         Objects.requireNonNull(aParents, "Given NetworkNode is 'null'");
         this.parents = aParents;
     }
+    //</editor-fold>
     //</editor-fold>
 }
