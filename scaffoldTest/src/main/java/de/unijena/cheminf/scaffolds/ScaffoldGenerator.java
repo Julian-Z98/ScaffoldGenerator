@@ -543,7 +543,7 @@ public class ScaffoldGenerator {
      * @throws CloneNotSupportedException if cloning is not possible.
      * @throws NullPointerException if parameter is null
      */
-    public List<IAtomContainer> applyEnumerativRemoval(IAtomContainer aMolecule) throws CDKException, CloneNotSupportedException, NullPointerException {
+    public List<IAtomContainer> applyEnumerativeRemoval(IAtomContainer aMolecule) throws CDKException, CloneNotSupportedException, NullPointerException {
         Objects.requireNonNull(aMolecule, "Input molecule must be non null");
         IAtomContainer tmpScaffoldOriginal = this.getScaffoldInternal(aMolecule, true, true, this.aromaticityModelSetting, this.scaffoldModeSetting);
         int tmpRingCount = this.getRingsInternal(tmpScaffoldOriginal, true).size();
@@ -595,7 +595,7 @@ public class ScaffoldGenerator {
      * @throws CloneNotSupportedException if cloning is not possible.
      * @throws NullPointerException if parameter is null
      */
-    public ScaffoldNetwork generateEnumerativNetwork(IAtomContainer aMolecule) throws CDKException, CloneNotSupportedException, NullPointerException {
+    public ScaffoldNetwork generateEnumerativeNetwork(IAtomContainer aMolecule) throws CDKException, CloneNotSupportedException, NullPointerException {
         Objects.requireNonNull(aMolecule, "Input molecule must be non null");
         ScaffoldNetwork tmpScaffoldNetwork = new ScaffoldNetwork(this.getSmilesGenerator());
         IAtomContainer tmpScaffoldOriginal = this.getScaffoldInternal(aMolecule, true, true, this.aromaticityModelSetting, this.scaffoldModeSetting);
@@ -672,13 +672,13 @@ public class ScaffoldGenerator {
      * @throws CloneNotSupportedException if cloning is not possible.
      * @throws NullPointerException if parameter is null
      */
-    public ScaffoldNetwork generateEnumerativForest(List<IAtomContainer> aMoleculeList) throws CDKException, CloneNotSupportedException, NullPointerException {
+    public ScaffoldNetwork generateEnumerativeForest(List<IAtomContainer> aMoleculeList) throws CDKException, CloneNotSupportedException, NullPointerException {
         Objects.requireNonNull(aMoleculeList, "Input molecule list must be non null");
         ScaffoldNetwork tmpScaffoldNetwork = new ScaffoldNetwork();
         for(IAtomContainer tmpMolecule : aMoleculeList) {
             Objects.requireNonNull(tmpMolecule, "Input molecule must be non null");
             IAtomContainer tmpClonedMolecule = tmpMolecule.clone();
-            tmpScaffoldNetwork.mergeNetwork(this.generateEnumerativNetwork(tmpClonedMolecule));
+            tmpScaffoldNetwork.mergeNetwork(this.generateEnumerativeNetwork(tmpClonedMolecule));
         }
         return  tmpScaffoldNetwork;
     }
