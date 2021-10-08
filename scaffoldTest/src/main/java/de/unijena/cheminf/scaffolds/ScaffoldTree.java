@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Julian Zander, Jonas Schaub,  Achim Zielesny
+ * Copyright (c) 2021 Julian Zander, Jonas Schaub, Achim Zielesny, Christoph Steinbeck
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -20,17 +20,18 @@ package de.unijena.cheminf.scaffolds;
 
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.smiles.SmilesGenerator;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 
 /**
  * Top-level class to organise the TreeNodes as a tree.
- * A tree can have several children but only one parent.
+ * A tree can have one root and several leaves.
  *
- * @version 1.0
+ * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas-schaub@uni-jena.de)
+ * @version 1.0.0.0
  */
 public class ScaffoldTree extends ScaffoldNodeCollectionBase {
 
@@ -47,128 +48,63 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
      * Default Constructor
      */
     public ScaffoldTree() {
-        this(new SmilesGenerator(SmiFlavor.Unique));
+        super();
     }
     //</editor-fold>
 
-    //<editor-fold desc="Public variables">
-    /**
-     * Add TreeNode to the ScaffoldTree
-     * @param aNode TreeNode to be added
-     * @throws CDKException In case of a problem with the SmilesGenerator
-     */
+    //<editor-fold desc="Public methods">
     @Override
-    public void addNode(ScaffoldNodeBase aNode) throws CDKException {
+    public void addNode(ScaffoldNodeBase aNode) throws CDKException, IllegalArgumentException, NullPointerException {
         /*Parameter checks*/
         Objects.requireNonNull(aNode, "Given TreeNode is 'null'");
-        TreeNode tmpNode = null;
-        try {
-            tmpNode = (TreeNode) aNode;
-        } catch(Exception e) {
-            e.printStackTrace();
-            System.out.println("Node cant be added to ScaffoldTree");
+        if(!(aNode instanceof TreeNode)) {
+            System.out.println("Node can not be added to ScaffoldTree");
             System.out.println("Parameter must be a TreeNode");
+            throw new IllegalArgumentException();
         }
         //Add to nodeMap
-        this.nodeMap.put(this.nodeCounter, tmpNode);
+        this.nodeMap.put(this.nodeCounter, aNode);
         //Add to reverseNodeMap
-        this.reverseNodeMap.put(tmpNode, this.nodeCounter);
+        this.reverseNodeMap.put(aNode, this.nodeCounter);
         /*Add to smilesMap*/
-        IAtomContainer tmpMolecule = (IAtomContainer) tmpNode.getMolecule();
+        IAtomContainer tmpMolecule = (IAtomContainer) aNode.getMolecule();
         String tmpSmiles = this.smilesGenerator.create(tmpMolecule); //Convert molecule to SMILES
-        this.smilesMap.put(tmpSmiles, tmpNode);
+        this.smilesMap.put(tmpSmiles, aNode);
         //Add to levelMap
-        this.levelMap.put(tmpNode.getLevel(), tmpNode);
+        this.levelMap.put(aNode.getLevel(), aNode);
         /*Add origins from the new node to parent nodes*/
-        for(int tmpCount = 0; tmpCount < tmpNode.getLevel(); tmpCount++) {
-            TreeNode tmpNextNode = tmpNode.getParent();
-            for(Object tmpString : tmpNode.getOriginSmilesList()) {
+        for(int tmpCount = 0; tmpCount < aNode.getLevel(); tmpCount++) {
+            TreeNode tmpNextNode = ((TreeNode<?>) aNode).getParent();
+            for(Object tmpString : aNode.getOriginSmilesList()) {
                 tmpNextNode.addOriginSmiles((String) tmpString);
             }
-            tmpNode = tmpNextNode;
+            aNode = tmpNextNode;
         }
         //Increase nodeCounter
         this.nodeCounter++;
     }
 
-    /**
-     * Removes a Node. This does not change the order. The numbering does not change.
-     * @param aNode Node to remove
-     * @throws CDKException In case of a problem with the SmilesGenerator
-     * @throws IllegalArgumentException if the node is not in the Scaffold
-     */
     @Override
-    public void removeNode(ScaffoldNodeBase aNode) throws CDKException, IllegalArgumentException {
+    public void removeNode(ScaffoldNodeBase aNode) throws CDKException, IllegalArgumentException, NullPointerException {
         /*Parameter checks*/
         Objects.requireNonNull(aNode, "Given ScaffoldNode is 'null'");
-        TreeNode tmpNode = null;
-        try {
-            tmpNode = (TreeNode) aNode;
-        } catch(Exception e) {
-            e.printStackTrace();
-            System.out.println("Node cant be removed from the ScaffoldTree");
+        if(!(aNode instanceof TreeNode)) {
+            System.out.println("Node can not be removed from the ScaffoldTree");
             System.out.println("Parameter must be a TreeNode");
+            throw new IllegalArgumentException();
         }
-        if(!this.reverseNodeMap.containsKey(tmpNode)) { //Check if the node exists in the Scaffold
+        if(!this.reverseNodeMap.containsKey(aNode)) { //Check if the node exists in the Scaffold
             throw new IllegalArgumentException("Node is not in Scaffold");
         }
         /*Remove from nodeMap and reverseNodeMap*/
-        int tmpNumberInNodeMap = this.reverseNodeMap.get(tmpNode); //get number in nodeMap
+        int tmpNumberInNodeMap = this.reverseNodeMap.get(aNode); //get number in nodeMap
         this.nodeMap.remove(tmpNumberInNodeMap);
-        this.reverseNodeMap.remove(tmpNode);
+        this.reverseNodeMap.remove(aNode);
         /*Remove from smilesMap*/
-        String tmpSmiles = this.smilesGenerator.create((IAtomContainer) tmpNode.getMolecule()); //Convert molecule to SMILES
-        this.smilesMap.remove(tmpSmiles, tmpNode);
+        String tmpSmiles = this.smilesGenerator.create((IAtomContainer) aNode.getMolecule()); //Convert molecule to SMILES
+        this.smilesMap.remove(tmpSmiles, aNode);
         /*Remove from levelMap*/
-        levelMap.remove(tmpNode.getLevel(), tmpNode);
-    }
-
-    /**
-     * Checks if the parent of each node in the tree is present (root excluded).
-     * If this is not the case, the tree is disjointed. Then it is actually more than one tree.
-     * @return whether the tree is connected
-     */
-    private boolean isConnected() {
-        int tmpCounter = 0;
-        boolean tmpIsTreeConnected = true;
-        for(ScaffoldNodeBase tmpNodeBase : this.nodeMap.values()) {
-            TreeNode tmpNode = (TreeNode) tmpNodeBase;
-            /*The root has no parent and is therefore skipped*/
-            if(tmpCounter == 0) {
-                tmpCounter++;
-                continue;
-            }
-            /*Is the parent of the node in the tree*/
-            if(!this.reverseNodeMap.containsKey(tmpNode.getParent())) {
-                tmpIsTreeConnected = false;
-            }
-            tmpCounter++;
-        }
-        return tmpIsTreeConnected;
-    }
-
-    /**
-     * Checks whether the tree has a single root. Returns false in any other case.
-     * If false, the tree is incorrect or not yet complete.
-     * @return Whether the tree has only one root
-     */
-    private boolean hasOneSingleRootNode() {
-        int tmpRootCounter = 0;
-        for(ScaffoldNodeBase tmpNodeBase : this.nodeMap.values()) {
-            TreeNode tmpNode = (TreeNode) tmpNodeBase;
-            /*Is the parent of the node in the tree*/
-            if(!this.reverseNodeMap.containsKey(tmpNode.getParent())) {
-                tmpRootCounter++;
-            }
-            if(tmpRootCounter < 1) { //If the tree has more than one root
-                return false;
-            }
-        }
-        if(tmpRootCounter == 1) { //If the tree has only one root
-            return true;
-        } else { //If the tree has no root
-            return false;
-        }
+        levelMap.remove(aNode.getLevel(), aNode);
     }
 
     /**
@@ -198,8 +134,9 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
      * @param aScaffoldTree tree to be inserted into the existing ScaffoldTree.
      * @return false if the new tree has nodes and cannot be inserted because the two trees have no common nodes.
      * @throws CDKException In case of a problem with the SmilesGenerator
+     * @throws NullPointerException if parameter is null
      */
-    public boolean mergeTree(ScaffoldTree aScaffoldTree) throws CDKException {
+    public boolean mergeTree(ScaffoldTree aScaffoldTree) throws CDKException, NullPointerException {
         Objects.requireNonNull(aScaffoldTree, "Given ScaffoldTree is 'null'");
         /*If the old ScaffoldTree is empty, transfer the new ScaffoldTree to be added.*/
         if(this.getAllNodes().size() == 0  || this.getAllNodes().isEmpty()) {
@@ -264,14 +201,6 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
     }
 
     //<editor-fold desc="get/set">
-    /**
-     * Outputs an adjacency matrix in which the parent node of each node is marked with a 1.
-     * All others are marked with 0. Each row and column number in the matrix is assigned to a node.
-     * The assignment can be requested with getMatrixNodes/getMatrixNode.
-     * only works with valid trees. Can be checked with {@link ScaffoldTree#isValid()}.
-     * @return the adjacency matrix
-     * @throws IllegalStateException if the tree is not connected
-     */
     @Override
     public Integer[][] getMatrix() throws IllegalStateException {
         int tmpSize = this.nodeMap.size();
@@ -281,9 +210,7 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
         }
         /*Set all values of the matrix to 0*/
         for (int tmpRow = 0; tmpRow < tmpMatrix.length; tmpRow++) {
-            for (int tmpCol = 0; tmpCol < tmpMatrix[tmpRow].length; tmpCol++) {
-                tmpMatrix[tmpRow][tmpCol] = 0;
-            }
+            Arrays.fill(tmpMatrix[tmpRow], 0);
         }
         /*Insert a 1 for each parent node*/
         int tmpCounter = 0;
@@ -319,5 +246,55 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
         throw new IllegalStateException("Tree has no clear root");
     }
     //</editor-fold>
+    //</editor-fold>
+
+    //<editor-fold desc="Private methods">
+    /**
+     * Checks if the parent of each node in the tree is present (root excluded).
+     * If this is not the case, the tree is disjointed. Then it is actually more than one tree.
+     * @return whether the tree is connected
+     */
+    private boolean isConnected() {
+        int tmpCounter = 0;
+        boolean tmpIsTreeConnected = true;
+        for(ScaffoldNodeBase tmpNodeBase : this.nodeMap.values()) {
+            TreeNode tmpNode = (TreeNode) tmpNodeBase;
+            /*The root has no parent and is therefore skipped*/
+            if(tmpCounter == 0) {
+                tmpCounter++;
+                continue;
+            }
+            /*Is the parent of the node in the tree*/
+            if(!this.reverseNodeMap.containsKey(tmpNode.getParent())) {
+                tmpIsTreeConnected = false;
+            }
+            tmpCounter++;
+        }
+        return tmpIsTreeConnected;
+    }
+
+    /**
+     * Checks whether the tree has a single root. Returns false in any other case.
+     * If false, the tree is incorrect or not yet complete.
+     * @return Whether the tree has only one root
+     */
+    private boolean hasOneSingleRootNode() {
+        int tmpRootCounter = 0;
+        for(ScaffoldNodeBase tmpNodeBase : this.nodeMap.values()) {
+            TreeNode tmpNode = (TreeNode) tmpNodeBase;
+            /*Is the parent of the node in the tree*/
+            if(!this.reverseNodeMap.containsKey(tmpNode.getParent())) {
+                tmpRootCounter++;
+            }
+            if(tmpRootCounter < 1) { //If the tree has more than one root
+                return false;
+            }
+        }
+        if(tmpRootCounter == 1) { //If the tree has only one root
+            return true;
+        } else { //If the tree has no root
+            return false;
+        }
+    }
     //</editor-fold>
 }

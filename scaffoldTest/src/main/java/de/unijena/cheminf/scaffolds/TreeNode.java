@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Julian Zander, Jonas Schaub,  Achim Zielesny
+ * Copyright (c) 2021 Julian Zander, Jonas Schaub, Achim Zielesny, Christoph Steinbeck
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -25,11 +25,13 @@ import java.util.Objects;
  * The TreeNodes are nodes from which a {@link ScaffoldTree} can be built.
  * It is used to organise the IAtomContainers and enables a relationship between the different objects.
  * A TreeNode can have different children but only one parent.
+ * The parents are the smaller parent scaffolds.
  *
  * @param <MoleculeType> As MoleculeType, any data type can be defined.
- *                      In our scenario, the nodes contain molecules.
+ *                      In our scenario, the node contains a CDK IAtomContainer.
  *
- * @version 1.0
+ * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas-schaub@uni-jena.de)
+ * @version 1.0.0.0
  */
 public class TreeNode<MoleculeType> extends ScaffoldNodeBase<MoleculeType> {
 
@@ -50,23 +52,14 @@ public class TreeNode<MoleculeType> extends ScaffoldNodeBase<MoleculeType> {
     }
     //</editor-fold>
 
-    //<editor-fold desc="Public variables">
-    /**
-     * Shows if the node has parents
-     * @return Whether the node has parents
-     */
+    //<editor-fold desc="Public methods">
     @Override
     public boolean isOrphan() {
         return parent == null;
     }
 
-    /**
-     * Adds a child to the TreeNode, i.e. links it to a TreeNode on the level below
-     * @param aMolecule Molecule of the child leaf
-     * @return Node of the child leaf
-     */
     @Override
-    public TreeNode<MoleculeType> addChild(MoleculeType aMolecule) {
+    public TreeNode<MoleculeType> addChild(MoleculeType aMolecule) throws NullPointerException {
         Objects.requireNonNull(aMolecule, "Given molecule is 'null'");
         TreeNode<MoleculeType> tmpChildNode = new TreeNode<MoleculeType>(aMolecule);
         this.children.add(tmpChildNode);
@@ -75,10 +68,6 @@ public class TreeNode<MoleculeType> extends ScaffoldNodeBase<MoleculeType> {
     }
 
     //<editor-fold desc="get/set">
-    /**
-     * Outputs the level on which the node is located in the entire tree
-     * @return level of the node in the entire tree
-     */
     @Override
     public int getLevel() {
         if (this.isOrphan())
@@ -98,8 +87,9 @@ public class TreeNode<MoleculeType> extends ScaffoldNodeBase<MoleculeType> {
     /**
      * Set the parent node.
      * @param aParent parent that are set
+     * @throws NullPointerException if parameter is null
      */
-    public void setParent(TreeNode<MoleculeType> aParent) {
+    public void setParent(TreeNode<MoleculeType> aParent) throws NullPointerException {
         Objects.requireNonNull(aParent, "Given TreeNode is 'null'");
         this.parent = aParent;
     }

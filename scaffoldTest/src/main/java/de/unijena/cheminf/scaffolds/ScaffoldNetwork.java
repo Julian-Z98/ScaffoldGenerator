@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Julian Zander, Jonas Schaub, Achim Zielesny
+ * Copyright (c) 2021 Julian Zander, Jonas Schaub, Achim Zielesny, Christoph Steinbeck
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -22,7 +22,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.smiles.SmilesGenerator;
 
 import java.util.ArrayList;
@@ -32,8 +31,10 @@ import java.util.Objects;
 
 /**
  * Top-level class to organise the NetworkNodes
+ * A network can have several roots and leaves.
  *
- * @version 1.0
+ * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas-schaub@uni-jena.de)
+ * @version 1.0.0.0
  */
 public class ScaffoldNetwork extends ScaffoldNodeCollectionBase {
 
@@ -50,79 +51,62 @@ public class ScaffoldNetwork extends ScaffoldNodeCollectionBase {
      * Default Constructor
      */
     public ScaffoldNetwork() {
-        this(new SmilesGenerator(SmiFlavor.Unique));
+        super();
     }
     //</editor-fold>
 
     //<editor-fold desc="Public methods">
-    /**
-     * Add a new NetworkNode to the ScaffoldNetwork
-     * @param aNode NetworkNode to be added
-     * @throws CDKException In case of a problem with the SmilesGenerator
-     */
     @Override
-    public void addNode(ScaffoldNodeBase aNode) throws CDKException {
+    public void addNode(ScaffoldNodeBase aNode) throws CDKException, IllegalArgumentException, NullPointerException {
         /*Parameter checks*/
         Objects.requireNonNull(aNode, "Given NetworkNode is 'null'");
-        NetworkNode tmpNode = null;
-        try {
-            tmpNode = (NetworkNode) aNode;
-        } catch(Exception e) {
-            e.printStackTrace();
-            System.out.println("Node cant be added to NetworkTree");
+        if(!(aNode instanceof NetworkNode)) {
+            System.out.println("Node can not be added to ScaffoldNetwork");
             System.out.println("Parameter must be a NetworkNode");
+            throw new IllegalArgumentException();
         }
         //Add to nodeMap
-        this.nodeMap.put(this.nodeCounter, tmpNode);
+        this.nodeMap.put(this.nodeCounter, aNode);
         //Add to reverseNodeMap
-        this.reverseNodeMap.put(tmpNode, this.nodeCounter);
+        this.reverseNodeMap.put(aNode, this.nodeCounter);
         /*Add to smilesMap*/
-        IAtomContainer tmpMolecule = (IAtomContainer) tmpNode.getMolecule();
+        IAtomContainer tmpMolecule = (IAtomContainer) aNode.getMolecule();
         String tmpSmiles = this.smilesGenerator.create(tmpMolecule); //Convert molecule to SMILES
-        this.smilesMap.put(tmpSmiles, tmpNode);
+        this.smilesMap.put(tmpSmiles, aNode);
         /*Since the network is built from the leaves to the root,
          the levels of all nodes in the network must be re-determined for every node added.*/
-        this.levelMap.put(tmpNode.getLevel(), tmpNode);
+        this.levelMap.put(aNode.getLevel(), aNode);
         ListMultimap<Integer, ScaffoldNodeBase> tmpLevelMap = ArrayListMultimap.create();
         for(ScaffoldNodeBase tmpNodeBase : this.getAllNodes()) {
             NetworkNode tmpNetworkNode = (NetworkNode) tmpNodeBase;
-            tmpLevelMap.put(tmpNode.getLevel(), tmpNetworkNode);
+            tmpLevelMap.put(aNode.getLevel(), tmpNetworkNode);
         }
         this.levelMap = tmpLevelMap;
         //Increase nodeCounter
         this.nodeCounter++;
     }
 
-    /**
-     * Removes a Node. This does not change the order. The numbering does not change.
-     * @param aNode Node to remove
-     * @throws CDKException In case of a problem with the SmilesGenerator
-     * @throws IllegalArgumentException if the node is not in the Scaffold
-     */
     @Override
-    public void removeNode(ScaffoldNodeBase aNode) throws CDKException, IllegalArgumentException {
+    public void removeNode(ScaffoldNodeBase aNode) throws CDKException, IllegalArgumentException, NullPointerException {
         /*Parameter checks*/
         Objects.requireNonNull(aNode, "Given ScaffoldNode is 'null'");
-        NetworkNode tmpNode = null;
-        try {
-            tmpNode = (NetworkNode) aNode;
-        } catch(Exception e) {
-            e.printStackTrace();
-            System.out.println("Node cant be removed to NetworkTree");
+        if(!(aNode instanceof NetworkNode)) {
+            System.out.println("Node can not be removed from ScaffoldNetwork");
             System.out.println("Parameter must be a NetworkNode");
+            throw new IllegalArgumentException();
         }
-        if(!this.reverseNodeMap.containsKey(tmpNode)) { //Check if the node exists in the Scaffold
+        if(!this.reverseNodeMap.containsKey(aNode)) { //Check if the node exists in the Scaffold
             throw new IllegalArgumentException("Node is not in Scaffold");
         }
         /*Remove from nodeMap and reverseNodeMap*/
-        int tmpNumberInNodeMap = this.reverseNodeMap.get(tmpNode); //get number in nodeMap
+        int tmpNumberInNodeMap = this.reverseNodeMap.get(aNode); //get number in nodeMap
         this.nodeMap.remove(tmpNumberInNodeMap);
-        this.reverseNodeMap.remove(tmpNode);
+        this.reverseNodeMap.remove(aNode);
         /*Remove from smilesMap*/
-        String tmpSmiles = this.smilesGenerator.create((IAtomContainer) tmpNode.getMolecule()); //Convert molecule to SMILES
-        this.smilesMap.remove(tmpSmiles, tmpNode);
+        String tmpSmiles = this.smilesGenerator.create((IAtomContainer) aNode.getMolecule()); //Convert molecule to SMILES
+        this.smilesMap.remove(tmpSmiles, aNode);
         /*Remove from levelMap*/
-        levelMap.remove(tmpNode.getLevel(), tmpNode);
+        levelMap.remove(aNode.getLevel(), aNode);
     }
 
     /**
@@ -214,14 +198,6 @@ public class ScaffoldNetwork extends ScaffoldNodeCollectionBase {
     }
 
     //<editor-fold desc="get/set">
-    /**
-     * Outputs an adjacency matrix in which the parent node of each node is marked with a 1.
-     * All others are marked with 0. Each row and column number in the matrix is assigned to a node.
-     * The assignment can be requested with getMatrixNodes/getMatrixNode.
-     * only works with connected networks. Can be checked with isConnected.
-     * @return the adjacency matrix
-     * @throws IllegalStateException if the network is not connected
-     */
     @Override
     public Integer[][] getMatrix() throws IllegalStateException {
         int tmpSize = this.nodeMap.size();

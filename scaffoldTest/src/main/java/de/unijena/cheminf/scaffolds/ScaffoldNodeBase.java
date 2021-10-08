@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Julian Zander, Jonas Schaub,  Achim Zielesny
+ * Copyright (c) 2021 Julian Zander, Jonas Schaub, Achim Zielesny, Christoph Steinbeck
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -24,15 +24,16 @@ import java.util.List;
 import java.util.Objects;
 
 /**
+ * Inspired by: <a href="https://github.com/gt4dev/yet-another-tree-structure">Another Tree Structure</a>
+ * <br>
  * Base class of node objects.
  * Contains the basic functionality of nodes needed for a {@link ScaffoldTree} or {@link ScaffoldNetwork}.
  *
  * @param <MoleculeType> As MoleculeType, any data type can be defined.
- *                      In our scenario, the nodes contain molecules.
+ *                      In our scenario, the node contains a CDK IAtomContainer.
  *
- * Inspired by: https://github.com/gt4dev/yet-another-tree-structure
- *
- * @version 1.0
+ * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas-schaub@uni-jena.de)
+ * @version 1.0.0.0
  */
 public abstract class ScaffoldNodeBase<MoleculeType> {
 
@@ -54,29 +55,23 @@ public abstract class ScaffoldNodeBase<MoleculeType> {
      * Children of the Node
      */
     protected List<ScaffoldNodeBase<MoleculeType>> children;
-
-    /**
-     * List of indices of all elements
-     */
-    protected List<ScaffoldNodeBase<MoleculeType>> elementsIndex;
     //</editor-fold>
 
     //<editor-fold desc="Constructor">
     /**
      * Constructor
      * @param aMolecule molecule of the ScaffoldNodeBase
+     * @throws NullPointerException if parameter is null
      */
-    public ScaffoldNodeBase(MoleculeType aMolecule) {
+    public ScaffoldNodeBase(MoleculeType aMolecule) throws NullPointerException {
         Objects.requireNonNull(aMolecule, "Given molecule is 'null'");
         this.molecule = aMolecule;
         this.children = new LinkedList<ScaffoldNodeBase<MoleculeType>>();
         this.originSmilesList = new ArrayList<String>();
-        this.elementsIndex = new LinkedList<ScaffoldNodeBase<MoleculeType>>();
-        this.elementsIndex.add(this);
     }
     //</editor-fold>
 
-    //<editor-fold desc="Public variables">
+    //<editor-fold desc="Public methods">
     /**
      * Indicates whether it has children
      * @return true if it has no children
@@ -95,14 +90,16 @@ public abstract class ScaffoldNodeBase<MoleculeType> {
      * Adds a child to the ScaffoldNodeBase, i.e. links it to a ScaffoldNodeBase on the level below
      * @param aMolecule Molecule of the child leave
      * @return Node of the child leave
+     * @throws NullPointerException if parameter is null
      */
-    public abstract ScaffoldNodeBase<MoleculeType> addChild(MoleculeType aMolecule);
+    public abstract ScaffoldNodeBase<MoleculeType> addChild(MoleculeType aMolecule) throws NullPointerException;
 
     /**
      * Adds another string to the OriginSmilesList if it is not already present.
      * @param aString String to be added
+     * @throws NullPointerException if parameter is null
      */
-    public void addOriginSmiles(String aString) {
+    public void addOriginSmiles(String aString) throws NullPointerException {
         Objects.requireNonNull(aString, "Given SMILES of the molecule is 'null'");
         if(!this.originSmilesList.contains(aString)) {
             originSmilesList.add(aString);
@@ -111,8 +108,11 @@ public abstract class ScaffoldNodeBase<MoleculeType> {
     //<editor-fold desc="get/set">
 
     /**
-     * Outputs the level on which the node is located in the entire collection
-     * @return level of the node in the entire collection
+     * Outputs the level on which the node is located in the entire tree
+     * The level indicates the distance to the root (node without parents) and
+     * is determined by setting the level of the parent node + 1. The root itself has the level 0.
+     * The level is therefore dependent on the data structure and does not have to be set.
+     * @return level of the node in the entire NodeCollection
      */
     public abstract int getLevel();
 
@@ -127,8 +127,9 @@ public abstract class ScaffoldNodeBase<MoleculeType> {
     /**
      * Set the node molecule.
      * @param aMolecule molecule that are set
+     * @throws NullPointerException if parameter is null
      */
-    public void setMolecule(MoleculeType aMolecule) {
+    public void setMolecule(MoleculeType aMolecule) throws  NullPointerException {
         Objects.requireNonNull(aMolecule, "Given molecule is 'null'");
         this.molecule = aMolecule;
     }
@@ -144,8 +145,9 @@ public abstract class ScaffoldNodeBase<MoleculeType> {
     /**
      * Set the children node.
      * @param aChildren children that are set
+     * @throws NullPointerException if parameter is null
      */
-    public void setChildren(List<ScaffoldNodeBase<MoleculeType>> aChildren) {
+    public void setChildren(List<ScaffoldNodeBase<MoleculeType>> aChildren) throws NullPointerException{
         Objects.requireNonNull(aChildren, "Given ScaffoldNodeBase List is 'null'");
         this.children = aChildren;
     }
@@ -168,8 +170,9 @@ public abstract class ScaffoldNodeBase<MoleculeType> {
     /**
      * Set the entire originSmilesList
      * @param aOriginSmilesList SMILES of molecules that are set
+     * @throws NullPointerException if parameter is null
      */
-    public void setOriginSmilesList(ArrayList<String> aOriginSmilesList) {
+    public void setOriginSmilesList(ArrayList<String> aOriginSmilesList) throws NullPointerException {
         Objects.requireNonNull(aOriginSmilesList, "Given SMILES of the molecule List is 'null'");
         this.originSmilesList = aOriginSmilesList;
     }

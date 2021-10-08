@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Julian Zander, Jonas Schaub,  Achim Zielesny
+ * Copyright (c) 2021 Julian Zander, Jonas Schaub, Achim Zielesny, Christoph Steinbeck
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -25,11 +25,13 @@ import java.util.Objects;
 /**
  * The NetworkNodes are nodes from which a {@link ScaffoldNetwork} can be built.
  * It is used to organise the IAtomContainers and enables a relationship between the different objects.
- * A NetworkNode can have multiple children and parents
+ * A NetworkNode can have multiple children and parents.
+ * The parents are the smaller parent scaffolds.
  * @param <MoleculeType> As MoleculeType, any data type can be defined.
- *                     In our scenario, the nodes contain molecules.
+ *                     In our scenario, the node contains a CDK IAtomContainer.
  *
- * @version 1.0
+ * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas-schaub@uni-jena.de)
+ * @version 1.0.0.0
  */
 public class NetworkNode <MoleculeType> extends ScaffoldNodeBase<MoleculeType> {
 
@@ -52,22 +54,16 @@ public class NetworkNode <MoleculeType> extends ScaffoldNodeBase<MoleculeType> {
     //</editor-fold>
 
     //<editor-fold desc="Public methods">
-    /**
-     * Shows if the node has parents
-     * @return Whether the node has parents
-     */
     @Override
     public boolean isOrphan() {
         return parents.isEmpty();
     }
 
     /**
-     * Adds a child to the NetworkNode, i.e. links it to a NetworkNode on the level below.
-     * @param aMolecule Molecule of the child leaf
-     * @return Node of the child leaf
+     * @throws NullPointerException if parameter is null
      */
     @Override
-    public NetworkNode<MoleculeType> addChild(MoleculeType aMolecule) {
+    public NetworkNode<MoleculeType> addChild(MoleculeType aMolecule) throws NullPointerException {
         Objects.requireNonNull(aMolecule, "Given molecule is 'null'");
         NetworkNode<MoleculeType> tmpChildNode = new NetworkNode<MoleculeType>(aMolecule);
         this.children.add(tmpChildNode);
@@ -77,15 +73,17 @@ public class NetworkNode <MoleculeType> extends ScaffoldNodeBase<MoleculeType> {
     /**
      * Add the parents node and add this node as child to the parent node if not already done.
      * @param aParent parent that are added
+     * @throws NullPointerException if parameter is null
      */
-    public void addParent(NetworkNode<MoleculeType> aParent) {
+    public void addParent(NetworkNode<MoleculeType> aParent) throws NullPointerException {
         Objects.requireNonNull(aParent, "Given NetworkNode is 'null'");
         boolean tmpIsAlreadyChild = false;
         /*Check if the child is not already set*/
         for(ScaffoldNodeBase<MoleculeType> tmpBaseNode : aParent.getChildren()) {
             NetworkNode<MoleculeType> tmpNode = (NetworkNode<MoleculeType>) tmpBaseNode;
-            if(tmpNode.getMolecule() == this.getMolecule()){
+            if (tmpNode.getMolecule().equals(this.getMolecule())) {
                 tmpIsAlreadyChild = true;
+                break;
             }
         }
         /*Add child if not already added*/
@@ -97,10 +95,6 @@ public class NetworkNode <MoleculeType> extends ScaffoldNodeBase<MoleculeType> {
     }
     //<editor-fold desc="get/set">
 
-    /**
-     * Outputs the level on which the node is located in the entire network
-     * @return level of the node in the entire network
-     */
     @Override
     public int getLevel() {
         if (this.isOrphan())
@@ -120,8 +114,9 @@ public class NetworkNode <MoleculeType> extends ScaffoldNodeBase<MoleculeType> {
     /**
      * Set the parents of the node.
      * @param aParents parents that are set
+     * @throws NullPointerException if parameter is null
      */
-    public void setParents(List<NetworkNode<MoleculeType>> aParents) {
+    public void setParents(List<NetworkNode<MoleculeType>> aParents) throws NullPointerException {
         Objects.requireNonNull(aParents, "Given NetworkNode is 'null'");
         this.parents = aParents;
     }
