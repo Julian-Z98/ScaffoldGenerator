@@ -53,16 +53,16 @@ import java.util.TreeMap;
  * This class is designed to generate different molecule scaffolds and frameworks.
  * It contains several other methods for the decomposition of molecules. <p>
  *
- * Furthermore, the molecules can be decomposed according to the <a href="https://pubmed.ncbi.nlm.nih.gov/17238248/">
+ * Furthermore, the molecules can be decomposed according to the <a href="https://doi.org/10.1021/ci600338x">
  * Schuffenhauer rules</a> and a generation of all possible fragments,
  * which can be created by the iterative removal of the rings, is also possible. <br/>
  * The resulting molecular fragments can be organised in the form of a tree or a network.
- * The network approach is based on the <a href="https://pubs.acs.org/doi/10.1021/ci2000924">
+ * The network approach is based on the <a href="https://doi.org/10.1021/ci2000924">
  * Mining for Bioactive Scaffolds with Scaffold Networks</a> Paper.
  * Different trees or networks can also be merged together.
  *
- * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas-schaub@uni-jena.de)
- * @version 1.0.0.0
+ * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
+ * @version 1.0.0.1
  */
 public class ScaffoldGenerator {
 
@@ -73,21 +73,21 @@ public class ScaffoldGenerator {
     public enum ScaffoldModeOption {
 
         /**
-         * Schuffenhauer scaffolds are generated. Based on the <a href="https://pubmed.ncbi.nlm.nih.gov/17238248/">
+         * Schuffenhauer scaffolds are generated. Based on the <a href="https://doi.org/10.1021/ci600338x">
          * "The Scaffold Tree"</a> Paper by Schuffenhauer et al. 2006.
          * The terminal side chains of the molecule are removed, but any atoms non-single bonded to linkers or rings are retained.
          */
         SCHUFFENHAUER_SCAFFOLD(),
 
         /**
-         * Murcko frameworks are generated. Based on the <a href="https://pubs.acs.org/doi/10.1021/jm9602928">
+         * Murcko frameworks are generated. Based on the <a href="https://doi.org/10.1021/jm9602928">
          * "The Properties of Known Drugs. 1. Molecular Frameworks"</a> Paper by Bemis and Murcko 1996.
          * All terminal side chains are removed and only linkers and rings are retained.
          */
         MURCKO_FRAMEWORK(),
         
         /**
-         * Basic wire frames are generated based on the <a href="https://jcheminf.biomedcentral.com/articles/10.1186/s13321-021-00526-y">
+         * Basic wire frames are generated based on the <a href="https://doi.org/10.1186/s13321-021-00526-y">
          * "Molecular Anatomy: a new multi‑dimensional hierarchical scaffold analysis tool"</a>
          * Paper by Beccari et al. 2021.
          * It is a very abstract form of representation.
@@ -101,7 +101,7 @@ public class ScaffoldGenerator {
         ELEMENTAL_WIRE_FRAME(),
 
         /**
-         * Basic Frameworks are generated based on the <a href="https://jcheminf.biomedcentral.com/articles/10.1186/s13321-021-00526-y">
+         * Basic Frameworks are generated based on the <"https://doi.org/10.1186/s13321-021-00526-y">
          * "Molecular Anatomy: a new multi‑dimensional hierarchical scaffold analysis tool"</a>
          * Paper by Beccari et al. 2021.
          * All side chains are removed and all atoms are converted into carbons. The order of the remaining bonds is not changed.
@@ -171,11 +171,6 @@ public class ScaffoldGenerator {
 
     //<editor-fold desc="Private variables">
     /**
-     * MurckoFragmenter with the default settings for this class.
-     */
-    private final MurckoFragmenter murckoFragmenter = new MurckoFragmenter(true, 1);
-
-    /**
      * Specifies whether the aromaticity is to be taken into account.
      */
     private boolean determineAromaticitySetting;
@@ -214,7 +209,6 @@ public class ScaffoldGenerator {
      */
     public ScaffoldGenerator() {
         this.restoreDefaultSettings();
-        this.murckoFragmenter.setComputeRingFragments(false);
     }
     //</editor-fold>
 
@@ -448,7 +442,7 @@ public class ScaffoldGenerator {
         for(IAtom tmpAtom : tmpScaffold.atoms()) {
             tmpRemovedNumberList.add(tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY));
         }
-        /*Remove all numbers of the scaffold from the origin molecule*/
+        /*Remove all numbers of the scaffold from the original molecule*/
         for(Integer tmpNumber : tmpRemovedNumberList) {
             if(tmpMoleculePropertyMap.containsKey(tmpNumber)) {
                 if(tmpClonedMolecule.contains(tmpMoleculePropertyMap.get(tmpNumber))) {
@@ -595,7 +589,7 @@ public class ScaffoldGenerator {
      * @throws CloneNotSupportedException if cloning is not possible.
      * @throws NullPointerException if parameter is null
      */
-    public ScaffoldNetwork generateEnumerativeNetwork(IAtomContainer aMolecule) throws CDKException, CloneNotSupportedException, NullPointerException {
+    public ScaffoldNetwork generateScaffoldNetwork(IAtomContainer aMolecule) throws CDKException, CloneNotSupportedException, NullPointerException {
         Objects.requireNonNull(aMolecule, "Input molecule must be non null");
         ScaffoldNetwork tmpScaffoldNetwork = new ScaffoldNetwork(this.getSmilesGenerator());
         IAtomContainer tmpScaffoldOriginal = this.getScaffoldInternal(aMolecule, true, true, this.aromaticityModelSetting, this.scaffoldModeSetting);
@@ -609,6 +603,7 @@ public class ScaffoldGenerator {
         /*Get the origin and link it to the first node*/
         String tmpFirstNodeSmiles = this.getSmilesGenerator().create(aMolecule);
         tmpFirstNode.addOriginSmiles(tmpFirstNodeSmiles);
+        tmpFirstNode.addNonVirtualOriginSmiles(tmpFirstNodeSmiles);
         /*Go through all fragments created by iterative removal*/
         for (int tmpCounter = 0; tmpCounter < tmpIterativeRemovalList.size(); tmpCounter++) {
             IAtomContainer tmpIterMol = tmpIterativeRemovalList.get(tmpCounter); //Take the next molecule from the list
@@ -672,13 +667,13 @@ public class ScaffoldGenerator {
      * @throws CloneNotSupportedException if cloning is not possible.
      * @throws NullPointerException if parameter is null
      */
-    public ScaffoldNetwork generateEnumerativeForest(List<IAtomContainer> aMoleculeList) throws CDKException, CloneNotSupportedException, NullPointerException {
+    public ScaffoldNetwork generateScaffoldNetwork(List<IAtomContainer> aMoleculeList) throws CDKException, CloneNotSupportedException, NullPointerException {
         Objects.requireNonNull(aMoleculeList, "Input molecule list must be non null");
         ScaffoldNetwork tmpScaffoldNetwork = new ScaffoldNetwork();
         for(IAtomContainer tmpMolecule : aMoleculeList) {
             Objects.requireNonNull(tmpMolecule, "Input molecule must be non null");
             IAtomContainer tmpClonedMolecule = tmpMolecule.clone();
-            tmpScaffoldNetwork.mergeNetwork(this.generateEnumerativeNetwork(tmpClonedMolecule));
+            tmpScaffoldNetwork.mergeNetwork(this.generateScaffoldNetwork(tmpClonedMolecule));
         }
         return  tmpScaffoldNetwork;
     }
@@ -686,7 +681,7 @@ public class ScaffoldGenerator {
     /**
      * Iteratively removes the rings of the molecule according to specific rules that are queried hierarchically
      * and returns the scaffolds as list. <br/>
-     * Based on the rules from the  <a href="https://pubmed.ncbi.nlm.nih.gov/17238248/"> "The Scaffold Tree"</a> Paper by Schuffenhauer et al.
+     * Based on the rules from the  <a href="https://doi.org/10.1021/ci600338x"> "The Scaffold Tree"</a> Paper by Schuffenhauer et al.
      * Rule 7 {@link ScaffoldGenerator#applySchuffenhauerRuleSeven(IAtomContainer, List)} is only applied
      * if {@link ScaffoldGenerator#ruleSevenAppliedSetting} is true.
      * The aromaticity is also redetermined by {@link ScaffoldGenerator#determineAromaticitySetting}. <p>
@@ -828,7 +823,7 @@ public class ScaffoldGenerator {
      * Iteratively removes the rings of the molecule according to specific rules that are queried hierarchically. <p>
      * A tree is built from the resulting fragments.
      * A tree has one single root, the smallest fragment. Each node can have several children but only one parent. <p>
-     * Based on the rules from the  <a href="https://pubmed.ncbi.nlm.nih.gov/17238248/">
+     * Based on the rules from the  <a href="https://doi.org/10.1021/ci600338x">
      * "The Scaffold Tree"</a> Paper by Schuffenhauer et al.
      * Rule 7 {@link ScaffoldGenerator#applySchuffenhauerRuleSeven(IAtomContainer, List)} is only applied
      * if {@link ScaffoldGenerator#ruleSevenAppliedSetting} is true
@@ -862,6 +857,10 @@ public class ScaffoldGenerator {
             tmpNode.addChild(tmpTestMol);
             TreeNode tmpChildNode = (TreeNode) tmpScaffoldTree.getAllNodesOnLevel(i - 1).get(0).getChildren().get(0);
             tmpChildNode.addOriginSmiles(tmpSmiles);
+            /*the last and thus largest fragment is directly related to the original molecule*/
+            if(i == (tmpFragmentList.size() - 1)){
+                tmpChildNode.addNonVirtualOriginSmiles(tmpSmiles);
+            }
             tmpScaffoldTree.addNode(tmpChildNode);
         }
         return tmpScaffoldTree;
@@ -1646,7 +1645,7 @@ public class ScaffoldGenerator {
     //<editor-fold desc="Schuffenhauer rules">
     /**
      * Sort out the rings according to the first Schuffenhauer rule.
-     * Based on the first rule from the  <a href="https://pubmed.ncbi.nlm.nih.gov/17238248/">
+     * Based on the first rule from the  <a href="https://doi.org/10.1021/ci600338x">
      * "The Scaffold Tree"</a> Paper by Schuffenhauer et al. <p>
      * The rule says: Remove Heterocycles of Size 3 First.
      * Therefore, size 3 hetero rings are preferred when available.
@@ -1682,7 +1681,7 @@ public class ScaffoldGenerator {
 
     /**
      * Sort out the rings according to the second Schuffenhauer rule.
-     * Based on the second rule from the  <a href="https://pubmed.ncbi.nlm.nih.gov/17238248/">
+     * Based on the second rule from the  <a href="https://doi.org/10.1021/ci600338x">
      * "The Scaffold Tree"</a> Paper by Schuffenhauer et al. <p>
      * The rule says: Do not remove rings with >= 12 Atoms if there are still smaller rings to remove.
      * Therefore, this method prefers smaller rings when macro rings are present.
@@ -1715,7 +1714,7 @@ public class ScaffoldGenerator {
 
     /**
      * Sort out the rings according to the third Schuffenhauer rule.
-     * Based on the third rule from the  <a href="https://pubmed.ncbi.nlm.nih.gov/17238248/">
+     * Based on the third rule from the  <a href="https://doi.org/10.1021/ci600338x">
      * "The Scaffold Tree"</a> Paper by Schuffenhauer et al. <p>
      * The rule says: Choose the Parent Scaffold Having the Smallest Number of Acyclic Linker Bonds.
      * Therefore, linked rings are given priority over fused rings.
@@ -1760,7 +1759,7 @@ public class ScaffoldGenerator {
 
     /**
      * Sort out the rings according to the fourth and fifth Schuffenhauer rule.
-     * Based on the fourth and fifth rule from the  <a href="https://pubmed.ncbi.nlm.nih.gov/17238248/">
+     * Based on the fourth and fifth rule from the  <a href="https://doi.org/10.1021/ci600338x">
      * "The Scaffold Tree"</a> Paper by Schuffenhauer et al. <p>
      * The fourth rule says: Retain Bridged Rings, Spiro Rings, and Nonlinear Ring Fusion Patterns with Preference.
      * Therefore, delta is calculated as follows: |nrrb - (nR - 1)|
@@ -1858,7 +1857,7 @@ public class ScaffoldGenerator {
 
     /**
      * Sort out the rings according to the sixth Schuffenhauer rule.
-     * Based on the sixth rule from the  <a href="https://pubmed.ncbi.nlm.nih.gov/17238248/">
+     * Based on the sixth rule from the  <a href="https://doi.org/10.1021/ci600338x">
      * "The Scaffold Tree"</a> Paper by Schuffenhauer et al. <p>
      * The rule says: Remove Rings of Sizes 3, 5, and 6 First.
      * Therefore, the exocyclic atoms are removed and the size of the ring is determined.
@@ -1889,7 +1888,7 @@ public class ScaffoldGenerator {
 
     /**
      * Sort out the rings according to the seventh Schuffenhauer rule.
-     * Based on the seventh rule from the  <a href="https://pubmed.ncbi.nlm.nih.gov/17238248/">
+     * Based on the seventh rule from the  <a href="https://doi.org/10.1021/ci600338x">
      * "The Scaffold Tree"</a> Paper by Schuffenhauer et al. <p>
      * The rule says: A Fully Aromatic Ring System Must Not Be Dissected in a Way That the Resulting System Is Not Aromatic anymore.
      * It was changed to: The number of aromatic rings should be reduced by a maximum of one, when a ring is removed.
@@ -1964,7 +1963,7 @@ public class ScaffoldGenerator {
 
     /**
      * Sort out the rings according to the eighth Schuffenhauer rule.
-     * Based on the eighth rule from the  <a href="https://pubmed.ncbi.nlm.nih.gov/17238248/">
+     * Based on the eighth rule from the  <a href="https://doi.org/10.1021/ci600338x">
      * "The Scaffold Tree"</a> Paper by Schuffenhauer et al. <p>
      * The rule says: Remove Rings with the Least Number of Heteroatoms First
      * Therefore, the exocyclic atoms are removed and the number of cyclic heteroatoms is counted
@@ -2009,7 +2008,7 @@ public class ScaffoldGenerator {
 
     /**
      * Sort out the rings according to the ninth Schuffenhauer rule.
-     * Based on the ninth rule from the  <a href="https://pubmed.ncbi.nlm.nih.gov/17238248/">
+     * Based on the ninth rule from the  <a href="https://doi.org/10.1021/ci600338x">
      * "The Scaffold Tree"</a> Paper by Schuffenhauer et al. <p>
      * The rule says: If the Number of Heteroatoms Is Equal, the Priority of Heteroatoms to Retain is N > O > S.
      * Therefore, the number of cyclic N, O and S of each ring is counted
@@ -2102,7 +2101,7 @@ public class ScaffoldGenerator {
 
     /**
      * Sort out the rings according to the tenth Schuffenhauer rule.
-     * Based on the tenth rule from the  <a href="https://pubmed.ncbi.nlm.nih.gov/17238248/">
+     * Based on the tenth rule from the  <a href="https://doi.org/10.1021/ci600338x">
      * "The Scaffold Tree"</a> Paper by Schuffenhauer et al. <p>
      * The rule says: Smaller Rings are Removed First
      * Exocyclic atoms are not observed
@@ -2142,7 +2141,7 @@ public class ScaffoldGenerator {
 
     /**
      * Sort out the rings according to the eleventh Schuffenhauer rule.
-     * Based on the eleventh rule from the  <a href="https://pubmed.ncbi.nlm.nih.gov/17238248/">
+     * Based on the eleventh rule from the  <a href="https://doi.org/10.1021/ci600338x">
      * "The Scaffold Tree"</a> Paper by Schuffenhauer et al. <p>
      * The rule says: For Mixed Aromatic/Nonaromatic Ring Systems, Retain Nonaromatic Rings with Priority.
      * Therefore, all rings are tested for aromaticity and the nonaromatic ones are preferably removed.
@@ -2176,7 +2175,7 @@ public class ScaffoldGenerator {
 
     /**
      * Sort out the rings according to the twelfth Schuffenhauer rule.
-     * Based on the twelfth rule from the  <a href="https://pubmed.ncbi.nlm.nih.gov/17238248/">
+     * Based on the twelfth rule from the  <a href="https://doi.org/10.1021/ci600338x">
      * "The Scaffold Tree"</a> Paper by Schuffenhauer et al. <p>
      * The rule says: Remove Rings First Where the Linker Is Attached
      * to a Ring Heteroatom at Either End of the Linker.
@@ -2322,7 +2321,7 @@ public class ScaffoldGenerator {
 
     /**
      * Remove a ring according to the thirteenth Schuffenhauer rule.
-     * Based on rule number 13 from the  <a href="https://pubmed.ncbi.nlm.nih.gov/17238248/">
+     * Based on rule number 13 from the  <a href="https://doi.org/10.1021/ci600338x">
      * "The Scaffold Tree"</a> Paper by Schuffenhauer et al. <p>
      * In contrast to the paper, different types of SMILES can be used here instead of canonical SMILES.
      * The entered rings are sorted alphabetically by their SMILES. The last ring of this sort is returned.
