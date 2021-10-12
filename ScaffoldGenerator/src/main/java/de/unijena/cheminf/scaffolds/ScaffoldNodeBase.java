@@ -32,8 +32,8 @@ import java.util.Objects;
  * @param <MoleculeType> As MoleculeType, any data type can be defined.
  *                      In our scenario, the node contains a CDK IAtomContainer.
  *
- * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas-schaub@uni-jena.de)
- * @version 1.0.0.0
+ * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
+ * @version 1.0.1.0
  */
 public abstract class ScaffoldNodeBase<MoleculeType> {
 
@@ -52,6 +52,15 @@ public abstract class ScaffoldNodeBase<MoleculeType> {
     protected ArrayList<String> originSmilesList;
 
     /**
+     * List of SMILES of the molecules from which this fragment directly originates.
+     * NonVirtualOrigin: This node is the direct(without further fragmentation) scaffold of this origin molecule.
+     *
+     * If additional information of the origin is needed,
+     * it can be stored in a matrix with the IAtomContainer. The SMILES stored here can then be used as a key.
+     */
+    protected ArrayList<String> nonVirtualOriginSmilesList;
+
+    /**
      * Children of the Node
      */
     protected List<ScaffoldNodeBase<MoleculeType>> children;
@@ -68,6 +77,7 @@ public abstract class ScaffoldNodeBase<MoleculeType> {
         this.molecule = aMolecule;
         this.children = new LinkedList<ScaffoldNodeBase<MoleculeType>>();
         this.originSmilesList = new ArrayList<String>();
+        this.nonVirtualOriginSmilesList = new ArrayList<String>();
     }
     //</editor-fold>
 
@@ -102,8 +112,30 @@ public abstract class ScaffoldNodeBase<MoleculeType> {
     public void addOriginSmiles(String aString) throws NullPointerException {
         Objects.requireNonNull(aString, "Given SMILES of the molecule is 'null'");
         if(!this.originSmilesList.contains(aString)) {
-            originSmilesList.add(aString);
+            this.originSmilesList.add(aString);
         }
+    }
+
+    /**
+     * Adds another string to the NonVirtualOriginSmilesList if it is not already present.
+     * NonVirtualOrigin: This node is the direct(without further fragmentation) scaffold of this origin molecule.
+     * @param aString String to be added
+     * @throws NullPointerException if parameter is null
+     */
+    public void addNonVirtualOriginSmiles(String aString) throws NullPointerException {
+        Objects.requireNonNull(aString, "Given SMILES of the molecule is 'null'");
+        if(!this.nonVirtualOriginSmilesList.contains(aString)) {
+            this.nonVirtualOriginSmilesList.add(aString);
+        }
+    }
+
+    /**
+     * Indicates whether the molecule has at least one nonVirtualOrigin.
+     * NonVirtualOrigin: This node is the direct(without further fragmentation) scaffold of this origin molecule.
+     * @return true if the molecule has at least one nonVirtualOrigin
+     */
+    public boolean hasNonVirtualOriginSmiles() {
+        return !this.nonVirtualOriginSmilesList.isEmpty();
     }
     //<editor-fold desc="get/set">
 
@@ -161,12 +193,31 @@ public abstract class ScaffoldNodeBase<MoleculeType> {
     }
 
     /**
+     * Get the nonVirtualOriginSmilesList
+     * NonVirtualOrigin: This node is the direct(without further fragmentation) scaffold of this origin molecule.
+     * @return List of SMILES of the molecules from which this fragment originates
+     */
+    public ArrayList<String> getNonVirtualOriginSmilesList() {
+        return this.nonVirtualOriginSmilesList;
+    }
+
+    /**
      * Get the size of the originSmilesList
      * @return size of the originSmilesList
      */
     public Integer getOriginCount() {
         return this.originSmilesList.size();
     }
+
+    /**
+     * Get the size of the nonVirtualSmilesList
+     * NonVirtualOrigin: This node is the direct(without further fragmentation) scaffold of this origin molecule.
+     * @return size of the nonVirtualSmilesList
+     */
+    public Integer getNonVirtualOriginCount() {
+        return this.nonVirtualOriginSmilesList.size();
+    }
+
     /**
      * Set the entire originSmilesList
      * @param aOriginSmilesList SMILES of molecules that are set
@@ -175,6 +226,17 @@ public abstract class ScaffoldNodeBase<MoleculeType> {
     public void setOriginSmilesList(ArrayList<String> aOriginSmilesList) throws NullPointerException {
         Objects.requireNonNull(aOriginSmilesList, "Given SMILES of the molecule List is 'null'");
         this.originSmilesList = aOriginSmilesList;
+    }
+
+    /**
+     * Set the entire nonVirtualOriginSmilesList.
+     * NonVirtualOrigin: This node is the direct(without further fragmentation) scaffold of this origin molecule.
+     * @param aNonVirtualOriginSmilesList SMILES of molecules that are set
+     * @throws NullPointerException if parameter is null
+     */
+    public void setNonVirtualOriginSmilesList(ArrayList<String> aNonVirtualOriginSmilesList) throws NullPointerException {
+        Objects.requireNonNull(aNonVirtualOriginSmilesList, "Given SMILES of the molecule List is 'null'");
+        this.nonVirtualOriginSmilesList = aNonVirtualOriginSmilesList;
     }
     //</editor-fold>
     //</editor-fold>
