@@ -30,8 +30,8 @@ import java.util.Objects;
  * Top-level class to organise the TreeNodes as a tree.
  * A tree can have one root and several leaves.
  *
- * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas-schaub@uni-jena.de)
- * @version 1.0.0.0
+ * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
+ * @version 1.0.1.0
  */
 public class ScaffoldTree extends ScaffoldNodeCollectionBase {
 
@@ -58,9 +58,7 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
         /*Parameter checks*/
         Objects.requireNonNull(aNode, "Given TreeNode is 'null'");
         if(!(aNode instanceof TreeNode)) {
-            System.out.println("Node can not be added to ScaffoldTree");
-            System.out.println("Parameter must be a TreeNode");
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Node can not be added to ScaffoldTree. Parameter must be a TreeNode");
         }
         //Add to nodeMap
         this.nodeMap.put(this.nodeCounter, aNode);
@@ -89,9 +87,7 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
         /*Parameter checks*/
         Objects.requireNonNull(aNode, "Given ScaffoldNode is 'null'");
         if(!(aNode instanceof TreeNode)) {
-            System.out.println("Node can not be removed from the ScaffoldTree");
-            System.out.println("Parameter must be a TreeNode");
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Node can not be removed from the ScaffoldTree. Parameter must be a TreeNode.");
         }
         if(!this.reverseNodeMap.containsKey(aNode)) { //Check if the node exists in the Scaffold
             throw new IllegalArgumentException("Node is not in Scaffold");
@@ -166,6 +162,10 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
                             /*Add the origin smiles to the OldSmilesTree fragment*/
                             for(Object tmpOriginSmiles : tmpNewTreeNode.getOriginSmilesList()) {
                                 tmpOldTreeNode.addOriginSmiles((String) tmpOriginSmiles);
+                            }
+                            /*Add the nonVirtualOrigin smiles to the OldSmilesTree fragment*/
+                            for(Object tmpNonVirtualOriginSmiles : tmpNewTreeNode.getNonVirtualOriginSmilesList()) {
+                                tmpOldTreeNode.addNonVirtualOriginSmiles((String) tmpNonVirtualOriginSmiles);
                             }
                             //Trees are overlapping if a fragment occurs in both trees
                             tmpAreTreesOverlapping = true;
