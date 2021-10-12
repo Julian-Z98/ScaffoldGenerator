@@ -64,8 +64,8 @@ import static junit.framework.TestCase.assertEquals;
 /**
  * JUnit test class for the ScaffoldGenerator
  *
- * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas-schaub@uni-jena.de)
- * @version 1.0.0.0
+ * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
+ * @version 1.0.0.1
  */
 public class ScaffoldGeneratorTest extends ScaffoldGenerator {
 
@@ -742,6 +742,9 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             System.out.println("Node on LvL: " + tmpTestNode.getLevel());
             System.out.println("Children Number: " + tmpTestNode.getChildren().size());
             System.out.println("Origin" +tmpTestNode.getOriginSmilesList().get(0) + "Size" + tmpTestNode.getOriginSmilesList().size());
+            if(!tmpTestNode.getNonVirtualOriginCount().equals(0)){
+                System.out.println("NonVirtualOrigin" +tmpTestNode.getNonVirtualOriginSmilesList().get(0) + "Size" + tmpTestNode.getNonVirtualOriginSmilesList().size());
+            }
             for(Object tmpChildObject : tmpTestNode.getChildren()) {
                 TreeNode tmpChildNode = (TreeNode) tmpChildObject;
                 IAtomContainer tmpChildMolecule = (IAtomContainer) tmpChildNode.getMolecule();
@@ -765,7 +768,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
         //Generate a tree of molecules with iteratively removed terminal rings
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
-        ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.generateEnumerativeNetwork(tmpMolecule);
+        ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.generateScaffoldNetwork(tmpMolecule);
         /*Remove some nodes. Nodes can be removed from the non-root end.
         If nodes are removed in the middle of the tree, it cannot be displayed with Graphstream.*/
         System.out.println(tmpScaffoldNetwork.getAllNodes().size());
@@ -783,6 +786,9 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             System.out.println("Node on LvL: " + tmpTestNode.getLevel());
             System.out.println("Children Number: " + tmpTestNode.getChildren().size());
             System.out.println("Origin" +tmpTestNode.getOriginSmilesList().get(0) + "Size" + tmpTestNode.getOriginSmilesList().size());
+            if(!tmpTestNode.getNonVirtualOriginCount().equals(0)){
+                System.out.println("NonVirtualOrigin" +tmpTestNode.getNonVirtualOriginSmilesList().get(0) + "Size" + tmpTestNode.getNonVirtualOriginSmilesList().size());
+            }
             for(Object tmpChildObject : tmpTestNode.getChildren()) {
                 NetworkNode tmpChildNode = (NetworkNode) tmpChildObject;
                 IAtomContainer tmpChildMolecule = (IAtomContainer) tmpChildNode.getMolecule();
@@ -811,9 +817,9 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         //Generate a Network of molecules with iteratively removed terminal rings
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
         /*Uncomment the molecule to display it*/
-        ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.generateEnumerativeNetwork(tmpMolecule1);//Ondasetron
-        //ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.generateEnumerativeNetwork(tmpMolecule2);//Alosetron
-        //ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.generateEnumerativeNetwork(tmpMolecule3);//Ramosetron
+        ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.generateScaffoldNetwork(tmpMolecule1);//Ondasetron
+        //ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.generateScaffoldNetwork(tmpMolecule2);//Alosetron
+        //ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.generateScaffoldNetwork(tmpMolecule3);//Ramosetron
         /*Print some further information*/
         System.out.println("Root size: " + tmpScaffoldNetwork.getRoots().size());
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
@@ -906,10 +912,10 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         //Generate a Network of molecules with iteratively removed terminal rings
         /*Generate Networks*/
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
-        ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.generateEnumerativeNetwork(tmpMolecule1);
-        ScaffoldNetwork tmpScaffoldNetwork2 = tmpScaffoldGenerator.generateEnumerativeNetwork(tmpMolecule2);
-        ScaffoldNetwork tmpScaffoldNetwork3 = tmpScaffoldGenerator.generateEnumerativeNetwork(tmpMolecule3);
-        ScaffoldNetwork tmpScaffoldNetwork4 = tmpScaffoldGenerator.generateEnumerativeNetwork(tmpMolecule4);
+        ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.generateScaffoldNetwork(tmpMolecule1);
+        ScaffoldNetwork tmpScaffoldNetwork2 = tmpScaffoldGenerator.generateScaffoldNetwork(tmpMolecule2);
+        ScaffoldNetwork tmpScaffoldNetwork3 = tmpScaffoldGenerator.generateScaffoldNetwork(tmpMolecule3);
+        ScaffoldNetwork tmpScaffoldNetwork4 = tmpScaffoldGenerator.generateScaffoldNetwork(tmpMolecule4);
         /*Merge Networks*/
         tmpScaffoldNetwork.mergeNetwork(tmpScaffoldNetwork2);
         tmpScaffoldNetwork.mergeNetwork(tmpScaffoldNetwork3);
@@ -947,11 +953,14 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         /*Generate IAtomContainer from SMILES*/
-        IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("C2NC1SCNN1N2");
+        //IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("C2NC1SCNN1N2");
+        IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("BrC3CC2CC1CC1CCC2CC4CC34");
         IAtomContainer tmpMolecule2 = tmpParser.parseSmiles("c4ccc(C3NC2SC(c1ccccc1)NN2N3)cc4");
         //Molecule without connection to the network
         IAtomContainer tmpMolecule3 = tmpParser.parseSmiles("C3CC1CC1CC4CCC2CC2CC34");
         IAtomContainer tmpMolecule4 = tmpParser.parseSmiles("c3ccc(C2NNC(c1ccccc1)N2)cc3");
+        IAtomContainer tmpMolecule5 = tmpParser.parseSmiles("C1CCCPCCC1");
+        IAtomContainer tmpMolecule6 = tmpParser.parseSmiles("BrC2CCc1ccccc12");
         //Generate a Network of molecules with iteratively removed terminal rings
         /*Generate Networks*/
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
@@ -960,8 +969,11 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         tmpMoleculeList.add(tmpMolecule2);
         tmpMoleculeList.add(tmpMolecule3);
         tmpMoleculeList.add(tmpMolecule4);
-        ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.generateEnumerativeForest(tmpMoleculeList);
+        tmpMoleculeList.add(tmpMolecule5);
+        tmpMoleculeList.add(tmpMolecule6);
+        ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.generateScaffoldNetwork(tmpMoleculeList);
         /*Add edges and nodes*/
+        System.out.println("Node number: " + tmpScaffoldNetwork.getAllNodes().size());
         System.out.println("Root size: " + tmpScaffoldNetwork.getRoots().size());
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
         for(ScaffoldNodeBase tmpTestNodeBase : tmpScaffoldNetwork.getAllNodes()) {
@@ -972,6 +984,9 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             System.out.println("Children Number: " + tmpTestNode.getChildren().size());
             for(Object tmpOrigin : tmpTestNode.getOriginSmilesList()) {
                 System.out.println("Origin: " + tmpOrigin);
+            }
+            for(Object tmpNonVirtualOrigin : tmpTestNode.getNonVirtualOriginSmilesList()) {
+                System.out.println("NonVirtualOrigin: " + tmpNonVirtualOrigin);
             }
             for(Object tmpChildObject : tmpTestNode.getChildren()) {
                 NetworkNode tmpChildNode = (NetworkNode) tmpChildObject;
@@ -1000,9 +1015,9 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         IAtomContainer tmpMolecule3 = tmpParser.parseSmiles("CN1C=C(C2=CC=CC=C21)C(=O)C3CCC4=C(C3)NC=N4");//Ramosetron
         /*Generate a network of molecules with iteratively removed terminal rings*/
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
-        ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.generateEnumerativeNetwork(tmpMolecule1);
-        ScaffoldNetwork tmpScaffoldNetwork2 = tmpScaffoldGenerator.generateEnumerativeNetwork(tmpMolecule2);
-        ScaffoldNetwork tmpScaffoldNetwork3 = tmpScaffoldGenerator.generateEnumerativeNetwork(tmpMolecule3);
+        ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.generateScaffoldNetwork(tmpMolecule1);
+        ScaffoldNetwork tmpScaffoldNetwork2 = tmpScaffoldGenerator.generateScaffoldNetwork(tmpMolecule2);
+        ScaffoldNetwork tmpScaffoldNetwork3 = tmpScaffoldGenerator.generateScaffoldNetwork(tmpMolecule3);
         /*Merge the networks*/
         tmpScaffoldNetwork.mergeNetwork(tmpScaffoldNetwork2);
         //Uncomment if ramosetron should also be added to the network
@@ -1018,6 +1033,9 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             System.out.println("Children Number: " + tmpTestNode.getChildren().size());
             for(Object tmpOrigin : tmpTestNode.getOriginSmilesList()) {
                 System.out.println("Origin: " + tmpOrigin);
+            }
+            for(Object tmpOrigin : tmpTestNode.getNonVirtualOriginSmilesList()) {
+                System.out.println("NonVirtualOrigin: " + tmpOrigin);
             }
             for(Object tmpChildObject : tmpTestNode.getChildren()) {
                 NetworkNode tmpChildNode = (NetworkNode) tmpChildObject;
@@ -1048,7 +1066,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1=C(C(=NO1)C2=C(C=CC=C2Cl)F)C(=O)NC3C4N(C3=O)C(C(S4)(C)C)C(=O)O");
         IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("C2NC1SCNN1N2");
         //IAtomContainer tmpMolecule2 = tmpParser.parseSmiles("c4ccc(C3NC2SC(c1ccccc1)NN2N3)cc4");
-        IAtomContainer tmpMolecule2 = tmpParser.parseSmiles("C1=CC=C(C=C1)C4NC3SC(C2=CC(=CC=C2)[Br])NN3N4");
+        //IAtomContainer tmpMolecule2 = tmpParser.parseSmiles("C1=CC=C(C=C1)C4NC3SC(C2=CC(=CC=C2)[Br])NN3N4");
+        IAtomContainer tmpMolecule2 = tmpParser.parseSmiles("ClC2NC1SCNN1N2");
         IAtomContainer tmpMolecule3 = tmpParser.parseSmiles("c2ccc(C1NCNN1)cc2");
         IAtomContainer tmpMolecule4 = tmpParser.parseSmiles("C1=CC=C(C=C1)C3NNC(C2=CC=CC=C2[Br])N3");
         IAtomContainer tmpMolecule5 = tmpParser.parseSmiles("c2ccc1CCCc1c2");
@@ -1070,7 +1089,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         tmpOverlapScaffoldTree.mergeTree(tmpScaffoldTree3);
         tmpOverlapScaffoldTree.mergeTree(tmpScaffoldTree4);
         tmpOverlapScaffoldTree.mergeTree(tmpScaffoldTree6);
-        tmpScaffoldTree.mergeTree(tmpOverlapScaffoldTree);
+        //tmpScaffoldTree.mergeTree(tmpOverlapScaffoldTree);
         ScaffoldTree tmpUnfitScaffoldTree = tmpScaffoldGenerator.generateSchuffenhauerTree(tmpMolecule);//Molecule does not fit
         System.out.println("Tree does not fit: " + tmpScaffoldTree.mergeTree(tmpUnfitScaffoldTree));
         IAtomContainer tmpRootMolecule = (IAtomContainer) tmpScaffoldTree.getRoot().getMolecule();
@@ -1082,6 +1101,9 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             System.out.println("---Node: " + tmpSmilesGenerator.create((IAtomContainer) tmpTreeNode.getMolecule()));
             for(Object tmpSmiles : tmpTreeNode.getOriginSmilesList()) {
                 System.out.println("Origin of the Node: " + tmpSmiles);
+            }
+            for(Object tmpSmiles : tmpTreeNode.getNonVirtualOriginSmilesList()) {
+                System.out.println("nonVirtual: " + tmpSmiles);
             }
         }
         /*Display the tree*/
@@ -1135,6 +1157,11 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         List<ScaffoldTree> tmpFinalForest = tmpScaffoldGenerator.generateSchuffenhauerForest(tmpTreeList);
         System.out.println("Forest size: " + tmpFinalForest.size());
         ScaffoldTree tmpScaffoldTree = tmpFinalForest.get(1);
+        for(ScaffoldNodeBase tmpTreeNode : tmpScaffoldTree.getAllNodes()) {
+            for(Object tmpSmiles : tmpTreeNode.getNonVirtualOriginSmilesList()) {
+                System.out.println("nonVirtual: " + tmpSmiles);
+            }
+        }
         IAtomContainer tmpRootMolecule = (IAtomContainer) tmpScaffoldTree.getRoot().getMolecule();
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
         System.out.println("I am Root: " + tmpSmilesGenerator.create(tmpRootMolecule));
@@ -1269,6 +1296,10 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             for(ScaffoldNodeBase tmpNodeBase : tmpTestTree.getAllNodes()) {
                 TreeNode tmpNode = (TreeNode) tmpNodeBase;
                 System.out.println("Molecules:" + tmpSmilesGenerator.create((IAtomContainer) tmpNode.getMolecule()));
+                for(Object tmpSmiles : tmpNodeBase.getNonVirtualOriginSmilesList()) {
+                    String tmpSmilesString = (String) tmpSmiles;
+                    System.out.println("NonVirtualOrigin: " + tmpSmilesString);
+                }
             }
         }
         assertEquals(5, tmpScaffoldTree.getAllNodes().size());
@@ -3575,7 +3606,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
                         System.out.println("Molecule skipped: " + tmpCoconutID);
                         continue;
                     }
-                    ScaffoldNetwork tmpNetwork = tmpScaffoldGenerator.generateEnumerativeNetwork(tmpMolecule);
+                    ScaffoldNetwork tmpNetwork = tmpScaffoldGenerator.generateScaffoldNetwork(tmpMolecule);
                     if(tmpCounter == 10000){
                         System.out.println("Root size: " + tmpNetwork.getRoots().size());
                         System.out.println("Origin" + tmpNetwork.getRoots().get(0).getOriginSmilesList().get(0));
