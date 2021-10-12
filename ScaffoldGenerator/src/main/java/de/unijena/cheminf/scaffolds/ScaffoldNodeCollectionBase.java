@@ -34,7 +34,7 @@ import java.util.Objects;
  * Base class of node collection objects.
  * Top-level class to organise the ScaffoldNodeBase objects.
  *
- * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas-schaub@uni-jena.de)
+ * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
  * @version 1.0.0.0
  */
 public abstract class ScaffoldNodeCollectionBase {
