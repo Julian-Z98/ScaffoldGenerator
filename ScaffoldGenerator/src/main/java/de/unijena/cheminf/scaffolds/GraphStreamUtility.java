@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Contains useful functions such as visualisation with Graphstream.
- * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas-schaub@uni-jena.de)
+ * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
  * @version 1.0.0.0
  */
 public final class GraphStreamUtility {
