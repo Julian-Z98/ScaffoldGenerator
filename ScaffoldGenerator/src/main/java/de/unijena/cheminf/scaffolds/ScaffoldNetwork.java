@@ -33,8 +33,8 @@ import java.util.Objects;
  * Top-level class to organise the NetworkNodes
  * A network can have several roots and leaves.
  *
- * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas-schaub@uni-jena.de)
- * @version 1.0.0.0
+ * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
+ * @version 1.0.1.0
  */
 public class ScaffoldNetwork extends ScaffoldNodeCollectionBase {
 
@@ -61,9 +61,7 @@ public class ScaffoldNetwork extends ScaffoldNodeCollectionBase {
         /*Parameter checks*/
         Objects.requireNonNull(aNode, "Given NetworkNode is 'null'");
         if(!(aNode instanceof NetworkNode)) {
-            System.out.println("Node can not be added to ScaffoldNetwork");
-            System.out.println("Parameter must be a NetworkNode");
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Node can not be added to ScaffoldNetwork. Parameter must be a NetworkNode.");
         }
         //Add to nodeMap
         this.nodeMap.put(this.nodeCounter, aNode);
@@ -91,9 +89,7 @@ public class ScaffoldNetwork extends ScaffoldNodeCollectionBase {
         /*Parameter checks*/
         Objects.requireNonNull(aNode, "Given ScaffoldNode is 'null'");
         if(!(aNode instanceof NetworkNode)) {
-            System.out.println("Node can not be removed from ScaffoldNetwork");
-            System.out.println("Parameter must be a NetworkNode");
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Node can not be removed from ScaffoldNetwork. Parameter must be a NetworkNode.");
         }
         if(!this.reverseNodeMap.containsKey(aNode)) { //Check if the node exists in the Scaffold
             throw new IllegalArgumentException("Node is not in Scaffold");
@@ -132,52 +128,35 @@ public class ScaffoldNetwork extends ScaffoldNodeCollectionBase {
         }
         /*If the old Scaffold network is not empty*/
         else {
-            int tmpMaxNodeNumber = aScaffoldNetwork.getAllNodes().size();
-            ArrayList<NetworkNode> tmpNodesToAdd = new ArrayList(tmpMaxNodeNumber);
-            ArrayList<IAtomContainer> tmpMoleculeList = new ArrayList(tmpMaxNodeNumber);
-            /*Go through each level of the network starting at the root*/
-            for(int i = 0; i <= aScaffoldNetwork.getMaxLevel(); i++) {
-                /*Compare all nodes of the old network on this level with all nodes of the new network on this level*/
-                for(ScaffoldNodeBase tmpOldNetworkNodeBase : this.getAllNodesOnLevel(i)) {
-                    NetworkNode tmpOldNetworkNode = (NetworkNode) tmpOldNetworkNodeBase;
-                    for(Object tmpNewNetworkObject : aScaffoldNetwork.getAllNodesOnLevel(i)) {
-                        NetworkNode tmpNewNetworkNode = (NetworkNode) tmpNewNetworkObject;
-                        /*Generate the corresponding SMILES of the molecules*/
-                        String tmpOldSmiles = this.smilesGenerator.create((IAtomContainer) tmpOldNetworkNode.getMolecule());
-                        String tmpNewSmiles = this.smilesGenerator.create((IAtomContainer) tmpNewNetworkNode.getMolecule());
-                        /*Check whether a fragment occurs in both networks*/
-                        if(tmpOldSmiles.equals(tmpNewSmiles)) {
-                            /*Add the origin smiles to the OldSmilesNetwork fragment*/
-                            for(Object tmpOriginSmiles : tmpNewNetworkNode.getOriginSmilesList()) {
-                                tmpOldNetworkNode.addOriginSmiles((String) tmpOriginSmiles);
-                            }
-                            /*Networks are overlapping if a fragment occurs in both networks
-                            Get the children of the overlapping node*/
-                            for(Object tmpNewChild : tmpNewNetworkNode.getChildren()) {
-                                NetworkNode tmpNewChildNode = (NetworkNode) tmpNewChild;
-                                IAtomContainer tmpNewChildMolecule = (IAtomContainer) tmpNewChildNode.getMolecule();
-                                /*Add the child if it is not already in the network*/
-                                if(!this.containsMolecule(tmpNewChildMolecule)) {
-                                    NetworkNode tmpNewNode = new NetworkNode<>(tmpNewChildMolecule);
-                                    tmpNewNode.addParent(tmpOldNetworkNode);
-                                    tmpMoleculeList.add(tmpNewChildMolecule);
-                                    this.addNode(tmpNewNode);
-                                }
-                            }
-                        } else { /*Node is not in network*/
-                            /*Add node to lists so that it is added to the network later*/
-                            tmpNodesToAdd.add(tmpNewNetworkNode);
-                            tmpMoleculeList.add((IAtomContainer) tmpNewNetworkNode.getMolecule());
-                        }
-
+            ArrayList<IAtomContainer> tmpMoleculeList = new ArrayList(aScaffoldNetwork.getAllNodes().size());
+            for(Object tmpNewNetworkObject : aScaffoldNetwork.getAllNodes()) {
+                NetworkNode tmpNewNetworkNode = (NetworkNode) tmpNewNetworkObject;
+                /*Node is not in network*/
+                if(!this.containsMolecule((IAtomContainer) tmpNewNetworkNode.getMolecule())) {
+                    /*Add node to lists so that it is added to the network later*/
+                    NetworkNode tmpNewNode = new NetworkNode<>((IAtomContainer) tmpNewNetworkNode.getMolecule());
+                    /*Add the nonVirtual SMILES to the OldSmilesNetwork fragment*/
+                    for(Object tmpNonVirtualOriginSmiles : tmpNewNetworkNode.getNonVirtualOriginSmilesList()) {
+                        tmpNewNode.addNonVirtualOriginSmiles((String) tmpNonVirtualOriginSmiles);
                     }
-                }
-            }
-            /*Add the nodes of the new network that are not yet in the whole network*/
-            for(NetworkNode tmpNode : tmpNodesToAdd) {
-                if(!this.containsMolecule((IAtomContainer) tmpNode.getMolecule())) {
-                    NetworkNode tmpNewNode = new NetworkNode<>((IAtomContainer) tmpNode.getMolecule());
+                    /*Add the nonVirtual SMILES to the OldSmilesNetwork fragment*/
+                    for(Object tmpOriginSmiles : tmpNewNetworkNode.getOriginSmilesList()) {
+                        tmpNewNode.addOriginSmiles((String) tmpOriginSmiles);
+                    }
                     this.addNode(tmpNewNode);
+                    tmpMoleculeList.add((IAtomContainer) tmpNewNetworkNode.getMolecule());
+                } else { /*Node is already in the network*/
+                    NetworkNode tmpOldNetworkNode = (NetworkNode) this.getNode((IAtomContainer) tmpNewNetworkNode.getMolecule());
+                    /*Add the origin smiles to the OldSmilesNetwork fragment*/
+                    for(Object tmpOriginSmiles : tmpNewNetworkNode.getOriginSmilesList()) {
+                        tmpOldNetworkNode.addOriginSmiles((String) tmpOriginSmiles);
+                    }
+                    /*Add the nonVirtual SMILES to the OldSmilesNetwork fragment*/
+                    if(tmpNewNetworkNode.hasNonVirtualOriginSmiles()) {
+                        for(Object tmpNonVirtualOriginSmiles : tmpNewNetworkNode.getNonVirtualOriginSmilesList()) {
+                            tmpOldNetworkNode.addNonVirtualOriginSmiles((String) tmpNonVirtualOriginSmiles);
+                        }
+                    }
                 }
             }
             /*Add the matching parents to the newly added nodes. Children are automatically set when the parents are set.*/
