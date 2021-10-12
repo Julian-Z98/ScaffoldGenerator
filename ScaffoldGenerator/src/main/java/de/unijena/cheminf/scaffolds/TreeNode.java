@@ -30,7 +30,7 @@ import java.util.Objects;
  * @param <MoleculeType> As MoleculeType, any data type can be defined.
  *                      In our scenario, the node contains a CDK IAtomContainer.
  *
- * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas-schaub@uni-jena.de)
+ * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
  * @version 1.0.0.0
  */
 public class TreeNode<MoleculeType> extends ScaffoldNodeBase<MoleculeType> {
