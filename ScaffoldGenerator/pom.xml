@@ -23,7 +23,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>de.unijena.cheminf</groupId>
-    <artifactId>scaffold-master</artifactId>
+    <artifactId>scaffoldGenerator</artifactId>
     <version>1.0</version>
 
     <properties>
