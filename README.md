@@ -5,9 +5,10 @@
 * [Description](#Description)
 * [Functionalities and options](#Functionalities-and-options)
   * [Available functionalities](#Available-functionalities)
-  * [Our deviations from the Scaffold Tree method and prioritization rules by Schuffenhauer et al.](#Our-deviations-from-the-Scaffold-Tree-method-and-prioritization-rules-by-Schuffenhauer-et-al.)
+  * [Deviations from the Scaffold Tree prioritization rules](#Deviations-from-the-Scaffold-Tree-prioritization-rules)
   * [Aromaticity handling](#Aromaticity-handling)
   * [Available settings and options](#Available-settings-and-options)
+  * [Notes about the implementation](#Notes-about-the-implementation)
 * [Contents of this repository](#Contents-of-this-repository)
   * [Sources](#Sources)
   * [Resources](#Resources)
@@ -16,19 +17,51 @@
 * [References and useful links](#References-and-useful-links)
 
 ## Description
-
+The Scaffold Generator library is designed to make molecular scaffold-related functionalities available in applications 
+and workflows based on the [Chemistry Development Kit (CDK)](https://cdk.github.io/). Building upon the works by 
+[Bemis and Murcko](https://doi.org/10.1021/jm9602928), [Schuffenhauer et al.](https://doi.org/10.1021/ci600338x), 
+and [Varin et al.](https://doi.org/10.1021/ci2000924), it offers scaffold 
+perception and dissection based on single molecules and molecule collections. 
+From the latter, Scaffold Trees and Scaffold Networks can also be constructed, represented in data structures and visualised 
+using the [GraphStream library](https://graphstream-project.org). Multiple options to fine-tune and adapt the routines are available.
 
 ## Functionalities and options
 ### Available functionalities
+From a molecule represented by a CDK IAtomContainer object, the molecular scaffold can be extracted. According to
+[Bemis and Murcko](https://doi.org/10.1021/jm9602928), this is constituted by its rings and the non-cyclic structures 
+connecting them (linkers). Terminal side-chains are excluded. Different scaffold types based on this first definition
+can be selected in Scaffold Generator (see below). Additionally, the separate building blocks of the scaffold, rings and 
+linkers, and the side-chains removed for scaffold generation can be extracted. Ring perception is based on the CDK "relevant"
+cycle finder algorithm that extracts the smallest set of uniquely defined short cycles. Fused ring systems will therefore 
+be dissected into their constituting separate smallest rings.<p>
+Extracted scaffolds can be further dissected into their smaller parent scaffolds using two different methods. All possible 
+parent scaffolds can be enumerated that would result 
+from the step-wise removal of terminal rings, exploring all possible combinations of such removal steps. This dissection
+is the basis for Scaffold Networks, as described by [Varin et al.](https://doi.org/10.1021/ci2000924).
+<br>[Schuffenhauer et al.](https://doi.org/10.1021/ci600338x) built upon a similar scaffold dissection but introduced 
+13 chemical rules to prioritize one specific parent scaffold at every step. Applying these rules, only one specifically 
+determined terminal ring is chosen to be removed at every stage to generate one specifically chosen parent scaffold. This
+procedure is the basis for [Schuffenhauer et al.'s](https://doi.org/10.1021/ci600338x) Scaffold Trees.
+<br>Both scaffold dissection methods can be applied to a molecule using Scaffold Generator. But it is also possible 
+to directly apply them to a collection of molecules and thus generate Scaffold Networks based on [Varin et al.](https://doi.org/10.1021/ci2000924)
+and Scaffold Trees based on [Schuffenhauer et al.](https://doi.org/10.1021/ci600338x). For both approaches, data structures 
+are available in this library to manage the collection of resulting parent/child scaffolds and their connections in a 
+graph-based way that can be visualised using the [GraphStream library](https://graphstream-project.org).
+<br>Other functionalities of the data structures include the retrieval of chemical information from the scaffolds and 
+their origin molecules and the determination of virtual scaffolds, i.e. scaffolds that were only produced by dissection of 
+bigger child scaffolds and not present in the original data set.
 
-
-### Our deviations from the Scaffold Tree method and prioritization rules by Schuffenhauer et al.
-
+### Deviations from the Scaffold Tree prioritization rules
+non-single bonds
+different scaffolds/frameworks
+ring perception
 
 ### Aromaticity handling
 
 
 ### Available settings and options
+
+### Notes about the implementation
 
 
 ## Contents of this repository
