@@ -11,6 +11,7 @@
   * [Notes about the implementation](#Notes-about-the-implementation)
 * [Contents of this repository](#Contents-of-this-repository)
   * [Sources](#Sources)
+  * [Tests](#Tests)
   * [Resources](#Resources)
 * [Installation](#Installation)
 * [Dependencies](#Dependencies)
@@ -18,11 +19,11 @@
 
 ## Description
 The Scaffold Generator library is designed to make molecular scaffold-related functionalities available in applications 
-and workflows based on the [Chemistry Development Kit (CDK)](https://cdk.github.io/). Building upon the works by 
+and workflows based on the [Chemistry Development Kit (CDK)](https://cdk.github.io/). Building mainly upon the works by 
 [Bemis and Murcko](https://doi.org/10.1021/jm9602928), [Schuffenhauer et al.](https://doi.org/10.1021/ci600338x), 
 and [Varin et al.](https://doi.org/10.1021/ci2000924), it offers scaffold 
 perception and dissection based on single molecules and molecule collections. 
-From the latter, Scaffold Trees and Scaffold Networks can also be constructed, represented in data structures and visualised 
+From the latter, Scaffold Trees and Scaffold Networks can also be constructed, represented in data structures, and visualised 
 using the [GraphStream library](https://graphstream-project.org). Multiple options to fine-tune and adapt the routines are available.
 
 ## Functionalities and options
@@ -34,6 +35,7 @@ can be selected in Scaffold Generator (see below). Additionally, the separate bu
 linkers, and the side-chains removed for scaffold generation can be extracted. Ring perception is based on the CDK "relevant"
 cycle finder algorithm that extracts the smallest set of uniquely defined short cycles. Fused ring systems will therefore 
 be dissected into their constituting separate smallest rings.<p>
+
 Extracted scaffolds can be further dissected into their smaller parent scaffolds using two different methods. All possible 
 parent scaffolds can be enumerated that would result 
 from the step-wise removal of terminal rings, exploring all possible combinations of such removal steps. This dissection
@@ -52,30 +54,61 @@ their origin molecules and the determination of virtual scaffolds, i.e. scaffold
 bigger child scaffolds and not present in the original data set.
 
 ### Deviations from the Scaffold Tree prioritization rules
-non-single bonds
-different scaffolds/frameworks
-ring perception
+[Schuffenhauer et al.'s](https://doi.org/10.1021/ci600338x) definition of molecular scaffolds (compare Scheme 1) deviates from
+[Bemis and Murcko's](https://doi.org/10.1021/jm9602928) molecular framework definition in the way that all atoms connected
+to ring or linker atoms via **double bonds** are also included in the scaffold. In the Scaffold Generator implementation, 
+generated Schuffenhauer scaffolds include all atoms connected via **non-single bonds** to ring or linker atoms. <p>
+
+[Schuffenhauer et al.](https://doi.org/10.1021/ci600338x) describe cases where the removal of a terminal ring during 
+scaffold dissection can result in an artificially created spiro ring system (compare 
+[Schuffenhauer et al.](https://doi.org/10.1021/ci600338x) prioritization rule 5 and Scheme 10). Their prioritization rule 
+5 prevents this in most cases, but it is possible in general and would therefore be included in an enumeration of all possible
+parent scaffolds. In Scaffold Generator, these cases (artificially created spiro ring systems) are not possible at all 
+because of the way terminal rings considered for removal are determined. If the removal of all ring atoms from the scaffold
+would result in a disconnected structure, the respective ring is not considered terminal and not considered for removal. 
+Rule 5 can therefore be considered less relevant in Scaffold Generator's Scaffold Tree generation than in the original 
+method. Additionally, prioritization rules 4 and 5 have been combined in this implementation.<p>
+
+In the basic ring removal routine of [Schuffenhauer et al.](https://doi.org/10.1021/ci600338x), double bonds are inserted into
+non-aromatic rings after the removal of an adjacent aromatic ring to conserve correct hybridization states (compare Scheme 3a). 
+In Scaffold Generator, these double bonds are also inserted into the remaining rings if they are aromatic as well.<p>
+
+Prioritization rule 7 from the [Scaffold Tree publication](https://doi.org/10.1021/ci600338x) states "A Fully Aromatic 
+Ring System Must Not Be Dissected in a Way That the Resulting System Is Not Aromatic Any More". In Scaffold Generator, 
+this has been implemented as "the number of aromatic rings should be reduced by a maximum of one when a ring is removed", 
+i.e. no additional aromatic rings should be deleted by removing one ring. The results should be the same as intended by
+the Scaffold Tree developers.
 
 ### Aromaticity handling
-
+fused aromatic systems
 
 ### Available settings and options
+Different Scaffold/Framework types
+SMILES generator for matching in ST/SN, in particular for stereochemistry
+Apply rule 7
+insert double bonds to maintain hybridisation always or only after removal of aromatic rings
+
 
 ### Notes about the implementation
-
+cycle detection relevant or mcb
+building upon CDK MurckoFragmenter
 
 ## Contents of this repository
 ### Sources
+[list classes and their purposes]
 
+### Tests
+JUnit tests asserting and visualising
+COCONUT analyses
 
 ### Resources
-
+[list resources]
 
 ## Installation
 This is a Maven project. In order to use the source code for your own software, download or clone the repository and
 open it in a Maven-supporting IDE (e.g. IntelliJ) as a Maven project and execute the pom.xml file. Maven will then take
 care of installing all dependencies. A Java Development Kit (JDK) of version 11 or higher must also be pre-installed.
-<br>To run the COCONUT-analysing tests, an SD file of the database needs to be placed in the test resources folder. 
+<br>To run the COCONUT-analysing tests, an SD file of the database needs to be placed in the test "resources" folder. 
 The respective file can be downloaded at
 [https://coconut.naturalproducts.net/download](https://coconut.naturalproducts.net/download). Add the "COCONUT_DB.sdf" 
 file to <i>src\test\resources</i>. 
@@ -136,18 +169,15 @@ file to <i>src\test\resources</i>.
 
 
 
-
 ## ScaffoldGeneratorTest
-__Class ScaffoldGeneratorTest shows the funktions of the ScaffoldGenerator__
+__Class ScaffoldGeneratorTest shows the functions of the ScaffoldGenerator__
 
   A set of mol files is loaded from the resources folder, processed with the ScaffoldGenerator and saved as image in the generated scaffoldTestOutput. 
   The ScaffoldGenerator method getSchuffenhauerScaffold() transforms the molecules in Schuffenhauer scaffolds.
 
-https://coconut.naturalproducts.net/download
-
 ## MurckoFragmenterTest
 
-__Class MurckoFragmenterTest shows the funktions of the CDK MurckoFragmenter__
+__Class MurckoFragmenterTest shows the functions of the CDK MurckoFragmenter__
   
   A set of mol files is loaded from the resources folder and processed with the MurckoFragmenter. The following molecules are saved as image in the generated scaffoldTestOutput:
   * Original: The unchanged molecule
@@ -160,6 +190,3 @@ __Class MurckoFragmenterTest shows the funktions of the CDK MurckoFragmenter__
   * *Test3* shows that ring systems are separated from one another
   * *Test6* shows that side chains of the ring systems are removed and ring systems are not further broken down into individual rings
 
-## Required ressources
-COCONUT DB for speed test: https://coconut.naturalproducts.net/download
-Add the COCONUT_DB.sdf file to src\test\resources
