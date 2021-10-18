@@ -43,8 +43,8 @@ import java.io.IOException;
 /**
   * JUnit test class for the org.openscience.cdk.fragment.MurckoFragmenter
   *
-  * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas-schaub@uni-jena.de)
-  * @version 1.0
+ * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
+  * @version 1.0.0.0
   */
 public class MurckoFragmenterTest {
     private MurckoFragmenter fragmenter;
