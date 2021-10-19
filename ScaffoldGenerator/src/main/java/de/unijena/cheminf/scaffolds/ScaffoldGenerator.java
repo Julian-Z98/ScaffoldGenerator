@@ -62,7 +62,7 @@ import java.util.TreeMap;
  * Different trees or networks can also be merged together.
  *
  * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
- * @version 1.0.0.1
+ * @version 1.0.0.2
  */
 public class ScaffoldGenerator {
 
@@ -160,7 +160,7 @@ public class ScaffoldGenerator {
      * Default setting for whether hybridisation should only be retained for aromatic bonds.
      * By default, the hybridisation of all bonds is retained.
      */
-    public static final boolean RETAIN_ONLY_HYBRIDISATIONS_AT_AROMATIC_BONDS_SETTING_DEFAULT = true;
+    public static final boolean RETAIN_ONLY_HYBRIDISATIONS_AT_AROMATIC_BONDS_SETTING_DEFAULT = false;
 
     /**
      * Default setting for which scaffold mode should be used.
@@ -361,7 +361,7 @@ public class ScaffoldGenerator {
     }
 
     /**
-     * Generates a set of rings depending on the CycleFinder selected by {@link ScaffoldGenerator#getCycleFinder(IAtomContainer)}.
+     * Generates a set of rings depending on the selected CycleFinder.
      * The removal of atoms can create open valences. These open valences can be compensated with implicit hydrogens.
      * Can optional add non-single bounded atoms to the rings.
      * @param aMolecule molecule whose rings are produced.
