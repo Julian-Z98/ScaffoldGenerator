@@ -37,7 +37,7 @@ cycle finder algorithm that extracts the smallest set of uniquely defined short 
 be dissected into their constituting separate smallest rings.<p>
 
 Extracted scaffolds can be further dissected into their smaller parent scaffolds using two different methods. All possible 
-parent scaffolds can be enumerated that would result from the step-wise removal of terminal rings, exploring all possible 
+parent scaffolds can be enumerated that would result from the stepwise removal of terminal rings, exploring all possible 
 combinations of such removal steps. This dissection
 is the basis for Scaffold Networks, as described by [Varin et al.](https://doi.org/10.1021/ci2000924).
 <br>[Schuffenhauer et al.](https://doi.org/10.1021/ci600338x) built upon a similar scaffold dissection but introduced 
@@ -101,7 +101,6 @@ such cases.
 ([Schuffenhauer et al.](https://doi.org/10.1021/ci600338x), see also Scheme 12)
 * Prioritization rule 11
 <br>"For Mixed Aromatic/Nonaromatic Ring Systems, Retain Nonaromatic Rings with Priority."([Schuffenhauer et al.](https://doi.org/10.1021/ci600338x), see also Scheme 15)
-fused aromatic systems
 
 ### Available settings and options
 To fine-tune Scaffold Generator's functionalities, multiple settings are available:
@@ -111,7 +110,7 @@ To fine-tune Scaffold Generator's functionalities, multiple settings are availab
   * Schuffenhauer Scaffolds: Murcko Frameworks with the addition of all atoms that are connected to rings and linkers 
   via non-single bonds, based on [Schuffenhauer et al.](https://doi.org/10.1021/ci600338x) (compare 
   [Deviations from the Scaffold Tree prioritization rules](#Deviations-from-the-Scaffold-Tree-prioritization-rules) above)
-  * Beccari Basic WireFrame: Based on Murcko Frameworks, all side-chains are removed all elemental and bond order information is abstracted by turning 
+  * Beccari Basic WireFrame: Based on Murcko Frameworks, all side-chains are removed and all elemental and bond order information is abstracted by turning 
   all atoms into carbon atoms and all bonds into single bonds, according to [Manelfi et al.](https://doi.org/10.1186/s13321-021-00526-y) 
   and similar to [Bemis and Murcko's](https://doi.org/10.1021/jm9602928) archetype analysis.
   * Elemental Wireframe: Similar to Basic WireFrames but elemental information is kept, i.e. heteroatoms are retained in the scaffolds 
