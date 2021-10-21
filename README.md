@@ -12,24 +12,33 @@ Multiple options to fine-tune and adapt the routines are available.
 
 ## Contents of this repository
 ### Sources
-[TODO list classes and their purposes]
+* ScaffoldGenerator: Core class of the library making its main functionalities available through convenient, high-level methods.
+* ScaffoldNodeCollectionBase: Abstract base class of Scaffold Trees and Scaffold Networks. Manages a collection of scaffold nodes and their connections in a tree-based representation that can be exported as an adjacency matrix.
+* ScaffoldNetwork: Class used to represent Scaffold Network structures.
+* ScaffoldTree: Class used to represent Scaffold Tree structures.
+* ScaffoldNodeBase: Abstract base class for nodes in a Scaffold Tree or Scaffold Network that maintains structural information about its scaffold and the molecules it originated from.
+* NetworkNode: A class for nodes of a Scaffold Network that can have multiple parents.
+* TreeNode: A class for nodes of a Scaffold Tree that can have only one parent.
+* GraphStreamUtility: Utility class for displaying Scaffold Trees and Scaffold Networks using the [GraphStream library](https://graphstream-project.org). It is primarily employed in ScaffoldGeneratorTest (see below) for visual inspection.
+
 
 ### Tests
-[TODO
-JUnit tests asserting and visualising, 
-COCONUT analyses]
+* MurckoFragmenterTest: Illustrates the functions and options of CDK’s MurckoFragmenter that is used in Scaffold Generator for initial scaffold creation. Example molecules from resources (see below) are imported and image files of the generated framework structures saved in an output folder.
+* ScaffoldGeneratorTest: Illustrates and tests the functionalities of Scaffold Generator; the correct output of its basic methods like scaffold generation, the more advanced functions to build Scaffold Trees and Scaffold Networks, the correct application of [Schuffenhauer et al.'s](https://doi.org/10.1021/ci600338x) prioritization rules (based on the schemata given in their publication), and the correct workings of the available settings and options. Some examples of Scaffold Trees and Scaffold Networks are displayed for visual inspection using the [GraphStream library](https://graphstream-project.org) and examples for the basic functionalities are visualised using example molecules imported from the resource folder (see below) and saved as image files in an output folder. Additionally, performance tests are included that apply specific routines of Scaffold Generator to the whole [COCONUT database](https://doi.org/10.1186/s13321-020-00478-9).
+
 
 ### Resources
-[TODO list resources]
+The test resources folder at path <i>src\test\resources\</i> contains MDL MOL files of 23 test molecules used to illustrate the basic functionalities of Scaffold Generator. They are imported in multiple test methods and the results saved as image files in respective molecule-specific output folders.
+<br>An SD file of the [COCONUT database](https://doi.org/10.1186/s13321-020-00478-9) to run the performance tests, is not included in the repository (see below).
+
 
 ## Installation
 This is a Maven project. In order to use the source code for your own software, download or clone the repository and
 open it in a Maven-supporting IDE (e.g. IntelliJ) as a Maven project and execute the pom.xml file. Maven will then take
 care of installing all dependencies. A Java Development Kit (JDK) of version 11 or higher must also be pre-installed.
-<br>To run the COCONUT-analysing tests, an SD file of the database needs to be placed in the test "resources" folder. 
-The respective file can be downloaded at
-[https://coconut.naturalproducts.net/download](https://coconut.naturalproducts.net/download). Add the "COCONUT_DB.sdf" 
-file to <i>src\test\resources</i>. 
+<br>To run the COCONUT-analysing tests, an SD file of the database needs to be placed in the test "resources" folder
+at path <i>src\test\resources\COCONUT_DB.sdf</i>. 
+The respective file can be downloaded at [https://coconut.naturalproducts.net/download](https://coconut.naturalproducts.net/download).
 
 ## Dependencies
 **Needs to be pre-installed:**
