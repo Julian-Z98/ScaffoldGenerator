@@ -62,7 +62,7 @@ import java.util.TreeMap;
  * Different trees or networks can also be merged together.
  *
  * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
- * @version 1.0.0.2
+ * @version 1.0.0.3
  */
 public class ScaffoldGenerator {
 
@@ -93,7 +93,7 @@ public class ScaffoldGenerator {
          * It is a very abstract form of representation.
          * All side chains are removed, all bonds are converted into single bonds and all atoms are converted into carbons.
          */
-        BECCARI_BASIC_WIRE_FRAME(),
+        BASIC_WIRE_FRAME(),
 
         /**
          * All side chains are removed and multiple bonds are converted to single bonds, but the atomic elements remain.
@@ -106,7 +106,7 @@ public class ScaffoldGenerator {
          * Paper by Beccari et al. 2021.
          * All side chains are removed and all atoms are converted into carbons. The order of the remaining bonds is not changed.
          */
-        BECCARI_BASIC_FRAMEWORK()
+        BASIC_FRAMEWORK()
     }
     //</editor-fold>
 
@@ -399,7 +399,7 @@ public class ScaffoldGenerator {
      * The scaffold is therefore subtracted from the original molecule and
      * all remaining fragments are saturated with hydrogens if anAddImplicitHydrogens is true. <p>
      *
-     * SideChains cannot be generated for ELEMENTAL_WIRE_FRAME, BECCARI_BASIC_FRAMEWORK and BECCARI_BASIC_WIRE_FRAME themselves.
+     * SideChains cannot be generated for ELEMENTAL_WIRE_FRAME, BASIC_FRAMEWORK and BASIC_WIRE_FRAME themselves.
      * Their SideChains are identical to those of MURCKO_FRAMEWORK. Therefore, they are used.
      * @param aMolecule Molecule whose side chains are to be returned
      * @param anAddImplicitHydrogens Specifies whether implicit hydrogens are to be added at the end.
@@ -423,10 +423,10 @@ public class ScaffoldGenerator {
         }
         /*Generate scaffold*/
         IAtomContainer tmpScaffold = new AtomContainer();
-        /*SideChains cannot be generated for ELEMENTAL_WIRE_FRAME, BECCARI_BASIC_FRAMEWORK and BECCARI_BASIC_WIRE_FRAME themselves.
+        /*SideChains cannot be generated for ELEMENTAL_WIRE_FRAME, BASIC_FRAMEWORK and BASIC_WIRE_FRAME themselves.
         Their SideChains are identical to those of MURCKO_FRAMEWORK. Therefore, they can be used.*/
-        if(this.scaffoldModeSetting.equals(ScaffoldModeOption.ELEMENTAL_WIRE_FRAME) || this.scaffoldModeSetting.equals(ScaffoldModeOption.BECCARI_BASIC_FRAMEWORK)
-                || this.scaffoldModeSetting.equals(ScaffoldModeOption.BECCARI_BASIC_WIRE_FRAME)) {
+        if(this.scaffoldModeSetting.equals(ScaffoldModeOption.ELEMENTAL_WIRE_FRAME) || this.scaffoldModeSetting.equals(ScaffoldModeOption.BASIC_FRAMEWORK)
+                || this.scaffoldModeSetting.equals(ScaffoldModeOption.BASIC_WIRE_FRAME)) {
             /*Use MURCKO_FRAMEWORK as ScaffoldModeOption for those scaffolds*/
             //Get scaffold
             tmpScaffold = this.getScaffoldInternal(tmpClonedMolecule, anAddImplicitHydrogens,
@@ -931,7 +931,7 @@ public class ScaffoldGenerator {
     protected IAtomContainer getScaffoldInternal(IAtomContainer aMolecule, boolean anAddImplicitHydrogens, boolean anIsAromaticitySet, Aromaticity anAromaticity, ScaffoldModeOption aScaffoldModeOption) throws CDKException, CloneNotSupportedException {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
         /*Basic wire frames and element wire frames will be numbered later, as their number will be deleted immediately by anonymization and skeleton*/
-        if(!ScaffoldModeOption.BECCARI_BASIC_WIRE_FRAME.equals(aScaffoldModeOption) && !ScaffoldModeOption.ELEMENTAL_WIRE_FRAME.equals(aScaffoldModeOption)) {
+        if(!ScaffoldModeOption.BASIC_WIRE_FRAME.equals(aScaffoldModeOption) && !ScaffoldModeOption.ELEMENTAL_WIRE_FRAME.equals(aScaffoldModeOption)) {
             /*Mark each atom with ascending number*/
             Integer tmpCounter = 0;
             for(IAtom tmpAtom : tmpClonedMolecule.atoms()) {
@@ -946,7 +946,7 @@ public class ScaffoldGenerator {
             case MURCKO_FRAMEWORK:
                 break;
             /*Generate the basic wire frame*/
-            case BECCARI_BASIC_WIRE_FRAME:
+            case BASIC_WIRE_FRAME:
                 tmpMurckoFragment = AtomContainerManipulator.anonymise(tmpMurckoFragment);
                 /*Mark each atom with ascending number after anonymization because all properties are removed*/
                 Integer tmpCounterBWF = 0;
@@ -1027,7 +1027,7 @@ public class ScaffoldGenerator {
                 }
                 break;
             /*Generate the basic framework*/
-            case BECCARI_BASIC_FRAMEWORK:
+            case BASIC_FRAMEWORK:
                 for(IAtom tmpAtom : tmpMurckoFragment.atoms()) {
                     if(!tmpAtom.getSymbol().equals("C")) {
                         tmpAtom.setSymbol("C");
