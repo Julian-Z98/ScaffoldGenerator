@@ -26,7 +26,6 @@ import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.aromaticity.ElectronDonation;
 import org.openscience.cdk.depict.DepictionGenerator;
-import org.openscience.cdk.fragment.MurckoFragmenter;
 import org.openscience.cdk.graph.CycleFinder;
 import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.IAtom;
@@ -65,7 +64,7 @@ import static junit.framework.TestCase.assertEquals;
  * JUnit test class for the ScaffoldGenerator
  *
  * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
- * @version 1.0.0.1
+ * @version 1.0.0.2
  */
 public class ScaffoldGeneratorTest extends ScaffoldGenerator {
 
@@ -513,7 +512,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         }
         /*Beccari Basic Framework SideChains
         * These are identical with Elemental Wire Frame and Beccari Wire Framework*/
-        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.BECCARI_BASIC_FRAMEWORK);
+        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.BASIC_FRAMEWORK);
         //Generate SideChains
         List<IAtomContainer> tmpSideChainsBeccari = tmpScaffoldGenerator.getSideChains(tmpMolecule, true);
         /*Generate pictures of the rings*/
@@ -570,7 +569,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         }
         /*Beccari Basic Framework SideChains
          * These are identical with Elemental Wire Frame and Beccari Wire Framework*/
-        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.BECCARI_BASIC_FRAMEWORK);
+        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.BASIC_FRAMEWORK);
         //Generate SideChains
         List<IAtomContainer> tmpSideChainsBeccari = tmpScaffoldGenerator.getSideChains(tmpMolecule, false);
         /*Generate pictures of the rings*/
@@ -672,11 +671,11 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         tmpLinkers = tmpScaffoldGenerator.getLinkers(tmpMolecule, true);
         assertEquals("NC",tmpSmilesGenerator.create(tmpLinkers.get(0)));
         /*Generate the linkers of the Beccari Basic Framework*/
-        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.BECCARI_BASIC_FRAMEWORK);
+        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.BASIC_FRAMEWORK);
         tmpLinkers = tmpScaffoldGenerator.getLinkers(tmpMolecule, true);
         assertEquals("C=C",tmpSmilesGenerator.create(tmpLinkers.get(0)));
         /*Generate the linkers of the Beccari Basic Wire Frame*/
-        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.BECCARI_BASIC_WIRE_FRAME);
+        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.BASIC_WIRE_FRAME);
         tmpLinkers = tmpScaffoldGenerator.getLinkers(tmpMolecule, true);
         assertEquals("CC",tmpSmilesGenerator.create(tmpLinkers.get(0)));
     }
@@ -1427,18 +1426,21 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         tmpMolecule = tmpParser.parseSmiles("O=CC(OC(=O)C1=CC(O)=C(O)C(O)=C1OC=2C=C3C(=O)[O+]=C4C(O)=C(O)C=C5C(=O)[O+]=C(C2O)C3=C45)C(OC(=O)C6=CC(O)=C(O)C(O)=C6)C7OC(=O)C8=CC(O)=C(O)C(O)=C8C=9C(O)=C(O)C(O)=CC9C(=O)OCC7O");
         tmpMolecule = tmpParser.parseSmiles("[H]OC=1C([H])=C2C(C=3C([H])=C(C([H])=C([H])C3[H])C([H])([H])N([H])C([H])([H])C([H])([H])C=4C([H])=C(C([H])=C(C4[H])C([H])([H])N([H])C([H])([H])C([H])([H])C([H])([H])[H])C5([H])N([H])C([H])([H])C(O[H])(C([H])([H])C#CC([H])(C([H])([H])O[H])C([H])([H])C6([H])C5([H])C7([H])C(C8([H])C([H])(C([H])([H])N([H])C([H])(N([H])C([H])([H])[H])C8([H])[H])C([H])([H])C7([H])[H])(C([H])([H])C([H])=C9OC(=O)C%10=C9C([H])([H])C([H])([H])C%11([H])C%10([H])C%12%13C(C(=O)OC%12=C([H])C([H])(C([H])([H])C=%14C([H])=C([H])C([H])=C([H])C%14[H])C([H])([H])C([H])([H])[H])=C2C%11([H])C([H])([H])C%13([H])[H])C6([H])[H])C([H])([H])[H])=C([H])C1[H]");
         tmpMolecule = tmpParser.parseSmiles("CC1(C(=O)C(=C(O1)C2=CC=C(C=C2)S(=O)(=O)N)C3=CC(=CC=C3)F)C");
+        tmpMolecule = tmpParser.parseSmiles("c2ccc1NCCc1c2");
         /*Generate picture of molecule*/
-        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit().withAromaticDisplay();
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        tmpScaffoldGenerator.setDetermineAromaticitySetting(true);
         List<IAtomContainer> tmpSchuffenhauerFragments = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         int tmpCounter = 0;
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.UseAromaticSymbols));
         for(IAtomContainer tmpFragment : tmpSchuffenhauerFragments) {
-            MurckoFragmenter tmpMurckoFragmenter = new MurckoFragmenter(true,1);
-            tmpMurckoFragmenter.setComputeRingFragments(false);
-            tmpFragment = tmpMurckoFragmenter.scaffold(tmpFragment);
-            tmpFragment = AtomContainerManipulator.anonymise(tmpFragment);
-            AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpFragment);
-            CDKHydrogenAdder.getInstance(tmpFragment.getBuilder()).addImplicitHydrogens(tmpFragment);
+            //MurckoFragmenter tmpMurckoFragmenter = new MurckoFragmenter(true,1);
+            //tmpMurckoFragmenter.setComputeRingFragments(false);
+            //tmpFragment = tmpMurckoFragmenter.scaffold(tmpFragment);
+            //tmpFragment = AtomContainerManipulator.anonymise(tmpFragment);
+            //AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpFragment);
+            //CDKHydrogenAdder.getInstance(tmpFragment.getBuilder()).addImplicitHydrogens(tmpFragment);
             tmpCounter++;
             /*Generate picture*/
             BufferedImage tmpImgFragment = tmpGenerator.depict(tmpFragment).toImg();
@@ -2162,6 +2164,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
         //Generate SchuffenhauerScaffold
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        tmpScaffoldGenerator.setRetainOnlyHybridisationsAtAromaticBondsSetting(true);
         IAtomContainer tmpSchuffenhauerScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule, true);
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
         /*Save the picture*/
@@ -2204,6 +2207,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
         //Generate SchuffenhauerScaffold
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        tmpScaffoldGenerator.setRetainOnlyHybridisationsAtAromaticBondsSetting(true);
         IAtomContainer tmpSchuffenhauerScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule, true);
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpSchuffenhauerScaffold).toImg();
         /*Save the picture*/
@@ -2214,7 +2218,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         List<IAtomContainer> tmpRemovalRings = tmpScaffoldGenerator.applySchuffenhauerRuleSix(this.getRingsForSchuffenhauer(tmpSchuffenhauerScaffold));
         assertEquals(1, tmpRemovalRings.size()); //Only one fragment should be created
         //Remove the ring from the fragment currently being treated
-        IAtomContainer tmpRingRemoved = this.removeRing(tmpSchuffenhauerScaffold, true, tmpRemovalRings.get(0));
+        IAtomContainer tmpRingRemoved = this.removeRing(tmpSchuffenhauerScaffold, false, tmpRemovalRings.get(0));
         //Remove the linkers
         IAtomContainer tmpSchuffRingRemoved = this.getScaffold(tmpRingRemoved, true);
         BufferedImage tmpImgRule = tmpGenerator.depict(tmpSchuffRingRemoved).toImg();
@@ -3188,7 +3192,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         /*Generate and check SMILES*/
         assertEquals("N=1OC=C(C1C=2C=CC=CC2)CNC3CN4CCSC43", tmpSmilesGenerator.create(tmpMurckoSMILES));
         /*Generate Basic Wire Frame*/
-        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.BECCARI_BASIC_WIRE_FRAME);
+        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.BASIC_WIRE_FRAME);
         IAtomContainer tmpBWFSMILES = tmpScaffoldGenerator.getScaffold(tmpMolecule, true);
         /*Generate picture of the SchuffenhauerScaffold*/
         BufferedImage tmpImgBWF = tmpGenerator.depict(tmpBWFSMILES).toImg();
@@ -3210,7 +3214,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         /*Generate and check SMILES*/
         assertEquals("O1NC(C(C1)CNC2CN3CCSC32)C4CCCCC4", tmpSmilesGenerator.create(tmpEWFSMILES));
         /*Generate Basic Framework*/
-        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.BECCARI_BASIC_FRAMEWORK);
+        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.BASIC_FRAMEWORK);
         IAtomContainer tmpBFSMILES = tmpScaffoldGenerator.getScaffold(tmpMolecule, true);
         /*Generate picture of the SchuffenhauerScaffold*/
         BufferedImage tmpImgBF = tmpGenerator.depict(tmpBFSMILES).toImg();
@@ -3267,7 +3271,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         /*Generate and check SMILES*/
         assertEquals("[C]1SC2N([C]C2N[C]C3=[C]ON=C3C=4[C]=CC=C[C]4)[CH]1", tmpSmilesGenerator.create(tmpMurckoSMILES));
         /*Generate Basic Wire Frame*/
-        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.BECCARI_BASIC_WIRE_FRAME);
+        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.BASIC_WIRE_FRAME);
         IAtomContainer tmpBWFSMILES = tmpScaffoldGenerator.getScaffold(tmpMolecule, false);
         /*Generate picture of the SchuffenhauerScaffold*/
         BufferedImage tmpImgBWF = tmpGenerator.depict(tmpBWFSMILES).toImg();
@@ -3289,7 +3293,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         /*Generate and check SMILES*/
         assertEquals("[C]1[C][C][C]([C][C]1)[C]2[N]O[C][C]2[C][N][C]3[C]N4[C][C]S[C]34", tmpSmilesGenerator.create(tmpEWFSMILES));
         /*Generate Basic Framework*/
-        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.BECCARI_BASIC_FRAMEWORK);
+        tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.BASIC_FRAMEWORK);
         IAtomContainer tmpBFSMILES = tmpScaffoldGenerator.getScaffold(tmpMolecule, false);
         /*Generate picture of the SchuffenhauerScaffold*/
         BufferedImage tmpImgBF = tmpGenerator.depict(tmpBFSMILES).toImg();
