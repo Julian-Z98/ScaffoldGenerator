@@ -62,7 +62,7 @@ import java.util.TreeMap;
  * Different trees or networks can also be merged together.
  *
  * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
- * @version 1.0.0.3
+ * @version 1.0.0.4
  */
 public class ScaffoldGenerator {
 
@@ -85,7 +85,7 @@ public class ScaffoldGenerator {
          * All terminal side chains are removed and only linkers and rings are retained.
          */
         MURCKO_FRAMEWORK(),
-        
+
         /**
          * Basic wire frames are generated based on the <a href="https://doi.org/10.1186/s13321-021-00526-y">
          * "Molecular Anatomy: a new multi‑dimensional hierarchical scaffold analysis tool"</a>
@@ -269,6 +269,7 @@ public class ScaffoldGenerator {
     //<editor-fold desc="set/restore">
     /**
      * Sets the option to not determine the aromaticity.
+     * If false, then no structures labelled as aromatic are created and previously existing ones are not changed.
      * @param anIsAromaticitySet if true the aromaticity is determined
      */
     public void setDetermineAromaticitySetting(boolean anIsAromaticitySet) {
@@ -539,7 +540,7 @@ public class ScaffoldGenerator {
      */
     public List<IAtomContainer> applyEnumerativeRemoval(IAtomContainer aMolecule) throws CDKException, CloneNotSupportedException, NullPointerException {
         Objects.requireNonNull(aMolecule, "Input molecule must be non null");
-        IAtomContainer tmpScaffoldOriginal = this.getScaffoldInternal(aMolecule, true, true, this.aromaticityModelSetting, this.scaffoldModeSetting);
+        IAtomContainer tmpScaffoldOriginal = this.getScaffoldInternal(aMolecule, true, this.determineAromaticitySetting, this.aromaticityModelSetting, this.scaffoldModeSetting);
         int tmpRingCount = this.getRingsInternal(tmpScaffoldOriginal, true).size();
         List<String> tmpAddedSMILESList = new ArrayList<>(tmpRingCount * 45);
         //List of all fragments already created and size estimated on the basis of an empirical value
@@ -556,7 +557,7 @@ public class ScaffoldGenerator {
                 }
                 if(this.isRingTerminal(tmpIterMol, tmpRing) && this.isRingRemovable(tmpRing, tmpAllRingsList, tmpIterMol)) { //Consider all terminal rings
                     boolean tmpIsInList = false;
-                    IAtomContainer tmpRingRemoved = this.getScaffoldInternal(this.removeRing(tmpIterMol, true, tmpRing), true, false, null, this.scaffoldModeSetting); //Remove next ring
+                    IAtomContainer tmpRingRemoved = this.getScaffoldInternal(this.removeRing(tmpIterMol, true, tmpRing), true, this.determineAromaticitySetting, this.aromaticityModelSetting, this.scaffoldModeSetting); //Remove next ring
                     String tmpRingRemovedSMILES = this.getSmilesGenerator().create(tmpRingRemoved); //Generate SMILES
                     if(tmpAddedSMILESList.contains(tmpRingRemovedSMILES)) { //Check if the molecule has already been added to the list
                         tmpIsInList = true;
@@ -592,7 +593,7 @@ public class ScaffoldGenerator {
     public ScaffoldNetwork generateScaffoldNetwork(IAtomContainer aMolecule) throws CDKException, CloneNotSupportedException, NullPointerException {
         Objects.requireNonNull(aMolecule, "Input molecule must be non null");
         ScaffoldNetwork tmpScaffoldNetwork = new ScaffoldNetwork(this.getSmilesGenerator());
-        IAtomContainer tmpScaffoldOriginal = this.getScaffoldInternal(aMolecule, true, true, this.aromaticityModelSetting, this.scaffoldModeSetting);
+        IAtomContainer tmpScaffoldOriginal = this.getScaffoldInternal(aMolecule, true, this.determineAromaticitySetting, this.aromaticityModelSetting, this.scaffoldModeSetting);
         int tmpRingCount = this.getRingsInternal(tmpScaffoldOriginal, true).size();
         //List of all fragments already created and size estimated on the basis of an empirical value
         List<IAtomContainer> tmpIterativeRemovalList = new ArrayList<>(tmpRingCount * 45);
@@ -618,7 +619,7 @@ public class ScaffoldGenerator {
                 /*Consider all removable terminal rings*/
                 if (this.isRingTerminal(tmpIterMol, tmpRing) && this.isRingRemovable(tmpRing, tmpAllRingsList, tmpIterMol)) {
                     //Remove next ring
-                    IAtomContainer tmpRingRemoved = this.getScaffoldInternal(this.removeRing(tmpIterMol, true, tmpRing), true, false, null, this.scaffoldModeSetting);
+                    IAtomContainer tmpRingRemoved = this.getScaffoldInternal(this.removeRing(tmpIterMol, true, tmpRing), true, this.determineAromaticitySetting, aromaticityModelSetting, this.scaffoldModeSetting);
                     /*The node is not yet in the network and must therefore still be added.*/
                     if(!tmpScaffoldNetwork.containsMolecule(tmpRingRemoved)) {
                         tmpIterativeRemovalList.add(tmpRingRemoved);
@@ -708,7 +709,7 @@ public class ScaffoldGenerator {
             }
             /*Apply the new CycleFinder to the molecules*/
             tmpRingNumber = this.getRingsInternal(tmpScaffold, false).size();
-            tmpScaffold = this.getScaffoldInternal(tmpClonedMolecule, true, false ,null, this.scaffoldModeSetting);
+            tmpScaffold = this.getScaffoldInternal(tmpClonedMolecule, true, this.determineAromaticitySetting ,this.aromaticityModelSetting, this.scaffoldModeSetting);
         }
         //List of all generated fragments
         List<IAtomContainer> tmpScaffoldFragments = new ArrayList<>(tmpRingNumber);
@@ -813,7 +814,9 @@ public class ScaffoldGenerator {
                 continue;
             }
             /*Apply rule number thirteen, the tiebreaking rule */
-            tmpScaffoldFragments.add(this.applySchuffenhauerRuleThirteen(tmpScaffoldFragments.get(tmpScaffoldFragments.size() - 1), tmpRemovableRings));
+            IAtomContainer tmpFragment = this.getScaffoldInternal(this.applySchuffenhauerRuleThirteen(tmpScaffoldFragments.get(tmpScaffoldFragments.size() - 1),
+                    tmpRemovableRings), true, this.determineAromaticitySetting, this.aromaticityModelSetting, this.scaffoldModeSetting);
+            tmpScaffoldFragments.add(tmpFragment);
         }
         return tmpScaffoldFragments;
     }
@@ -1034,7 +1037,7 @@ public class ScaffoldGenerator {
                     }
                 }
                 break;
-            }
+        }
         /*The Murcko fragmenter class does not adjust the hybridisation when the atoms are removed.
         Therefore, this is deleted and determined again.*/
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpMurckoFragment);
@@ -1522,7 +1525,7 @@ public class ScaffoldGenerator {
         //Remove the ring from the fragment currently being treated
         IAtomContainer tmpRingRemoved = this.removeRing(aFragmentList.get(aFragmentList.size() - 1), true, aRing);
         //Remove the linkers
-        IAtomContainer tmpSchuffRingRemoved = this.getScaffoldInternal(tmpRingRemoved, true, false, null, this.scaffoldModeSetting);
+        IAtomContainer tmpSchuffRingRemoved = this.getScaffoldInternal(tmpRingRemoved, true, this.determineAromaticitySetting, this.aromaticityModelSetting, this.scaffoldModeSetting);
         //Add the fragment to the list of fragments
         aFragmentList.add(tmpSchuffRingRemoved);
     }
