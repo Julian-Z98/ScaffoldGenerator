@@ -62,7 +62,7 @@ import java.util.TreeMap;
  * Different trees or networks can also be merged together.
  *
  * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
- * @version 1.0.0.4
+ * @version 1.0.0.5
  */
 public class ScaffoldGenerator {
 
@@ -362,7 +362,7 @@ public class ScaffoldGenerator {
     }
 
     /**
-     * Generates a set of rings depending on the selected CycleFinder.
+     * Generates a set of rings depending on the used CycleFinder.
      * The removal of atoms can create open valences. These open valences can be compensated with implicit hydrogens.
      * Can optional add non-single bounded atoms to the rings.
      * @param aMolecule molecule whose rings are produced.
@@ -860,7 +860,7 @@ public class ScaffoldGenerator {
             tmpNode.addChild(tmpTestMol);
             TreeNode tmpChildNode = (TreeNode) tmpScaffoldTree.getAllNodesOnLevel(i - 1).get(0).getChildren().get(0);
             tmpChildNode.addOriginSmiles(tmpSmiles);
-            /*the last and thus largest fragment is directly related to the original molecule*/
+            /*The last and thus largest fragment is directly related to the original molecule*/
             if(i == (tmpFragmentList.size() - 1)){
                 tmpChildNode.addNonVirtualOriginSmiles(tmpSmiles);
             }
@@ -1377,10 +1377,10 @@ public class ScaffoldGenerator {
                     tmpEdgeAtomNumbers.remove(tmpBondProperty1);
                 }
             }
-            /*Increase the number of hydrogens by 1 for all previously untreated edge atoms to compensate for the removed atom.*/
+            /*Increase the number of hydrogens by 1 for all previously untreated edge C atoms to compensate for the removed atom.*/
             for(IAtom tmpAtom : tmpMoleculeClone.atoms()) {
                 Integer tmpAtomProperty = tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY);
-                if(tmpEdgeAtomNumbers.contains(tmpAtomProperty)) {
+                if(tmpEdgeAtomNumbers.contains(tmpAtomProperty) && tmpAtom.getSymbol() == "C") {
                     tmpAtom.setImplicitHydrogenCount(tmpAtom.getImplicitHydrogenCount() + 1);
                 }
             }
