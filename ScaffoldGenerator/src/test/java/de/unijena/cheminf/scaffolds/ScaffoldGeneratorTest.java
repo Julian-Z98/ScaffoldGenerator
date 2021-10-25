@@ -64,7 +64,7 @@ import static junit.framework.TestCase.assertEquals;
  * JUnit test class for the ScaffoldGenerator
  *
  * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
- * @version 1.0.0.2
+ * @version 1.0.1.0
  */
 public class ScaffoldGeneratorTest extends ScaffoldGenerator {
 
@@ -72,14 +72,14 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
     //<editor-fold desc="Fundamental method tests">
     /**
      * Test of ScaffoldGenerator.getScaffold() with V2000 and V3000 mol files.
-     * Loads the 22 Test(Test1.mol-Test23.mol) molfiles from the Resources folder and creates the SchuffenhauerScaffolds with getScaffold().
+     * Loads the 23 Test(Test1.mol-Test24.mol) molfiles from the Resources folder and creates the SchuffenhauerScaffolds with getScaffold().
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
      * @throws Exception if anything goes wrong
      */
     @Test
     public void getScaffoldTest() throws Exception {
-        for (int tmpCount = 1; tmpCount < 23; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 24; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -106,14 +106,14 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
 
     /**
      * Test of ScaffoldGenerator.getScaffold() with V2000 and V3000 mol files.
-     * Loads the 22 Test(Test1.mol-Test23.mol) molfiles from the Resources folder and creates the SchuffenhauerScaffolds with getScaffold().
+     * Loads the 32 Test(Test1.mol-Test24.mol) molfiles from the Resources folder and creates the SchuffenhauerScaffolds with getScaffold().
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
      * @throws Exception if anything goes wrong
      */
     @Test
     public void getScaffoldWithoutHTest() throws Exception {
-        for (int tmpCount = 1; tmpCount < 23; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 24; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -236,14 +236,14 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
     }
     /**
      * Test of Cycles.mcb() with V2000 and V3000 mol files.
-     * Loads the 12 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and creates the rings of the SchuffenhauerScaffold with getRings().
+     * Loads the24 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and creates the rings of the SchuffenhauerScaffold with getRings().
      * All generated Rings are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
      * @throws Exception if anything goes wrong
      */
     @Test
     public void getRingsTest() throws Exception {
-        for (int tmpCount = 1; tmpCount < 23; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 24; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -268,14 +268,14 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
 
     /**
      * Test of removeRing() with V2000 and V3000 mol files.
-     * Loads the 12 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and creates for each generated ring, the corresponding total molecule with removed ring.
+     * Loads the24 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and creates for each generated ring, the corresponding total molecule with removed ring.
      * All generated molecules are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
      * @throws Exception if anything goes wrong
      */
     @Test
     public void removeRingTest() throws Exception {
-        for (int tmpCount = 2; tmpCount < 23; tmpCount++) {
+        for (int tmpCount = 2; tmpCount < 24; tmpCount++) {
             String tmpFileName = "Test" + tmpCount ;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -303,14 +303,14 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
 
     /**
      * Test of removeRing() with V2000 and V3000 mol files.
-     * Loads the 12 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and creates for each generated ring, the corresponding total molecule with removed ring.
+     * Loads the24 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and creates for each generated ring, the corresponding total molecule with removed ring.
      * All generated molecules are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
      * @throws Exception if anything goes wrong
      */
     @Test
     public void removeRingWithoutHTest() throws Exception {
-        for (int tmpCount = 2; tmpCount < 23; tmpCount++) {
+        for (int tmpCount = 2; tmpCount < 24; tmpCount++) {
             String tmpFileName = "Test" + tmpCount ;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -374,7 +374,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
 
     /**
      * Test of isRingTerminal() with V2000 and V3000 mol files.
-     * Loads the 12 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and creates for each generated terminal ring, the corresponding total molecule with removed ring.
+     * Loads the24 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and creates for each generated terminal ring, the corresponding total molecule with removed ring.
      * All generated molecules are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
      * @throws Exception if anything goes wrong
@@ -416,7 +416,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
      */
     @Test
     public void getSideChainTest() throws Exception {
-        for (int tmpCount = 1; tmpCount < 23; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 24; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -447,7 +447,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
      */
     @Test
     public void getSideChainWithoutHTest() throws Exception {
-        for (int tmpCount = 1; tmpCount < 23; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 24; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -592,7 +592,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
      */
     @Test
     public void getLinkersTest() throws Exception {
-        for (int tmpCount = 1; tmpCount < 23; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 24; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -623,7 +623,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
      */
     @Test
     public void getLinkersWithoutHTest() throws Exception {
-        for (int tmpCount = 1; tmpCount < 23; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 24; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -683,9 +683,10 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
     //</editor-fold>
 
     //<editor-fold desc="Advanced method test">
+    //<editor-fold desc="Assert tests">
     /**
      * Test of applyEnumerativeRemoval() with V2000 and V3000 mol files.
-     * Loads the 12 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and iteratively removes the terminal rings.
+     * Loads the24 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and iteratively removes the terminal rings.
      * All generated molecules are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
      * @throws Exception if anything goes wrong
@@ -713,6 +714,171 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         }
     }
 
+    /**
+     * Creates a ScaffoldTree from a V2000 or V3000 mol file and checks the generated fragments.
+     * @throws Exception if anything goes wrong
+     */
+    @Test
+    public void generateSchuffenhauerTreeTest() throws Exception {
+        String tmpFileName = "Test11" ;
+        //Load molecule from molfile
+        IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
+        //Generate a tree of molecules with iteratively removed terminal rings
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        ScaffoldTree tmpScaffoldTree = tmpScaffoldGenerator.generateSchuffenhauerTree(tmpMolecule);
+        /*Remove some nodes. Nodes can be removed from the non-root end.
+        If nodes are removed in the middle of the tree, it cannot be displayed with Graphstream.*/
+        System.out.println(tmpScaffoldTree.getAllNodes().size());
+        //TreeNode tmpRemoveNode = (TreeNode) tmpScaffoldTree.getMatrixNode(3);
+        //tmpScaffoldTree.removeNode(tmpRemoveNode);
+        System.out.println(tmpScaffoldTree.getAllNodes().size());
+        /*Print some further information*/
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
+        List <IAtomContainer> tmpMoleculeList = new ArrayList<>();
+        for(ScaffoldNodeBase tmpTestNodeBase : tmpScaffoldTree.getAllNodes()) {
+            TreeNode tmpTestNode = (TreeNode) tmpTestNodeBase;
+            IAtomContainer tmpTestMolecule = (IAtomContainer) tmpTestNode.getMolecule();
+            tmpMoleculeList.add(tmpTestMolecule);
+            String tmpOrigin = (String) tmpTestNodeBase.getOriginSmilesList().get(0);
+            assertEquals("[H]C12SC(C)(C)C(C(=O)O)N2C(=O)C1NC(=O)C=3C(=NOC3C)C=4C(F)=CC=CC4Cl", tmpOrigin);
+        }
+        assertEquals("O=C1NCC1", tmpSmilesGenerator.create(tmpMoleculeList.get(0)));
+        assertEquals("O=C1N2CCSC2C1", tmpSmilesGenerator.create(tmpMoleculeList.get(1)));
+        assertEquals("O=C(NC1C(=O)N2CCSC21)C=3C=NOC3", tmpSmilesGenerator.create(tmpMoleculeList.get(2)));
+        assertEquals("O=C(NC1C(=O)N2CCSC21)C3=CON=C3C=4C=CC=CC4", tmpSmilesGenerator.create(tmpMoleculeList.get(3)));
+    }
+
+    /**
+     * Creates a ScaffoldNetwork from a V2000 or V3000 mol file and checks the generated fragments.
+     * @throws Exception if anything goes wrong
+     */
+    @Test
+    public void generateScaffoldNetworkTest() throws Exception {
+        String tmpFileName = "Test11" ;
+        //Load molecule from molfile
+        IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
+        //Generate a tree of molecules with iteratively removed terminal rings
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.generateScaffoldNetwork(tmpMolecule);
+        /*Remove some nodes. Nodes can be removed from the non-root end.
+        If nodes are removed in the middle of the tree, it cannot be displayed with Graphstream.*/
+        NetworkNode tmpRemoveNode = (NetworkNode) tmpScaffoldNetwork.getMatrixNode(9);
+        tmpScaffoldNetwork.removeNode(tmpRemoveNode);
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
+        List <IAtomContainer> tmpMoleculeList = new ArrayList<>();
+        for(ScaffoldNodeBase tmpTestNodeBase : tmpScaffoldNetwork.getAllNodes()) {
+            NetworkNode tmpTestNode = (NetworkNode) tmpTestNodeBase;
+            IAtomContainer tmpTestMolecule = (IAtomContainer) tmpTestNode.getMolecule();
+            tmpMoleculeList.add(tmpTestMolecule);
+            assertEquals("[H]C12SC(C)(C)C(C(=O)O)N2C(=O)C1NC(=O)C=3C(=NOC3C)C=4C(F)=CC=CC4Cl", tmpTestNode.getOriginSmilesList().get(0));
+            if(!tmpTestNode.getNonVirtualOriginCount().equals(0)) {
+                assertEquals("[H]C12SC(C)(C)C(C(=O)O)N2C(=O)C1NC(=O)C=3C(=NOC3C)C=4C(F)=CC=CC4Cl", tmpTestNode.getNonVirtualOriginSmilesList().get(0));
+            }
+        }
+        assertEquals("S1CNCC1", tmpSmilesGenerator.create(tmpMoleculeList.get(0)));
+        assertEquals("O=C1NCC1", tmpSmilesGenerator.create(tmpMoleculeList.get(1)));
+        assertEquals("N=1OC=CC1", tmpSmilesGenerator.create(tmpMoleculeList.get(2)));
+        assertEquals("N=1OC=CC1C=2C=CC=CC2", tmpSmilesGenerator.create(tmpMoleculeList.get(3)));
+        assertEquals("O=C(NC1C(=O)NC1)C=2C=NOC2", tmpSmilesGenerator.create(tmpMoleculeList.get(4)));
+        assertEquals("O=C1N2CCSC2C1", tmpSmilesGenerator.create(tmpMoleculeList.get(5)));
+        assertEquals("O=C(NC1C(=O)NC1)C2=CON=C2C=3C=CC=CC3", tmpSmilesGenerator.create(tmpMoleculeList.get(6)));
+        assertEquals("O=C(NC1C(=O)N2CCSC21)C=3C=NOC3", tmpSmilesGenerator.create(tmpMoleculeList.get(7)));
+        assertEquals("O=C(NC1C(=O)N2CCSC21)C3=CON=C3C=4C=CC=CC4", tmpSmilesGenerator.create(tmpMoleculeList.get(8)));
+    }
+
+    /**
+     * Creates different ScaffoldTrees and merges them.
+     * @throws Exception if anything goes wrong
+     */
+    @Test
+    public void mergeTreeTest() throws Exception {
+        //SMILES to IAtomContainer
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        //IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1=C(C(=NO1)C2=C(C=CC=C2Cl)F)C(=O)NC3C4N(C3=O)C(C(S4)(C)C)C(=O)O");
+        //IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("c2ccc1ccccc1c2");
+        //IAtomContainer tmpMolecule2 = tmpParser.parseSmiles("c2ccc(Oc1ccccc1)cc2");
+        //IAtomContainer tmpMolecule3 = tmpParser.parseSmiles("O=c1[nH]c3cccc2cccc1c23");//3Rings
+        //IAtomContainer tmpMolecule4 = tmpParser.parseSmiles("O=C(Nc1ccccc1)c2ccccc2");
+        //IAtomContainer tmpMolecule5 = tmpParser.parseSmiles("c2ccc1CCCc1c2");
+        //IAtomContainer tmpMolecule6 = tmpParser.parseSmiles("c2ccc(c1ccccc1)cc2");
+        IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1=C(C(=NO1)C2=C(C=CC=C2Cl)F)C(=O)NC3C4N(C3=O)C(C(S4)(C)C)C(=O)O");
+        IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("C2NC1SCNN1N2");
+        //IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("CC");
+        IAtomContainer tmpMolecule2 = tmpParser.parseSmiles("c4ccc(C3NC2SC(c1ccccc1)NN2N3)cc4");
+        IAtomContainer tmpMolecule3 = tmpParser.parseSmiles("c2ccc(C1NCNN1)cc2");
+        IAtomContainer tmpMolecule4 = tmpParser.parseSmiles("c3ccc(C2NNC(c1ccccc1)N2)cc3");
+        IAtomContainer tmpMolecule5 = tmpParser.parseSmiles("c2ccc1CCCc1c2");
+        IAtomContainer tmpMolecule6 = tmpParser.parseSmiles("c3ccc(C2NC1SCNN1N2)cc3");
+        //Generate a tree of molecules with iteratively removed terminal rings
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        ScaffoldTree tmpScaffoldTree = tmpScaffoldGenerator.generateSchuffenhauerTree(tmpMolecule1);
+        ScaffoldTree tmpScaffoldTree2 = tmpScaffoldGenerator.generateSchuffenhauerTree(tmpMolecule2);
+        ScaffoldTree tmpScaffoldTree3 = tmpScaffoldGenerator.generateSchuffenhauerTree(tmpMolecule3);
+        ScaffoldTree tmpScaffoldTree4 = tmpScaffoldGenerator.generateSchuffenhauerTree(tmpMolecule4);
+        ScaffoldTree tmpScaffoldTree5 = tmpScaffoldGenerator.generateSchuffenhauerTree(tmpMolecule5);
+        ScaffoldTree tmpScaffoldTree6 = tmpScaffoldGenerator.generateSchuffenhauerTree(tmpMolecule6);
+        tmpScaffoldTree.mergeTree(tmpScaffoldTree2);
+        tmpScaffoldTree.mergeTree(tmpScaffoldTree3);
+        tmpScaffoldTree.mergeTree(tmpScaffoldTree4);
+        tmpScaffoldTree.mergeTree(tmpScaffoldTree5);
+        ScaffoldTree tmpOverlapScaffoldTree = tmpScaffoldGenerator.generateSchuffenhauerTree(tmpMolecule1);
+        tmpOverlapScaffoldTree.mergeTree(tmpScaffoldTree2);
+        tmpOverlapScaffoldTree.mergeTree(tmpScaffoldTree3);
+        tmpOverlapScaffoldTree.mergeTree(tmpScaffoldTree4);
+        tmpOverlapScaffoldTree.mergeTree(tmpScaffoldTree6);
+        tmpScaffoldTree.mergeTree(tmpOverlapScaffoldTree);
+        ScaffoldTree tmpUnfitScaffoldTree = tmpScaffoldGenerator.generateSchuffenhauerTree(tmpMolecule);
+        /*Does the new tree fit in the old one*/
+        assertEquals(false, tmpScaffoldTree.mergeTree(tmpUnfitScaffoldTree));
+        /*Check number of nodes*/
+        assertEquals(7, tmpScaffoldTree.getAllNodes().size());
+        IAtomContainer tmpRootMolecule = (IAtomContainer) tmpScaffoldTree.getRoot().getMolecule();
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
+        /*Check root*/
+        assertEquals("N1NCNC1", tmpSmilesGenerator.create(tmpRootMolecule));
+        IAtomContainer tmpMoleculeFive = (IAtomContainer) tmpScaffoldTree.getMatrixNode(5).getMolecule();
+        /*Check molecule 5*/
+        assertEquals("C=1C=CC(=CC1)C2NNC(N2)C=3C=CC=CC3", tmpSmilesGenerator.create(tmpMoleculeFive));
+    }
+
+    /**
+     * Creates different ScaffoldNetworks and merges them.
+     * A network is added here that has no connection to the rest of the network.
+     * @throws Exception if anything goes wrong
+     */
+    @Test
+    public void mergeNetworkTest() throws Exception {
+        //SMILES to IAtomContainer
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        /*Generate IAtomContainer from SMILES*/
+        IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("C2NC1SCNN1N2");
+        IAtomContainer tmpMolecule2 = tmpParser.parseSmiles("c4ccc(C3NC2SC(c1ccccc1)NN2N3)cc4");
+        //Molecule without connection to the network
+        IAtomContainer tmpMolecule3 = tmpParser.parseSmiles("C3CC1CC1CC4CCC2CC2CC34");
+        IAtomContainer tmpMolecule4 = tmpParser.parseSmiles("c3ccc(C2NNC(c1ccccc1)N2)cc3");
+        //Generate a Network of molecules with iteratively removed terminal rings
+        /*Generate Networks*/
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.generateScaffoldNetwork(tmpMolecule1);
+        ScaffoldNetwork tmpScaffoldNetwork2 = tmpScaffoldGenerator.generateScaffoldNetwork(tmpMolecule2);
+        ScaffoldNetwork tmpScaffoldNetwork3 = tmpScaffoldGenerator.generateScaffoldNetwork(tmpMolecule3);
+        ScaffoldNetwork tmpScaffoldNetwork4 = tmpScaffoldGenerator.generateScaffoldNetwork(tmpMolecule4);
+        /*Merge Networks*/
+        tmpScaffoldNetwork.mergeNetwork(tmpScaffoldNetwork2);
+        tmpScaffoldNetwork.mergeNetwork(tmpScaffoldNetwork3);
+        tmpScaffoldNetwork.mergeNetwork(tmpScaffoldNetwork4);
+        /*Checks*/
+        assertEquals(5, tmpScaffoldNetwork.getRoots().size());
+        assertEquals(16, tmpScaffoldNetwork.getAllNodes().size());
+        assertEquals(6, tmpScaffoldNetwork.getAllNodesOnLevel(0).size());
+        assertEquals(3, tmpScaffoldNetwork.getMaxLevel());
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
+        IAtomContainer tmpNodeMolecule = (IAtomContainer) tmpScaffoldNetwork.getMatrixNode(8).getMolecule();
+        assertEquals("S1C(NN2NC(NC12)C=3C=CC=CC3)C=4C=CC=CC4", tmpSmilesGenerator.create(tmpNodeMolecule));
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="Ignored tests">
     /**
      * Creates a ScaffoldTree from a V2000 or V3000 mol file and displays it as a network with GraphStream.
      * @throws Exception if anything goes wrong
@@ -847,7 +1013,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
      */
     @Ignore
     @Test
-    public void mergeTreeTest() throws Exception {
+    public void mergeTreeDisplayTest() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         //IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1=C(C(=NO1)C2=C(C=CC=C2Cl)F)C(=O)NC3C4N(C3=O)C(C(S4)(C)C)C(=O)O");
@@ -899,7 +1065,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
      */
     @Ignore
     @Test
-    public void mergeNetworkTest() throws Exception {
+    public void mergeNetworkDisplayTest() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         /*Generate IAtomContainer from SMILES*/
@@ -1347,6 +1513,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         GraphStreamUtility.displayWithGraphStream(tmpScaffoldTree, true);
     }
     //</editor-fold>
+    //</editor-fold>
 
     //<editor-fold desc="Schuffenhauer rules tests">
     /**
@@ -1358,7 +1525,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
      */
     @Test
     public void applySchuffenhauerRulesTest() throws Exception {
-        for (int tmpCount = 1; tmpCount < 23; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 24; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -1427,6 +1594,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         tmpMolecule = tmpParser.parseSmiles("[H]OC=1C([H])=C2C(C=3C([H])=C(C([H])=C([H])C3[H])C([H])([H])N([H])C([H])([H])C([H])([H])C=4C([H])=C(C([H])=C(C4[H])C([H])([H])N([H])C([H])([H])C([H])([H])C([H])([H])[H])C5([H])N([H])C([H])([H])C(O[H])(C([H])([H])C#CC([H])(C([H])([H])O[H])C([H])([H])C6([H])C5([H])C7([H])C(C8([H])C([H])(C([H])([H])N([H])C([H])(N([H])C([H])([H])[H])C8([H])[H])C([H])([H])C7([H])[H])(C([H])([H])C([H])=C9OC(=O)C%10=C9C([H])([H])C([H])([H])C%11([H])C%10([H])C%12%13C(C(=O)OC%12=C([H])C([H])(C([H])([H])C=%14C([H])=C([H])C([H])=C([H])C%14[H])C([H])([H])C([H])([H])[H])=C2C%11([H])C([H])([H])C%13([H])[H])C6([H])[H])C([H])([H])[H])=C([H])C1[H]");
         tmpMolecule = tmpParser.parseSmiles("CC1(C(=O)C(=C(O1)C2=CC=C(C=C2)S(=O)(=O)N)C3=CC(=CC=C3)F)C");
         tmpMolecule = tmpParser.parseSmiles("c2ccc1NCCc1c2");
+        tmpMolecule = tmpParser.parseSmiles("c1c2c(ccc1)CCN2");
+        tmpMolecule = tmpParser.parseSmiles("[H]C1=C2C(=C([H])C([H])=C1[H])C([H])([H])C([H])([H])N2[H]");
         /*Generate picture of molecule*/
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit().withAromaticDisplay();
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
@@ -1435,6 +1604,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         int tmpCounter = 0;
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.UseAromaticSymbols));
         for(IAtomContainer tmpFragment : tmpSchuffenhauerFragments) {
+            System.out.println(tmpSmilesGenerator.create(tmpFragment));
             //MurckoFragmenter tmpMurckoFragmenter = new MurckoFragmenter(true,1);
             //tmpMurckoFragmenter.setComputeRingFragments(false);
             //tmpFragment = tmpMurckoFragmenter.scaffold(tmpFragment);
