@@ -62,7 +62,7 @@ import java.util.TreeMap;
  * Different trees or networks can also be merged together.
  *
  * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
- * @version 1.0.0.5
+ * @version 1.0.0.6
  */
 public class ScaffoldGenerator {
 
@@ -101,7 +101,7 @@ public class ScaffoldGenerator {
         ELEMENTAL_WIRE_FRAME(),
 
         /**
-         * Basic Frameworks are generated based on the <"https://doi.org/10.1186/s13321-021-00526-y">
+         * Basic Frameworks are generated based on the <a href="https://doi.org/10.1186/s13321-021-00526-y">
          * "Molecular Anatomy: a new multi‑dimensional hierarchical scaffold analysis tool"</a>
          * Paper by Beccari et al. 2021.
          * All side chains are removed and all atoms are converted into carbons. The order of the remaining bonds is not changed.
