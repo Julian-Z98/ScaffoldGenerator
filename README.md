@@ -28,7 +28,7 @@ Multiple options to fine-tune and adapt the routines are available.
 
 
 ### Resources
-The test resources folder at path <i>src\test\resources\</i> contains MDL MOL files of 23 test molecules used to illustrate the basic functionalities of Scaffold Generator. They are imported in multiple test methods and the results saved as image files in respective molecule-specific output folders.
+The test resources folder at path <i>src\test\resources\ </i> contains MDL MOL files of 23 test molecules used to illustrate the basic functionalities of Scaffold Generator. They are imported in multiple test methods and the results saved as image files in respective molecule-specific output folders.
 <br>An SD file of the [COCONUT database](https://doi.org/10.1186/s13321-020-00478-9) to run the performance tests, is not included in the repository (see below).
 
 
