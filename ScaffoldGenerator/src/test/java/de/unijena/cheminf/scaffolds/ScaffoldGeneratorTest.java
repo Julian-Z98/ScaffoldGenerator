@@ -148,7 +148,6 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("[S+]#S1CCCCC1"); //Triple bond
         //IAtomContainer tmpMolecule = tmpParser.parseSmiles("P=[P+]1CCCCC1"); // P=P Test
-        tmpMolecule = tmpParser.parseSmiles("S=P12N=P3(OC=4C=CC(C=NN(C)P(=S)(C=5C=CC=CC5)N(N=CC=6C=CC(OP(=NP(=S)(OC=7C=CC(C=NN(C)P(=S)(C=8C=CC=CC8)N(N=CC=9C=CC(O1)=CC9)C)=CC7)OC=%10C=CC(C=NN(C)P(=S)(C=%11C=CC=CC%11)N(N=CC=%12C=CC(O2)=CC%12)C)=CC%10)(OC=%13C=CC(C=NN(C)P(=S)(C=%14C=CC=CC%14)N(N=CC=%15C=CC(O3)=CC%15)C)=CC%13)C=%16C=CC=CC%16)=CC6)C)=CC4)C=%17C=CC=CC%17"); // Test
         //IAtomContainer tmpMolecule = tmpParser.parseSmiles("S=S1CCCCC1"); //S=S Test
         /*Generate picture of the Original*/
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
@@ -189,13 +188,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
     public void removeRingNonCTest() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
-        IAtomContainer tmpMolecule = tmpParser.parseSmiles("c2cc[p+]1CCCCc1c2"); //Triple bond
-        tmpMolecule = tmpParser.parseSmiles("c1cc2CCCc3cccc(c1)c23");//Test
-        //tmpMolecule = tmpParser.parseSmiles("c1ccc3c(c1)c2ccccc2c4ccccc34");//Test
-        //tmpMolecule = tmpParser.parseSmiles("c1ccc2c(c1)c7cccc6CC3CCc4cccc5cc2c(c3c45)c67");//Test
-        tmpMolecule = tmpParser.parseSmiles("CCN(C1=CC=CC(=C1)C2=CC=NC3=C(C=NN23)C#N)C(=O)C");//Test
-        //tmpMolecule = tmpParser.parseSmiles("c7ccc(c5c(c1ccccc1)c(c2ccccc2)c(c3ccccc3)c(c4ccccc4)c5c6ccccc6)cc7");//Test
-        //tmpMolecule = tmpParser.parseSmiles("c1c3CCC4CCC5CCC6CCc7cc2CCc1c2c8c3C4=C5C6c78");//Test
+        IAtomContainer tmpMolecule = tmpParser.parseSmiles("CCN(C1=CC=CC(=C1)C2=CC=NC3=C(C=NN23)C#N)C(=O)C");
         /*Generate picture of the Original*/
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
         BufferedImage tmpImgSMILES = tmpGenerator.depict(tmpMolecule).toImg();
@@ -337,42 +330,6 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
     }
 
     /**
-     * Example of the errors caused by AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms().
-     * All molecules containing B throw a NullPointerException in line 347 of the CDKAtomMatcher.
-     * All molecules containing P with 4 bonds throw a NullPointerException in line 1373 of the CDKAtomMatcher.
-     * In both cases Atom.getFormalCharge() = null there and triggers this error.
-     * In this method, both an example molecule with B and with P are given. Both trigger an error. With tmpBypassError the FormalCharges can be set to 0 and the errors can be bypassed.
-     * @throws Exception if anything goes wrong
-     */
-    @Test
-    public void percieveAtomTypesErrorTest() throws Exception {
-        boolean tmpBypassError = false; //Pass the error or not
-        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
-        IAtomContainer tmpMolecule = null;
-        //P Examples:
-        tmpMolecule = tmpParser.parseSmiles("C1C2CC3CC1CC(C2)C3(CC(=O)C(=P(C4=CC=CC=C4)(C5=CC=CC=C5)C6=CC=CC=C6)C#N)C7=CC=C(C=C7)F"); //PubChem CID: 89041793
-        //tmpMolecule = tmpParser.parseSmiles("C1=CC=C(C=C1)C(=O)OCCCC[P+](C2=CC=CC=C2)(C3=CC=CC=C3)C4=CC=CC=C4"); //PubChem CID: 2755300
-        //tmpMolecule = tmpParser.parseSmiles("C1CCC(=C(C(=P(C2=CC=CC=C2)(C3=CC=CC=C3)C4=CC=CC=C4)C(=O)C(C(F)(F)F)(F)F)C(C(F)(F)F)(F)F)C1"); //PubChem CID: 2752540
-        //B Examples:
-        //tmpMolecule = tmpParser.parseSmiles("[B-](C1=CC=CC=C1)(C2=CC=CC=C2)(C3=CC=CC=C3)C4=CC=CC=C4"); //PubChem CID: 8934
-        //tmpMolecule = tmpParser.parseSmiles("[B-]123OC4C(=O)OC(CCC=CC=CCCC(CC(=O)C(C5CCC(C(O1)(O5)C(O2)C(=O)OC(CCC=CC=CCCC(CC(=O)C(C6CCC(C4(O3)O6)(C)O)C)O)C)(C)O)C)O)C"); //PubChem CID: 637168
-        //tmpMolecule = tmpParser.parseSmiles("[B-]123OC4C(=O)OC5CC(C=CCC(C(C6CCC(C(O1)(O6)C(O2)C(=O)OC7CC(C=CCC(C(C8CCC(C4(O3)O8)C)(C)C)O)OC7C)C)(C)C)O)OC5C"); //PubChem CID: 43587
-        //AtomContainerManipulator.clearAtomConfigurations(tmpMolecule);
-        for(IAtom tmpAtom : tmpMolecule.atoms()) {
-            tmpAtom.setHybridization((IAtomType.Hybridization) CDKConstants.UNSET);
-        }
-        if(tmpBypassError) {
-            /*Avoid the error by setting the FormalCharge to 0*/
-            for(IAtom tmpAtom : tmpMolecule.atoms()) {
-                if(tmpAtom.getSymbol() == "B" || (tmpAtom.getSymbol() == "P" && tmpMolecule.getConnectedBondsList(tmpAtom).size() == 4)) {
-                    tmpAtom.setFormalCharge(0);
-                }
-            }
-        }
-        AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpMolecule); //Line that causes the error
-    }
-
-    /**
      * Test of isRingTerminal() with V2000 and V3000 mol files.
      * Loads the24 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and creates for each generated terminal ring, the corresponding total molecule with removed ring.
      * All generated molecules are saved as images in a subfolder of the scaffoldTestOutput folder.
@@ -422,8 +379,6 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
             //Generate the SchuffenhauerScaffold
             ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
-            //tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.MURCKO_FRAMEWORK);
-            //tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.ELEMENTAL_WIRE_FRAME);
             //Generate SideChains
             List<IAtomContainer> tmpSideChains = tmpScaffoldGenerator.getSideChains(tmpMolecule, true);
             /*Generate pictures of the SideChains*/
@@ -453,8 +408,6 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
             //Generate the SchuffenhauerScaffold
             ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
-            //tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.MURCKO_FRAMEWORK);
-            //tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.ELEMENTAL_WIRE_FRAME);
             //Generate SideChains
             List<IAtomContainer> tmpSideChains = tmpScaffoldGenerator.getSideChains(tmpMolecule, false);
             /*Generate pictures of the SideChains*/
@@ -598,8 +551,6 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
             //Generate the SchuffenhauerScaffold
             ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
-            //tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.MURCKO_FRAMEWORK);
-            //tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.ELEMENTAL_WIRE_FRAME);
             //Generate Linker
             List<IAtomContainer> tmpLinkers = tmpScaffoldGenerator.getLinkers(tmpMolecule, true);
             /*Generate pictures of the Linkers*/
@@ -629,8 +580,6 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
             //Generate the SchuffenhauerScaffold
             ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
-            //tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.MURCKO_FRAMEWORK);
-            //tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.ELEMENTAL_WIRE_FRAME);
             //Generate Linker
             List<IAtomContainer> tmpLinkers = tmpScaffoldGenerator.getLinkers(tmpMolecule, false);
             /*Generate pictures of the Linkers*/
@@ -700,10 +649,10 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
             //Generate a list of molecules with iteratively removed terminal rings
             ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
             List<IAtomContainer> tmpMolecules = tmpScaffoldGenerator.applyEnumerativeRemoval(tmpMolecule);
+            DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
             int tmpCounter = 1;
             for (IAtomContainer tmpIterative : tmpMolecules) {
                 /*Generate picture of the molecule*/
-                DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
                 BufferedImage tmpImgRemove = tmpGenerator.depict(tmpIterative).toImg();
                 /*Save the picture*/
                 new File(System.getProperty("user.dir") + "/scaffoldTestOutput/TestMolecules/" + tmpFileName ).mkdirs();
@@ -794,16 +743,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
     public void mergeTreeTest() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
-        //IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1=C(C(=NO1)C2=C(C=CC=C2Cl)F)C(=O)NC3C4N(C3=O)C(C(S4)(C)C)C(=O)O");
-        //IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("c2ccc1ccccc1c2");
-        //IAtomContainer tmpMolecule2 = tmpParser.parseSmiles("c2ccc(Oc1ccccc1)cc2");
-        //IAtomContainer tmpMolecule3 = tmpParser.parseSmiles("O=c1[nH]c3cccc2cccc1c23");//3Rings
-        //IAtomContainer tmpMolecule4 = tmpParser.parseSmiles("O=C(Nc1ccccc1)c2ccccc2");
-        //IAtomContainer tmpMolecule5 = tmpParser.parseSmiles("c2ccc1CCCc1c2");
-        //IAtomContainer tmpMolecule6 = tmpParser.parseSmiles("c2ccc(c1ccccc1)cc2");
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1=C(C(=NO1)C2=C(C=CC=C2Cl)F)C(=O)NC3C4N(C3=O)C(C(S4)(C)C)C(=O)O");
         IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("C2NC1SCNN1N2");
-        //IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("CC");
         IAtomContainer tmpMolecule2 = tmpParser.parseSmiles("c4ccc(C3NC2SC(c1ccccc1)NN2N3)cc4");
         IAtomContainer tmpMolecule3 = tmpParser.parseSmiles("c2ccc(C1NCNN1)cc2");
         IAtomContainer tmpMolecule4 = tmpParser.parseSmiles("c3ccc(C2NNC(c1ccccc1)N2)cc3");
@@ -875,6 +816,89 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
         IAtomContainer tmpNodeMolecule = (IAtomContainer) tmpScaffoldNetwork.getMatrixNode(8).getMolecule();
         assertEquals("S1C(NN2NC(NC12)C=3C=CC=CC3)C=4C=CC=CC4", tmpSmilesGenerator.create(tmpNodeMolecule));
+    }
+
+    /**
+     * Loads two stereoisomers as SMILES and joins them as a tree. Since the SMILESGenerator setting is "Isomeric",
+     * the stereochemistry is kept in consideration and the two molecules are represented in the tree as two different ones.
+     *
+     * The structure is similar to the method "mergeNonStereoMoleculesToForestTest()" except for the setting.
+     * @throws Exception if anything goes wrong
+     */
+    @Test
+    public void mergeStereoMoleculesToForestTest() throws Exception {
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        List<IAtomContainer> tmpTestMoleculeList = new ArrayList<>();
+        /*Loading and reading the library*/
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        IAtomContainer tmpMolecule = tmpParser.parseSmiles("C4CCC(C/C(CC1CC[F+]CC1)=C(CC2CCCCC2)\\CC3CC[F+]CC3)CC4");
+        IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("C4CCC(C/C(CC1CC[F+]CC1)=C(CC2CCCCC2)/CC3CC[F+]CC3)CC4");
+        tmpTestMoleculeList.add(tmpMolecule);
+        tmpTestMoleculeList.add(tmpMolecule1);
+        tmpScaffoldGenerator.setSmilesGeneratorSetting(new SmilesGenerator(SmiFlavor.Isomeric));
+        List<ScaffoldTree> tmpTestTreeList = tmpScaffoldGenerator.generateSchuffenhauerForest(tmpTestMoleculeList);
+        System.out.println("Number of molecules: " + tmpTestMoleculeList.size());
+        System.out.println("Number of trees: " + tmpTestTreeList.size());
+        ScaffoldTree tmpScaffoldTree = tmpTestTreeList.get(0);
+        System.out.println("Origin SMILES: " + tmpScaffoldTree.getRoot().getOriginSmilesList());
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Isomeric);
+        for(ScaffoldTree tmpTestTree : tmpTestTreeList) {
+            System.out.println("Number of Nodes:" + tmpTestTree.getAllNodes().size());
+            tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.MURCKO_FRAMEWORK);
+            IAtomContainer tmpScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule, true);
+            System.out.println("Root:" + tmpSmilesGenerator.create((IAtomContainer) tmpTestTree.getRoot().getMolecule()));
+            for(ScaffoldNodeBase tmpNodeBase : tmpTestTree.getAllNodes()) {
+                TreeNode tmpNode = (TreeNode) tmpNodeBase;
+                System.out.println("Molecules:" + tmpSmilesGenerator.create((IAtomContainer) tmpNode.getMolecule()));
+                for(Object tmpSmiles : tmpNodeBase.getNonVirtualOriginSmilesList()) {
+                    String tmpSmilesString = (String) tmpSmiles;
+                    System.out.println("NonVirtualOrigin: " + tmpSmilesString);
+                }
+            }
+        }
+        assertEquals(5, tmpScaffoldTree.getAllNodes().size());
+        /*Display the tree*/
+        //GraphStreamUtility.displayWithGraphStream(tmpScaffoldTree, true);
+    }
+
+    /**
+     * Loads two stereoisomers as SMILES and joins them as a tree. Since the SMILESGenerator setting is "Unique",
+     * the stereochemistry is ignored and the two molecules are represented as one in the tree.
+     *
+     * The structure is similar to the method "mergeStereoMoleculesToForestTest()" except for the setting.
+     * @throws Exception if anything goes wrong
+     */
+    @Test
+    public void mergeNonStereoMoleculesToForestTest() throws Exception {
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        List<IAtomContainer> tmpTestMoleculeList = new ArrayList<>();
+        /*Loading and reading the library*/
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        IAtomContainer tmpMolecule = tmpParser.parseSmiles("C4CCC(C/C(CC1CC[F+]CC1)=C(CC2CCCCC2)\\CC3CC[F+]CC3)CC4");
+        IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("C4CCC(C/C(CC1CC[F+]CC1)=C(CC2CCCCC2)/CC3CC[F+]CC3)CC4");
+        tmpTestMoleculeList.add(tmpMolecule);
+        tmpTestMoleculeList.add(tmpMolecule1);
+        tmpScaffoldGenerator.setSmilesGeneratorSetting(new SmilesGenerator(SmiFlavor.Unique));
+        List<ScaffoldTree> tmpTestTreeList = tmpScaffoldGenerator.generateSchuffenhauerForest(tmpTestMoleculeList);
+        System.out.println("Number of molecules: " + tmpTestMoleculeList.size());
+        System.out.println("Number of trees: " + tmpTestTreeList.size());
+        ScaffoldTree tmpScaffoldTree = tmpTestTreeList.get(0);
+        System.out.println("Origin SMILES: " + tmpScaffoldTree.getRoot().getOriginSmilesList());
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
+        for(ScaffoldTree tmpTestTree : tmpTestTreeList) {
+            System.out.println("Number of Nodes:" + tmpTestTree.getAllNodes().size());
+            tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.MURCKO_FRAMEWORK);
+            IAtomContainer tmpScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule, true);
+            System.out.println("Root:" + tmpSmilesGenerator.create((IAtomContainer) tmpTestTree.getRoot().getMolecule()));
+            System.out.println("Scaffold:" + tmpSmilesGenerator.create(tmpScaffold));
+            for(ScaffoldNodeBase tmpNodeBase : tmpTestTree.getAllNodes()) {
+                TreeNode tmpNode = (TreeNode) tmpNodeBase;
+                System.out.println("Molecules:" + tmpSmilesGenerator.create((IAtomContainer) tmpNode.getMolecule()));
+            }
+        }
+        assertEquals(4, tmpScaffoldTree.getAllNodes().size());
+        /*Display the tree*/
+        //GraphStreamUtility.displayWithGraphStream(tmpScaffoldTree, true);
     }
     //</editor-fold>
 
@@ -1016,16 +1040,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
     public void mergeTreeDisplayTest() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
-        //IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1=C(C(=NO1)C2=C(C=CC=C2Cl)F)C(=O)NC3C4N(C3=O)C(C(S4)(C)C)C(=O)O");
-        //IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("c2ccc1ccccc1c2");
-        //IAtomContainer tmpMolecule2 = tmpParser.parseSmiles("c2ccc(Oc1ccccc1)cc2");
-        //IAtomContainer tmpMolecule3 = tmpParser.parseSmiles("O=c1[nH]c3cccc2cccc1c23");//3Rings
-        //IAtomContainer tmpMolecule4 = tmpParser.parseSmiles("O=C(Nc1ccccc1)c2ccccc2");
-        //IAtomContainer tmpMolecule5 = tmpParser.parseSmiles("c2ccc1CCCc1c2");
-        //IAtomContainer tmpMolecule6 = tmpParser.parseSmiles("c2ccc(c1ccccc1)cc2");
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1=C(C(=NO1)C2=C(C=CC=C2Cl)F)C(=O)NC3C4N(C3=O)C(C(S4)(C)C)C(=O)O");
         IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("C2NC1SCNN1N2");
-        //IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("CC");
         IAtomContainer tmpMolecule2 = tmpParser.parseSmiles("c4ccc(C3NC2SC(c1ccccc1)NN2N3)cc4");
         IAtomContainer tmpMolecule3 = tmpParser.parseSmiles("c2ccc(C1NCNN1)cc2");
         IAtomContainer tmpMolecule4 = tmpParser.parseSmiles("c3ccc(C2NNC(c1ccccc1)N2)cc3");
@@ -1221,17 +1237,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
     public void mergeTreeOriginTest() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
-        //IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1=C(C(=NO1)C2=C(C=CC=C2Cl)F)C(=O)NC3C4N(C3=O)C(C(S4)(C)C)C(=O)O");
-        //IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("c2ccc1ccccc1c2");
-        //IAtomContainer tmpMolecule2 = tmpParser.parseSmiles("c2ccc(Oc1ccccc1)cc2");
-        //IAtomContainer tmpMolecule3 = tmpParser.parseSmiles("O=c1[nH]c3cccc2cccc1c23");//3Rings
-        //IAtomContainer tmpMolecule4 = tmpParser.parseSmiles("O=C(Nc1ccccc1)c2ccccc2");
-        //IAtomContainer tmpMolecule5 = tmpParser.parseSmiles("c2ccc1CCCc1c2");
-        //IAtomContainer tmpMolecule6 = tmpParser.parseSmiles("c2ccc(c1ccccc1)cc2");
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1=C(C(=NO1)C2=C(C=CC=C2Cl)F)C(=O)NC3C4N(C3=O)C(C(S4)(C)C)C(=O)O");
         IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("C2NC1SCNN1N2");
-        //IAtomContainer tmpMolecule2 = tmpParser.parseSmiles("c4ccc(C3NC2SC(c1ccccc1)NN2N3)cc4");
-        //IAtomContainer tmpMolecule2 = tmpParser.parseSmiles("C1=CC=C(C=C1)C4NC3SC(C2=CC(=CC=C2)[Br])NN3N4");
         IAtomContainer tmpMolecule2 = tmpParser.parseSmiles("ClC2NC1SCNN1N2");
         IAtomContainer tmpMolecule3 = tmpParser.parseSmiles("c2ccc(C1NCNN1)cc2");
         IAtomContainer tmpMolecule4 = tmpParser.parseSmiles("C1=CC=C(C=C1)C3NNC(C2=CC=CC=C2[Br])N3");
@@ -1285,15 +1292,6 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
-        /*
-        IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1=C(C(=NO1)C2=C(C=CC=C2Cl)F)C(=O)NC3C4N(C3=O)C(C(S4)(C)C)C(=O)O");
-        IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("c2ccc1ccccc1c2");
-        IAtomContainer tmpMolecule2 = tmpParser.parseSmiles("c2ccc(Oc1ccccc1)cc2");
-        IAtomContainer tmpMolecule3 = tmpParser.parseSmiles("O=c1[nH]c3cccc2cccc1c23");//3Rings
-        IAtomContainer tmpMolecule4 = tmpParser.parseSmiles("O=C(Nc1ccccc1)c2ccccc2");
-        IAtomContainer tmpMolecule5 = tmpParser.parseSmiles("c2ccc1CCCc1c2");
-        IAtomContainer tmpMolecule6 = tmpParser.parseSmiles("c2ccc(c1ccccc1)cc2");
-        */
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1=C(C(=NO1)C2=C(C=CC=C2Cl)F)C(=O)NC3C4N(C3=O)C(C(S4)(C)C)C(=O)O");
         IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("c1ncc2c(n1)SC3CCCCC23");
         IAtomContainer tmpMolecule2 = tmpParser.parseSmiles("c1ncc2c(n1)SC3CCCC23");
@@ -1306,7 +1304,6 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         IAtomContainer tmpMolecule9 = tmpParser.parseSmiles("c2ncc1NCNc1n2");
         IAtomContainer tmpMolecule10 = tmpParser.parseSmiles("c1ccc2c(c1)[nH]c3ncncc23");
         //Generate a tree of molecules with iteratively removed terminal rings
-
         List<IAtomContainer> tmpTreeList = new ArrayList<>();
         tmpTreeList.add(tmpMolecule);
         tmpTreeList.add(tmpMolecule1);
@@ -1417,100 +1414,12 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
         tmpScaffoldGenerator.setSmilesGeneratorSetting(new SmilesGenerator(SmiFlavor.Isomeric));
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
-        IAtomContainer tmpMolecule = tmpParser.parseSmiles("F\\C(=C(\\F)CC1CCCCC1)CC2CCCCC2");
-        //tmpMolecule = tmpParser.parseSmiles("C1CC[C@]2(OCC=CC2)NC1");
-        tmpMolecule = tmpParser.parseSmiles("C8CCCC(/C(=C(C1CCCNCCC1)\\C6CCCCC(C5CCCC(C/C(CC2CCNCC2)=C(CC3CCCCC3)/CC4CCNCC4)C5)CC6)C7CCCCCNC7)CCC8");
-        //tmpMolecule = tmpParser.parseSmiles("C1CC[C@@]2(OCC=CC2)NC1");
+        IAtomContainer tmpMolecule = tmpParser.parseSmiles("C8CCCC(/C(=C(C1CCCNCCC1)\\C6CCCCC(C5CCCC(C/C(CC2CCNCC2)=C(CC3CCCCC3)/CC4CCNCC4)C5)CC6)C7CCCCCNC7)CCC8");
         List<IAtomContainer> tmpFragmentList = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Isomeric);
         for(IAtomContainer tmpFragment : tmpFragmentList) {
             System.out.println(tmpSmilesGenerator.create(tmpFragment));
         }
-    }
-
-    /**
-     * Loads two stereoisomers as SMILES and joins them as a tree. Since the SMILESGenerator setting is "Isomeric",
-     * the stereochemistry is kept in consideration and the two molecules are represented in the tree as two different ones.
-     *
-     * The structure is similar to the method "mergeNonStereoMoleculesToForestTest()" except for the setting.
-     * @throws Exception if anything goes wrong
-     */
-    @Ignore
-    @Test
-    public void mergeStereoMoleculesToForestTest() throws Exception {
-        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
-        List<IAtomContainer> tmpTestMoleculeList = new ArrayList<>();
-        /*Loading and reading the library*/
-        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
-        IAtomContainer tmpMolecule = tmpParser.parseSmiles("C4CCC(C/C(CC1CC[F+]CC1)=C(CC2CCCCC2)\\CC3CC[F+]CC3)CC4");
-        IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("C4CCC(C/C(CC1CC[F+]CC1)=C(CC2CCCCC2)/CC3CC[F+]CC3)CC4");
-        tmpTestMoleculeList.add(tmpMolecule);
-        tmpTestMoleculeList.add(tmpMolecule1);
-        tmpScaffoldGenerator.setSmilesGeneratorSetting(new SmilesGenerator(SmiFlavor.Isomeric));
-        List<ScaffoldTree> tmpTestTreeList = tmpScaffoldGenerator.generateSchuffenhauerForest(tmpTestMoleculeList);
-        System.out.println("Number of molecules: " + tmpTestMoleculeList.size());
-        System.out.println("Number of trees: " + tmpTestTreeList.size());
-        ScaffoldTree tmpScaffoldTree = tmpTestTreeList.get(0);
-        System.out.println("Origin SMILES: " + tmpScaffoldTree.getRoot().getOriginSmilesList());
-        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Isomeric);
-        for(ScaffoldTree tmpTestTree : tmpTestTreeList) {
-            System.out.println("Number of Nodes:" + tmpTestTree.getAllNodes().size());
-            tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.MURCKO_FRAMEWORK);
-            IAtomContainer tmpScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule, true);
-            System.out.println("Root:" + tmpSmilesGenerator.create((IAtomContainer) tmpTestTree.getRoot().getMolecule()));
-            for(ScaffoldNodeBase tmpNodeBase : tmpTestTree.getAllNodes()) {
-                TreeNode tmpNode = (TreeNode) tmpNodeBase;
-                System.out.println("Molecules:" + tmpSmilesGenerator.create((IAtomContainer) tmpNode.getMolecule()));
-                for(Object tmpSmiles : tmpNodeBase.getNonVirtualOriginSmilesList()) {
-                    String tmpSmilesString = (String) tmpSmiles;
-                    System.out.println("NonVirtualOrigin: " + tmpSmilesString);
-                }
-            }
-        }
-        assertEquals(5, tmpScaffoldTree.getAllNodes().size());
-        /*Display the tree*/
-        GraphStreamUtility.displayWithGraphStream(tmpScaffoldTree, true);
-    }
-
-    /**
-     * Loads two stereoisomers as SMILES and joins them as a tree. Since the SMILESGenerator setting is "Unique",
-     * the stereochemistry is ignored and the two molecules are represented as one in the tree.
-     *
-     * The structure is similar to the method "mergeStereoMoleculesToForestTest()" except for the setting.
-     * @throws Exception if anything goes wrong
-     */
-    @Ignore
-    @Test
-    public void mergeNonStereoMoleculesToForestTest() throws Exception {
-        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
-        List<IAtomContainer> tmpTestMoleculeList = new ArrayList<>();
-        /*Loading and reading the library*/
-        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
-        IAtomContainer tmpMolecule = tmpParser.parseSmiles("C4CCC(C/C(CC1CC[F+]CC1)=C(CC2CCCCC2)\\CC3CC[F+]CC3)CC4");
-        IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("C4CCC(C/C(CC1CC[F+]CC1)=C(CC2CCCCC2)/CC3CC[F+]CC3)CC4");
-        tmpTestMoleculeList.add(tmpMolecule);
-        tmpTestMoleculeList.add(tmpMolecule1);
-        tmpScaffoldGenerator.setSmilesGeneratorSetting(new SmilesGenerator(SmiFlavor.Unique));
-        List<ScaffoldTree> tmpTestTreeList = tmpScaffoldGenerator.generateSchuffenhauerForest(tmpTestMoleculeList);
-        System.out.println("Number of molecules: " + tmpTestMoleculeList.size());
-        System.out.println("Number of trees: " + tmpTestTreeList.size());
-        ScaffoldTree tmpScaffoldTree = tmpTestTreeList.get(0);
-        System.out.println("Origin SMILES: " + tmpScaffoldTree.getRoot().getOriginSmilesList());
-        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
-        for(ScaffoldTree tmpTestTree : tmpTestTreeList) {
-            System.out.println("Number of Nodes:" + tmpTestTree.getAllNodes().size());
-            tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldModeOption.MURCKO_FRAMEWORK);
-            IAtomContainer tmpScaffold = tmpScaffoldGenerator.getScaffold(tmpMolecule, true);
-            System.out.println("Root:" + tmpSmilesGenerator.create((IAtomContainer) tmpTestTree.getRoot().getMolecule()));
-            System.out.println("Scaffold:" + tmpSmilesGenerator.create(tmpScaffold));
-            for(ScaffoldNodeBase tmpNodeBase : tmpTestTree.getAllNodes()) {
-                TreeNode tmpNode = (TreeNode) tmpNodeBase;
-                System.out.println("Molecules:" + tmpSmilesGenerator.create((IAtomContainer) tmpNode.getMolecule()));
-            }
-        }
-        assertEquals(4, tmpScaffoldTree.getAllNodes().size());
-        /*Display the tree*/
-        GraphStreamUtility.displayWithGraphStream(tmpScaffoldTree, true);
     }
     //</editor-fold>
     //</editor-fold>
@@ -1556,61 +1465,14 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
     public void applySchuffenhauerRulesSMILESTest() throws Exception {
         //SMILES to IAtomContainer
         SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
-        IAtomContainer tmpMolecule = tmpParser.parseSmiles("C5CCCCCCCCCCCCCC1NC1CCCCCCCCCCCCCC(C3CC2CC2C4NC34)CC5");//Original
-        //tmpMolecule = tmpParser.parseSmiles("C6CCC(CCC4CC(CC1CCCC1)C(C2CCCC2)C5C(C3CCCC3)CCC45)C6");
-        //tmpMolecule = tmpParser.parseSmiles("OCC1OC2OC3C(O)C(O)C(OC3CO)OC4C(O)C(O)C(OC4CO)OC5C(O)C(O)C(OC5CO)OC6C(O)C(O)C(OC6CO)OC7C(O)C(O)C(OC7CO)OC8C(O)C(O)C(OC8CO)OC9C(O)C(O)C(OC9CO)OC%10C(O)C(O)C(OC%10CO)OC%11C(O)C(O)C(OC%11CO)OC%12C(O)C(O)C(OC%12CO)OC1C(O)C2O");
-        //tmpMolecule = tmpParser.parseSmiles("C2=C1[F+]C1CC2");
-        //tmpMolecule = tmpParser.parseSmiles("C2CCC1SC1C2");
-        //tmpMolecule = tmpParser.parseSmiles("C2CCC(C1C[Br+]1)C2");
-        //tmpMolecule = tmpParser.parseSmiles("C2=C1[I+]C1CCC2");
-        //tmpMolecule = tmpParser.parseSmiles("C2=C1[I+]C1=CCC2");
-        //tmpMolecule = tmpParser.parseSmiles("C2CC(C1C[Br+]1)CC2C3C[F+]3");
-        //tmpMolecule = tmpParser.parseSmiles("[Cl+]2C3C1[I+]C1C4[Cl+]C234");
-        //tmpMolecule = tmpParser.parseSmiles("C=1C=CC=2C(C1)=C3C=CC4=C5C=CC=CC5=C6C=CC2C3=C46");
-        tmpMolecule = tmpParser.parseSmiles("c2ccc1[nH]ccc1c2");
-        tmpMolecule = tmpParser.parseSmiles("O=C4C(=O)C3CC2C1CNNC1NC2C3C4=O");
-        tmpMolecule= tmpParser.parseSmiles("C1NOCC2CSNCC12");
-        tmpMolecule = tmpParser.parseSmiles("C2CC1NOCC1C3NSCC23");
-        tmpMolecule = tmpParser.parseSmiles("C2NNNC3CC1SNNCC1CC23");
-        tmpMolecule = tmpParser.parseSmiles("O=C2CC(=[Br+])C1CCCCCC1CC2=P");
-        //tmpMolecule = tmpParser.parseSmiles("CCN(C1=CC=CC(=C1)C2=CC=NC3=C(C=NN23)C#N)C(=O)C");
-        tmpMolecule = tmpParser.parseSmiles("N1=C2C=CC=CC2=NC3=C1C(=NN3C=4C=CC=CC4)N");
-        tmpMolecule = tmpParser.parseSmiles("N1=CC=2C(=NN(C=3C=CC=CC3)S2N1C)C=4C=CC=CC4");
-        tmpMolecule = tmpParser.parseSmiles("c1ccc5c(c1)c2ccccc2C6c3ccccc3c4ccccc4C56");
-        tmpMolecule = tmpParser.parseSmiles("N=1C=CN(C1)C2=NC=CO2");
-        tmpMolecule = tmpParser.parseSmiles("O=CN1C=CC2=CC=NN21");
-        tmpMolecule = tmpParser.parseSmiles("N=1C=2C=CC=CC2N=C3C1C=4C=CC=C(C34)C");
-        //tmpMolecule = tmpParser.parseSmiles("c1c[nH]cn1");
-        //tmpMolecule = tmpParser.parseSmiles("C5CCN(CCC3CN(CCC1CCNC1)CN(CCN2CCCC2)C3CCC4CCCN4)C5"); //Rule 12
-        //tmpMolecule = tmpParser.parseSmiles("C5CCN(C3CN(C1CCCN1)C(C2CCNC2)N3N4CCCC4)C5"); //Rule 12
-        //tmpMolecule = tmpParser.parseSmiles("[I+]=C(NC1CCCN1)C4C(CCN2CCCC2)CN(CCC3CCNC3)CN4CCN5CCCC5"); //Rule 12
-        tmpMolecule = tmpParser.parseSmiles("O=C(O)C1CCC(=CO)C(CCCNC2=CC=C(C=[NH+]2)C=3C=CC=C(C3)CC4=C5C=CC=CC5=CC6C4=CC78C=CCC9(C)C(O)CCC6(C%10=C(C7)C%11%12CC(O)C%131C=CC%14C%15%16CCC%14%12C(C=CC%16CC(CC=%17C=CC=CC%17CCCCC)C%15)CC(C%10)C%13%11C)C89)C%18CCCCC%18");
-        tmpMolecule = tmpParser.parseSmiles("[H]OC(=O)C1([H])C23C([H])=C([H])C4([H])C56C7(C8=C(C9%10C%11([H])C(C(=C%12C(C([H])=C([H])C([H])=C%12[H])=C%11[H])C([H])([H])C%13=C([H])C(C=%14C([H])=C([H])C(N([H])C([H])([H])C([H])([H])C([H])([H])C([H])(C(=C([H])O[H])C([H])([H])C1([H])[H])C%15([H])C([H])([H])C([H])([H])C([H])([H])C([H])([H])C%15([H])[H])=[N+]([H])C%14[H])=C([H])C([H])=C%13[H])=C([H])C%16(C([H])=C([H])C([H])([H])C(C([H])(O[H])C([H])([H])C9([H])[H])(C%16%10[H])C([H])([H])[H])C8([H])[H])C([H])([H])C([H])(C72C([H])([H])[H])C([H])([H])C6([H])C([H])=C([H])C%17([H])C4(C([H])([H])C([H])(C([H])([H])C=%18C(=C([H])C([H])=C([H])C%18[H])C([H])([H])C([H])([H])C([H])([H])C([H])([H])C([H])([H])[H])C%17([H])[H])C([H])([H])C5([H])[H])C([H])([H])C3([H])O[H]");
-        tmpMolecule = tmpParser.parseSmiles("S=P12N=P3(OC=4C=CC(C=NN(C)P(=S)(C=5C=CC=CC5)N(N=CC=6C=CC(OP(=NP(=S)(OC=7C=CC(C=NN(C)P(=S)(C=8C=CC=CC8)N(N=CC=9C=CC(O1)=CC9)C)=CC7)OC=%10C=CC(C=NN(C)P(=S)(C=%11C=CC=CC%11)N(N=CC=%12C=CC(O2)=CC%12)C)=CC%10)(OC=%13C=CC(C=NN(C)P(=S)(C=%14C=CC=CC%14)N(N=CC=%15C=CC(O3)=CC%15)C)=CC%13)C=%16C=CC=CC%16)=CC6)C)=CC4)C=%17C=CC=CC%17");
-        //tmpMolecule = tmpParser.parseSmiles("[H]OC(=O)C1([H])C2([H])C3(C4(C5=C(C67C8([H])C=9C(=C%10C(C([H])=C([H])C([H])=C%10[H])=C8[H])C([H])(C%11=C([H])C(C=%12C([H])=C([H])C(N([H])C([H])([H])C([H])([H])C([H])([H])C([H])(C(=C([H])O[H])C([H])([H])C1([H])[H])C%13([H])C([H])([H])C([H])([H])C([H])([H])C([H])([H])C%13([H])[H])=[N+]([H])C%12[H])=C([H])C([H])=C%11[H])C([H])([H])C#CC([H])([H])C%14(C([H])(O[H])C([H])([H])C6([H])[H])C7([H])C(C9[H])(C([H])=C([H])C%14([H])[H])C5([H])[H])C([H])([H])C3([H])C([H])([H])C%15([H])C4%16C([H])([H])C%17(C([H])([H])C([H])(C([H])(C([H])([H])C=%18C([H])=C([H])C([H])=C([H])C%18[H])C%17([H])[H])C([H])([H])SSC%15([H])[H])C([H])([H])C%16([H])[H])C([H])([H])C2([H])O[H])C([H])([H])[H]");
-        //tmpMolecule = tmpParser.parseSmiles("[H]OC(=O)C1([H])C2([H])C3(C(C4=C(C56C7([H])C(C(=C8C(C([H])=C([H])C([H])=C8[H])=C7[H])C([H])([H])C9=C([H])C(C=%10C([H])=C([H])C(N([H])C([H])([H])C([H])([H])C([H])([H])C([H])(C(=C([H])[H])C([H])([H])C1([H])[H])C%11([H])C([H])([H])C([H])([H])C([H])([H])C([H])([H])C%11([H])[H])=[N+]([H])C%10[H])=C([H])C([H])=C9[H])=C([H])C%12(C(=C([H])C([H])([H])C(C([H])(O[H])C([H])([H])C5([H])[H])(C%126[H])C([H])([H])[H])C([H])([H])C([H])(C([H])([H])[H])C([H])([H])[H])C4([H])[H])C([H])([H])C3([H])[H])(C%13([H])C([H])([H])C%14([H])C([H])(C([H])(C([H])([H])C=%15C([H])=C([H])C([H])=C([H])C%15[H])C([H])([H])C([H])([H])C%14([H])[H])C([H])([H])C%13([H])[H])C([H])([H])C2([H])O[H])C([H])([H])[H]");
-        //tmpMolecule = tmpParser.parseSmiles("[H]C1([H])C2=C(SS=3SC(SC([H])([H])[H])=C(C23)C([H])([H])C1([H])[H])SC([H])([H])[H]");
-        tmpMolecule = tmpParser.parseSmiles("O=CC(OC(=O)C1=CC(O)=C(O)C(O)=C1OC=2C=C3C(=O)[O+]=C4C(O)=C(O)C=C5C(=O)[O+]=C(C2O)C3=C45)C(OC(=O)C6=CC(O)=C(O)C(O)=C6)C7OC(=O)C8=CC(O)=C(O)C(O)=C8C=9C(O)=C(O)C(O)=CC9C(=O)OCC7O");
-        tmpMolecule = tmpParser.parseSmiles("[H]OC=1C([H])=C2C(C=3C([H])=C(C([H])=C([H])C3[H])C([H])([H])N([H])C([H])([H])C([H])([H])C=4C([H])=C(C([H])=C(C4[H])C([H])([H])N([H])C([H])([H])C([H])([H])C([H])([H])[H])C5([H])N([H])C([H])([H])C(O[H])(C([H])([H])C#CC([H])(C([H])([H])O[H])C([H])([H])C6([H])C5([H])C7([H])C(C8([H])C([H])(C([H])([H])N([H])C([H])(N([H])C([H])([H])[H])C8([H])[H])C([H])([H])C7([H])[H])(C([H])([H])C([H])=C9OC(=O)C%10=C9C([H])([H])C([H])([H])C%11([H])C%10([H])C%12%13C(C(=O)OC%12=C([H])C([H])(C([H])([H])C=%14C([H])=C([H])C([H])=C([H])C%14[H])C([H])([H])C([H])([H])[H])=C2C%11([H])C([H])([H])C%13([H])[H])C6([H])[H])C([H])([H])[H])=C([H])C1[H]");
-        tmpMolecule = tmpParser.parseSmiles("CC1(C(=O)C(=C(O1)C2=CC=C(C=C2)S(=O)(=O)N)C3=CC(=CC=C3)F)C");
-        tmpMolecule = tmpParser.parseSmiles("c2ccc1NCCc1c2");
-        tmpMolecule = tmpParser.parseSmiles("c1c2c(ccc1)CCN2");
-        tmpMolecule = tmpParser.parseSmiles("[H]C1=C2C(=C([H])C([H])=C1[H])C([H])([H])C([H])([H])N2[H]");
+        IAtomContainer tmpMolecule = tmpParser.parseSmiles("C5CCCCCCCCCCCCCC1NC1CCCCCCCCCCCCCC(C3CC2CC2C4NC34)CC5");
         /*Generate picture of molecule*/
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit().withAromaticDisplay();
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
         tmpScaffoldGenerator.setDetermineAromaticitySetting(true);
         List<IAtomContainer> tmpSchuffenhauerFragments = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         int tmpCounter = 0;
-        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.UseAromaticSymbols));
         for(IAtomContainer tmpFragment : tmpSchuffenhauerFragments) {
-            System.out.println(tmpSmilesGenerator.create(tmpFragment));
-            //MurckoFragmenter tmpMurckoFragmenter = new MurckoFragmenter(true,1);
-            //tmpMurckoFragmenter.setComputeRingFragments(false);
-            //tmpFragment = tmpMurckoFragmenter.scaffold(tmpFragment);
-            //tmpFragment = AtomContainerManipulator.anonymise(tmpFragment);
-            //AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(tmpFragment);
-            //CDKHydrogenAdder.getInstance(tmpFragment.getBuilder()).addImplicitHydrogens(tmpFragment);
             tmpCounter++;
             /*Generate picture*/
             BufferedImage tmpImgFragment = tmpGenerator.depict(tmpFragment).toImg();
