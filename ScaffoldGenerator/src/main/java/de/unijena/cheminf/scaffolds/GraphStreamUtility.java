@@ -88,7 +88,7 @@ public final class GraphStreamUtility {
         /*Display graph*/
         System.setProperty("org.graphstream.ui", "swing");
         tmpGraph.display();
-        tmpGraph.setAttribute("ui.screenshot", "screenshot.png"); // Saved at: C:\Users\zande\IdeaProjects\ScaffoldGenerator\ScaffoldGenerator
+        //tmpGraph.setAttribute("ui.screenshot", "screenshot.png"); // Saved at: C:\Users\zande\IdeaProjects\ScaffoldGenerator\ScaffoldGenerator
         TimeUnit.SECONDS.sleep(300);
     }
 }
