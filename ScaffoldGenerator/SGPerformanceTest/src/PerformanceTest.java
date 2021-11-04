@@ -40,7 +40,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
-import java.util.logging.Logger;
 
 /**
  * An application for testing the performance of the ScaffoldGenerator methods.
