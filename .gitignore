@@ -9,9 +9,14 @@
 *iml
 target/
 
-# Output fles #
+# Output files #
 
 scaffoldTestOutput/
+Figure/
 
 # Large input files #
 *.sdf
+
+# PerformanceTest files #
+/Results.txt
+/Exceptions_Log.txt
