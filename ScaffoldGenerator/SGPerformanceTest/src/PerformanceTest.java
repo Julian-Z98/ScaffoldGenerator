@@ -22,6 +22,7 @@
 //package de.unijena.cheminf.performancetest;
 
 import de.unijena.cheminf.scaffolds.ScaffoldGenerator;
+import de.unijena.cheminf.scaffolds.ScaffoldTree;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.io.iterator.IteratingSDFReader;
@@ -39,6 +40,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.logging.Logger;
 
 /**
  * An application for testing the performance of the ScaffoldGenerator methods.
@@ -131,29 +133,61 @@ public class PerformanceTest {
             }
             tmpResultsPrintWriter.println("\nDone Loading database. Found and processed " + tmpMoleculesList.size() + " valid molecules.");
             System.out.println("Done Loading database. Found and processed " + tmpMoleculesList.size() + " valid molecules.");
-            /*Generate 10 random subsets from 1/10 to 10/10 and generate a network and a forest out of them*/
+            /*Generate all Schuffenhauer fragments of the molecule*/
+            tmpResultsPrintWriter.println("\nGenerate all Schuffenhauer fragments.");
+            System.out.println("Generate all Schuffenhauer fragments.");
+            ScaffoldGenerator tmpScaffoldGenerator = new ScaffoldGenerator();
+            long tmpStartTime = System.currentTimeMillis();
+            /*Real measured process*/
+            for(IAtomContainer tmpMolecule : tmpMoleculesList) {
+                tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
+            }
+            long tmpEndTime = System.currentTimeMillis();
+            tmpResultsPrintWriter.println("Schuffenhauer fragment generation took " + (tmpEndTime - tmpStartTime) + " ms.");
+            System.out.println("Schuffenhauer fragment generation took " + (tmpEndTime - tmpStartTime) + " ms.");
+            /*Generate all Schuffenhauer fragments of the molecule*/
+            tmpResultsPrintWriter.println("\nGenerate all enumerative removal fragments.");
+            System.out.println("Generate all enumerative removal fragments.");
+            tmpStartTime = System.currentTimeMillis();
+            /*Real measured process*/
+            for(IAtomContainer tmpMolecule : tmpMoleculesList) {
+                tmpScaffoldGenerator.applyEnumerativeRemoval(tmpMolecule);
+            }
+            tmpEndTime = System.currentTimeMillis();
+            tmpResultsPrintWriter.println("Enumerative removal fragment generation took " + (tmpEndTime - tmpStartTime) + " ms.");
+            System.out.println("Enumerative removal fragment generation took " + (tmpEndTime - tmpStartTime) + " ms.");
+            /*Remove all molecules with more than 10 Rings from list*/
+            for(int tmpIndex = 0 ; tmpIndex < tmpMoleculesList.size(); tmpIndex++) {
+                if(tmpScaffoldGenerator.getRings(tmpMoleculesList.get(tmpIndex), true, true).size() > 10) {
+                    tmpMoleculesList.remove(tmpIndex);
+                    tmpIndex--;
+                }
+            }
             int tmpListSize = tmpMoleculesList.size();
-            for (int tmpDeci = 1; tmpDeci < 10; tmpDeci++) {
-                int tmpRate = tmpListSize / 10 * tmpDeci;
+            tmpResultsPrintWriter.println("\nNumber of molecules with less than 11 rings: " + tmpListSize);
+            System.out.println("Number of molecules with less than 11 rings: " + tmpListSize);
+            /*Generate 10 random subsets from 1/10 to 10/10 and generate a network and a forest out of them*/
+            for (int tmpDeci = 1; tmpDeci < 11; tmpDeci++) {
+                int tmpRate = (int) (tmpListSize / 10.0 * tmpDeci);
                 tmpResultsPrintWriter.println("\nProcess " + tmpRate + " valid molecules.");
                 System.out.println("Process " + tmpRate + " valid molecules.");
                 long tmpSeed = System.nanoTime();
                 Collections.shuffle(tmpMoleculesList, new Random(tmpSeed));
                 List<IAtomContainer> tmpMoleculeSubList = tmpMoleculesList.subList(0, tmpRate);
                 tmpResultsPrintWriter.flush();
-                ScaffoldGenerator tmpScaffoldGenerator = new ScaffoldGenerator();
-                long tmpStartTime = System.currentTimeMillis();
+                tmpStartTime = System.currentTimeMillis();
                 /*Real measured process*/
                 tmpScaffoldGenerator.generateScaffoldNetwork(tmpMoleculeSubList);
-                long tmpEndTime = System.currentTimeMillis();
+                tmpEndTime = System.currentTimeMillis();
                 tmpResultsPrintWriter.println("Network generation took " + (tmpEndTime - tmpStartTime) + " ms.");
                 System.out.println("Network generation took " + (tmpEndTime - tmpStartTime) + " ms.");
                 tmpStartTime = System.currentTimeMillis();
                 /*Real measured process*/
-                tmpScaffoldGenerator.generateSchuffenhauerForest(tmpMoleculeSubList);
+                List<ScaffoldTree> tmpTreeList = tmpScaffoldGenerator.generateSchuffenhauerForest(tmpMoleculeSubList);
                 tmpEndTime = System.currentTimeMillis();
                 tmpResultsPrintWriter.println("Forest generation took " + (tmpEndTime - tmpStartTime) + " ms.");
                 System.out.println("Forest generation took " + (tmpEndTime - tmpStartTime) + " ms.");
+                System.out.println("Number of trees: " + tmpTreeList.size());
             }
             tmpResultsPrintWriter.flush();
             tmpResultsPrintWriter.println();
