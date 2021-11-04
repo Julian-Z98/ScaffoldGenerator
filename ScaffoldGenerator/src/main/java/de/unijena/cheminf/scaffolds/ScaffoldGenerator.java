@@ -40,6 +40,7 @@ import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.tools.CDKHydrogenAdder;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -47,6 +48,9 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.TreeMap;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -89,7 +93,7 @@ public class ScaffoldGenerator {
         /**
          * Basic wire frames are generated based on the <a href="https://doi.org/10.1186/s13321-021-00526-y">
          * "Molecular Anatomy: a new multi‑dimensional hierarchical scaffold analysis tool"</a>
-         * Paper by Beccari et al. 2021.
+         * Paper by Manelfi et al. 2021.
          * It is a very abstract form of representation.
          * All side chains are removed, all bonds are converted into single bonds and all atoms are converted into carbons.
          */
@@ -103,7 +107,7 @@ public class ScaffoldGenerator {
         /**
          * Basic Frameworks are generated based on the <a href="https://doi.org/10.1186/s13321-021-00526-y">
          * "Molecular Anatomy: a new multi‑dimensional hierarchical scaffold analysis tool"</a>
-         * Paper by Beccari et al. 2021.
+         * Paper by Manelfi et al. 2021.
          * All side chains are removed and all atoms are converted into carbons. The order of the remaining bonds is not changed.
          */
         BASIC_FRAMEWORK()
@@ -201,6 +205,11 @@ public class ScaffoldGenerator {
      * With this setting, only the hybridisation of aromatic atoms can be obtained.
      */
     private boolean retainOnlyHybridisationsAtAromaticBondsSetting;
+
+    /**
+     * Counts logged exceptions.
+     */
+    private int tmpLogExceptionCounter;
     //</editor-fold>
 
     //<editor-fold desc="Constructor">
@@ -208,6 +217,7 @@ public class ScaffoldGenerator {
      * The only constructor of this class. Sets all settings to their default values.
      */
     public ScaffoldGenerator() {
+        this.tmpLogExceptionCounter = 0;
         this.restoreDefaultSettings();
     }
     //</editor-fold>
@@ -674,7 +684,25 @@ public class ScaffoldGenerator {
         for(IAtomContainer tmpMolecule : aMoleculeList) {
             Objects.requireNonNull(tmpMolecule, "Input molecule must be non null");
             IAtomContainer tmpClonedMolecule = tmpMolecule.clone();
-            tmpScaffoldNetwork.mergeNetwork(this.generateScaffoldNetwork(tmpClonedMolecule));
+            try{
+                tmpScaffoldNetwork.mergeNetwork(this.generateScaffoldNetwork(tmpClonedMolecule));
+            } catch (Exception anException) {
+                /*Log the skipped molecule*/
+                Logger tmpLogger = Logger.getLogger(ScaffoldGenerator.class.getName());
+                FileHandler tmpFileHandler = null;
+                try {
+                    tmpFileHandler = new FileHandler("Exceptions_Log.txt", true);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                tmpLogger.addHandler(tmpFileHandler);
+                tmpLogger.setLevel(Level.WARNING);
+                tmpLogger.warning("generateScaffoldNetwork Exception.");
+                tmpLogExceptionCounter++;
+                tmpLogger.warning("SMILES of the skipped molecule number " + tmpLogExceptionCounter + ": "
+                        + this.smilesGeneratorSetting.create(tmpClonedMolecule));
+                tmpFileHandler.close();
+            }
         }
         return  tmpScaffoldNetwork;
     }
@@ -894,19 +922,37 @@ public class ScaffoldGenerator {
         tmpOutputForest.add(tmpFirstTree);
         /*Go through all molecules*/
         for(IAtomContainer tmpMolecule : aMoleculeList) {
-            boolean isMoleculeMerged = false;
-            ScaffoldTree tmpOldTree = this.generateSchuffenhauerTree(tmpMolecule);
-            /*Go through each newly created tree*/
-            for(ScaffoldTree tmpNewTree : tmpOutputForest) {
-                /*When one of the new trees has been joined with one of the old trees, move on to the next molecule*/
-                if(tmpNewTree.mergeTree(tmpOldTree)) {
-                    isMoleculeMerged = true;
-                    break;
+            try{
+                boolean isMoleculeMerged = false;
+                ScaffoldTree tmpOldTree = this.generateSchuffenhauerTree(tmpMolecule);
+                /*Go through each newly created tree*/
+                for(ScaffoldTree tmpNewTree : tmpOutputForest) {
+                    /*When one of the new trees has been joined with one of the old trees, move on to the next molecule*/
+                    if(tmpNewTree.mergeTree(tmpOldTree)) {
+                        isMoleculeMerged = true;
+                        break;
+                    }
                 }
-            }
-            /*If the molecule could not be included in a tree add the tree of the molecule*/
-            if(!isMoleculeMerged) {
-                tmpOutputForest.add(tmpOldTree);
+                /*If the molecule could not be included in a tree add the tree of the molecule*/
+                if(!isMoleculeMerged) {
+                    tmpOutputForest.add(tmpOldTree);
+                }
+            } catch (Exception anException) {
+                /*Log the skipped molecule*/
+                Logger tmpLogger = Logger.getLogger(ScaffoldGenerator.class.getName());
+                FileHandler tmpFileHandler = null;
+                try {
+                    tmpFileHandler = new FileHandler("Exceptions_Log.txt", true);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                tmpLogger.addHandler(tmpFileHandler);
+                tmpLogger.setLevel(Level.WARNING);
+                tmpLogger.warning("generateSchuffenhauerForest exception.");
+                tmpLogExceptionCounter++;
+                tmpLogger.warning("SMILES of the skipped molecule number " + tmpLogExceptionCounter + ": "
+                        + this.smilesGeneratorSetting.create(tmpMolecule));
+                tmpFileHandler.close();
             }
         }
         return tmpOutputForest;
@@ -1471,6 +1517,7 @@ public class ScaffoldGenerator {
         /*Is it an aromatic ring at all*/
         //Remove exocyclic atoms
         IAtomContainer tmpRemovedRing = this.getRingsInternal(tmpClonedRing, false).get(0);
+        this.aromaticityModelSetting.apply(tmpRemovedRing);
         if (!this.isAtomContainerAromatic(tmpRemovedRing)) {
             return true;
         }
