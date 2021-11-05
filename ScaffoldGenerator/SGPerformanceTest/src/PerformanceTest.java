@@ -132,10 +132,22 @@ public class PerformanceTest {
             }
             tmpResultsPrintWriter.println("\nDone Loading database. Found and processed " + tmpMoleculesList.size() + " valid molecules.");
             System.out.println("Done Loading database. Found and processed " + tmpMoleculesList.size() + " valid molecules.");
+            /*Remove all molecules with more than 10 Rings from list*/
+            ScaffoldGenerator tmpScaffoldGenerator = new ScaffoldGenerator();
+            for(int tmpIndex = 0 ; tmpIndex < tmpMoleculesList.size(); tmpIndex++) {
+                System.out.println(tmpIndex);
+                IAtomContainer tmpScaffold = tmpScaffoldGenerator.getScaffold(tmpMoleculesList.get(tmpIndex), false);
+                if(tmpScaffoldGenerator.getRings(tmpScaffold, false, false).size() > 10) {
+                    tmpMoleculesList.remove(tmpIndex);
+                    tmpIndex--;
+                }
+            }
+            int tmpListSize = tmpMoleculesList.size();
+            tmpResultsPrintWriter.println("\nNumber of molecules with less than 11 rings: " + tmpListSize);
+            System.out.println("Number of molecules with less than 11 rings: " + tmpListSize);
             /*Generate all Schuffenhauer fragments of the molecule*/
             tmpResultsPrintWriter.println("\nGenerate all Schuffenhauer fragments.");
             System.out.println("Generate all Schuffenhauer fragments.");
-            ScaffoldGenerator tmpScaffoldGenerator = new ScaffoldGenerator();
             long tmpStartTime = System.currentTimeMillis();
             /*Real measured process*/
             for(IAtomContainer tmpMolecule : tmpMoleculesList) {
@@ -155,19 +167,9 @@ public class PerformanceTest {
             tmpEndTime = System.currentTimeMillis();
             tmpResultsPrintWriter.println("Enumerative removal fragment generation took " + (tmpEndTime - tmpStartTime) + " ms.");
             System.out.println("Enumerative removal fragment generation took " + (tmpEndTime - tmpStartTime) + " ms.");
-            /*Remove all molecules with more than 10 Rings from list*/
-            for(int tmpIndex = 0 ; tmpIndex < tmpMoleculesList.size(); tmpIndex++) {
-                if(tmpScaffoldGenerator.getRings(tmpMoleculesList.get(tmpIndex), true, true).size() > 10) {
-                    tmpMoleculesList.remove(tmpIndex);
-                    tmpIndex--;
-                }
-            }
-            int tmpListSize = tmpMoleculesList.size();
-            tmpResultsPrintWriter.println("\nNumber of molecules with less than 11 rings: " + tmpListSize);
-            System.out.println("Number of molecules with less than 11 rings: " + tmpListSize);
             /*Generate 10 random subsets from 1/10 to 10/10 and generate a network and a forest out of them*/
-            for (int tmpDeci = 1; tmpDeci < 11; tmpDeci++) {
-                int tmpRate = (int) (tmpListSize / 10.0 * tmpDeci);
+            for (int tmpDeci = 1; tmpDeci < 101; tmpDeci++) {
+                int tmpRate = (int) (tmpListSize / 100.0 * tmpDeci);
                 tmpResultsPrintWriter.println("\nProcess " + tmpRate + " valid molecules.");
                 System.out.println("Process " + tmpRate + " valid molecules.");
                 long tmpSeed = System.nanoTime();

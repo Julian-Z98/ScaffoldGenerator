@@ -36,8 +36,8 @@ public class Main {
      */
     public static void main(String[] args) {
         try {
-            PerformanceTest tmpApplication = new PerformanceTest("ScaffoldGenerator\\src\\test\\resources\\PerformanceTest.sdf");
-            //PerformanceTest tmpApplication = new PerformanceTest("ScaffoldGenerator\\src\\test\\resources\\COCONUT_DB.sdf");
+            //PerformanceTest tmpApplication = new PerformanceTest("ScaffoldGenerator\\src\\test\\resources\\PerformanceTest.sdf");
+            PerformanceTest tmpApplication = new PerformanceTest("ScaffoldGenerator\\src\\test\\resources\\COCONUT_DB1000.sdf");
         } catch (Exception anException) {
             anException.printStackTrace(System.err);
             System.exit(1);
