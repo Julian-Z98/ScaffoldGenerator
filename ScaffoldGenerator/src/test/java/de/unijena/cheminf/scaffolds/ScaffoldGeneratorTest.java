@@ -21,7 +21,6 @@ package de.unijena.cheminf.scaffolds;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.openscience.cdk.AtomContainer;
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.aromaticity.ElectronDonation;
@@ -30,7 +29,6 @@ import org.openscience.cdk.graph.CycleFinder;
 import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.cdk.interfaces.IAtomType;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IStereoElement;
 import org.openscience.cdk.io.FormatFactory;
@@ -64,7 +62,7 @@ import static junit.framework.TestCase.assertEquals;
  * JUnit test class for the ScaffoldGenerator
  *
  * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
- * @version 1.0.1.0
+ * @version 1.0.2.0
  */
 public class ScaffoldGeneratorTest extends ScaffoldGenerator {
 
@@ -72,14 +70,14 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
     //<editor-fold desc="Fundamental method tests">
     /**
      * Test of ScaffoldGenerator.getScaffold() with V2000 and V3000 mol files.
-     * Loads the 23 Test(Test1.mol-Test24.mol) molfiles from the Resources folder and creates the SchuffenhauerScaffolds with getScaffold().
+     * Loads the 7 Test(Test1.mol-Test7.mol) molfiles from the Resources folder and creates the SchuffenhauerScaffolds with getScaffold().
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
      * @throws Exception if anything goes wrong
      */
     @Test
     public void getScaffoldTest() throws Exception {
-        for (int tmpCount = 1; tmpCount < 24; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 8; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -106,14 +104,14 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
 
     /**
      * Test of ScaffoldGenerator.getScaffold() with V2000 and V3000 mol files.
-     * Loads the 32 Test(Test1.mol-Test24.mol) molfiles from the Resources folder and creates the SchuffenhauerScaffolds with getScaffold().
+     * Loads the  7 Test(Test1.mol-Test7.mol) molfiles from the Resources folder and creates the SchuffenhauerScaffolds with getScaffold().
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
      * @throws Exception if anything goes wrong
      */
     @Test
     public void getScaffoldWithoutHTest() throws Exception {
-        for (int tmpCount = 1; tmpCount < 24; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 8; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -229,14 +227,14 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
     }
     /**
      * Test of Cycles.mcb() with V2000 and V3000 mol files.
-     * Loads the24 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and creates the rings of the SchuffenhauerScaffold with getRings().
+     * Loads the 7 Test(Test1.mol-Test7.mol) molfiles from the Resources folder and creates the rings of the SchuffenhauerScaffold with getRings().
      * All generated Rings are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
      * @throws Exception if anything goes wrong
      */
     @Test
     public void getRingsTest() throws Exception {
-        for (int tmpCount = 1; tmpCount < 24; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 8; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -261,14 +259,14 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
 
     /**
      * Test of removeRing() with V2000 and V3000 mol files.
-     * Loads the24 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and creates for each generated ring, the corresponding total molecule with removed ring.
+     * Loads the 7 Test(Test1.mol-Test7.mol) molfiles from the Resources folder and creates for each generated ring, the corresponding total molecule with removed ring.
      * All generated molecules are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
      * @throws Exception if anything goes wrong
      */
     @Test
     public void removeRingTest() throws Exception {
-        for (int tmpCount = 2; tmpCount < 24; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 8; tmpCount++) {
             String tmpFileName = "Test" + tmpCount ;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -296,14 +294,14 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
 
     /**
      * Test of removeRing() with V2000 and V3000 mol files.
-     * Loads the24 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and creates for each generated ring, the corresponding total molecule with removed ring.
+     * Loads the 7 Test(Test1.mol-Test7.mol) molfiles from the Resources folder and creates for each generated ring, the corresponding total molecule with removed ring.
      * All generated molecules are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
      * @throws Exception if anything goes wrong
      */
     @Test
     public void removeRingWithoutHTest() throws Exception {
-        for (int tmpCount = 2; tmpCount < 24; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 8; tmpCount++) {
             String tmpFileName = "Test" + tmpCount ;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -331,14 +329,14 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
 
     /**
      * Test of isRingTerminal() with V2000 and V3000 mol files.
-     * Loads the24 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and creates for each generated terminal ring, the corresponding total molecule with removed ring.
+     * Loads the 7 Test(Test1.mol-Test7.mol) molfiles from the Resources folder and creates for each generated terminal ring, the corresponding total molecule with removed ring.
      * All generated molecules are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
      * @throws Exception if anything goes wrong
      */
     @Test
     public void isRingTerminalTest() throws Exception {
-        for (int tmpCount = 2; tmpCount < 21; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 8; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -367,13 +365,15 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
     }
 
     /**
-     * Stores the side chains of the Schuffenhauer scaffold of all test molecules as images
+     * Test of getSideChains() with V2000 and V3000 mol files.
+     * Loads the 7 Test(Test1.mol-Test7.mol) molfiles from the Resources folder.
+     * Stores the side chains of the Schuffenhauer scaffold of all test molecules as images.
      * The images are saved in the folder with the name of the test molecule. By removing the annotation, side chains from other scaffolds can also be output.
      * @throws Exception If anything goes wrong
      */
     @Test
-    public void getSideChainTest() throws Exception {
-        for (int tmpCount = 1; tmpCount < 24; tmpCount++) {
+    public void getSideChainsTest() throws Exception {
+        for (int tmpCount = 1; tmpCount < 8; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -396,13 +396,15 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
     }
 
     /**
+     * Test of getSideChains() with V2000 and V3000 mol files.
+     * Loads the 7 Test(Test1.mol-Test7.mol) molfiles from the Resources folder.
      * Stores the side chains of the Schuffenhauer scaffold of all test molecules as images
      * The images are saved in the folder with the name of the test molecule. By removing the annotation, side chains from other scaffolds can also be output.
      * @throws Exception If anything goes wrong
      */
     @Test
     public void getSideChainWithoutHTest() throws Exception {
-        for (int tmpCount = 1; tmpCount < 24; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 8; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -430,10 +432,9 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
      * @throws Exception if anything goes wrong
      */
     @Test
-    public void getSideChainScaffoldModeTest() throws Exception {
-        String tmpFileName = "Test11";
+    public void getSideChainsScaffoldModeTest() throws Exception {
         //Load molecule from molfile
-        IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
+        IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/Test3.mol");
         //Generate the SchuffenhauerScaffold
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
         //Generate SideChains
@@ -487,10 +488,9 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
      * @throws Exception if anything goes wrong
      */
     @Test
-    public void getSideChainScaffoldModeWithoutHTest() throws Exception {
-        String tmpFileName = "Test11";
+    public void getSideChainsScaffoldModeWithoutHTest() throws Exception {
         //Load molecule from molfile
-        IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
+        IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/Test3.mol");
         //Generate the SchuffenhauerScaffold
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
         //Generate SideChains
@@ -539,13 +539,15 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
     }
 
     /**
+     * Test of getLinkers() with V2000 and V3000 mol files.
+     * Loads the 7 Test(Test1.mol-Test7.mol) molfiles from the Resources folder.
      * Stores the linkers of the Schuffenhauer scaffold of all test molecules as images
      * The images are saved in the folder with the name of the test molecule. By removing the annotation, side chains from other scaffolds can also be output.
      * @throws Exception If anything goes wrong
      */
     @Test
     public void getLinkersTest() throws Exception {
-        for (int tmpCount = 1; tmpCount < 24; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 8; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -568,13 +570,15 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
     }
 
     /**
+     * Test of getLinkers() with V2000 and V3000 mol files.
+     * Loads the 7 Test(Test1.mol-Test7.mol) molfiles from the Resources folder.
      * Stores the linkers of the Schuffenhauer scaffold of all test molecules as images
      * The images are saved in the folder with the name of the test molecule. By removing the annotation, side chains from other scaffolds can also be output.
      * @throws Exception If anything goes wrong
      */
     @Test
     public void getLinkersWithoutHTest() throws Exception {
-        for (int tmpCount = 1; tmpCount < 24; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 8; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -628,21 +632,20 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         tmpLinkers = tmpScaffoldGenerator.getLinkers(tmpMolecule, true);
         assertEquals("CC",tmpSmilesGenerator.create(tmpLinkers.get(0)));
     }
-
     //</editor-fold>
 
     //<editor-fold desc="Advanced method test">
     //<editor-fold desc="Assert tests">
     /**
      * Test of applyEnumerativeRemoval() with V2000 and V3000 mol files.
-     * Loads the24 Test(Test1.mol-Test12.mol) molfiles from the Resources folder and iteratively removes the terminal rings.
+     * Loads the 7 Test(Test1.mol-Test7.mol) molfiles from the Resources folder and iteratively removes the terminal rings.
      * All generated molecules are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
      * @throws Exception if anything goes wrong
      */
     @Test
     public void getIterativeRemovalTest() throws Exception {
-        for (int tmpCount = 1; tmpCount < 24; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 8; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -669,9 +672,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
      */
     @Test
     public void generateSchuffenhauerTreeTest() throws Exception {
-        String tmpFileName = "Test11" ;
         //Load molecule from molfile
-        IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
+        IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/Test3.mol");
         //Generate a tree of molecules with iteratively removed terminal rings
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
         ScaffoldTree tmpScaffoldTree = tmpScaffoldGenerator.generateSchuffenhauerTree(tmpMolecule);
@@ -703,9 +705,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
      */
     @Test
     public void generateScaffoldNetworkTest() throws Exception {
-        String tmpFileName = "Test11" ;
         //Load molecule from molfile
-        IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
+        IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/Test3.mol");
         //Generate a tree of molecules with iteratively removed terminal rings
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
         ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.generateScaffoldNetwork(tmpMolecule);
@@ -899,6 +900,70 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         assertEquals(4, tmpScaffoldTree.getAllNodes().size());
         /*Display the tree*/
         //GraphStreamUtility.displayWithGraphStream(tmpScaffoldTree, true);
+    }
+
+    /**
+     * Loads a molecule without cycles from a molfile and checks its applySchuffenhauerRules/applyEnumerativeRemoval Output.
+     * The output should be on empty fragment in both cases.
+     * @throws Exception If anything goes wrong
+     */
+    @Test
+    public void nonCyclicTest() throws Exception {
+        //Load molecule from molfile
+        IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/TestNonCyclic.mol");
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        List<IAtomContainer> tmpMoleculeList = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
+        /*Check if there is only one empty fragment there*/
+        assertEquals(1, tmpMoleculeList.size());
+        assertEquals(0, tmpMoleculeList.get(0).getAtomCount());
+        tmpMoleculeList = tmpScaffoldGenerator.applyEnumerativeRemoval(tmpMolecule);
+        /*Check if there is only one empty fragment there*/
+        assertEquals(1, tmpMoleculeList.size());
+        assertEquals(0, tmpMoleculeList.get(0).getAtomCount());
+    }
+
+    /**
+     * Loads Adamantane as a molfile and checks its applySchuffenhauerRules/applyEnumerativeRemoval Output.
+     * The output should be only one Fragment.
+     * @throws Exception If anything goes wrong
+     */
+    @Test
+    public void AdamantaneTest() throws Exception {
+        //Load molecule from molfile
+        IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/TestAdamantane.mol");
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        List<IAtomContainer> tmpMoleculeList = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
+        /*Check if there is only one fragment there*/
+        assertEquals(1, tmpMoleculeList.size());
+        assertEquals(10, tmpMoleculeList.get(0).getAtomCount());
+        tmpMoleculeList = tmpScaffoldGenerator.applyEnumerativeRemoval(tmpMolecule);
+        /*Check if there is only one fragment there*/
+        assertEquals(1, tmpMoleculeList.size());
+        assertEquals(10, tmpMoleculeList.get(0).getAtomCount());
+    }
+
+    /**
+     * Loads Pyrene as a molfile and checks its Schuffenhauer fragments with/without determinded aromaticity.
+     * The output should be only one Fragment.
+     * @throws Exception If anything goes wrong
+     */
+    @Test
+    public void PyreneTest() throws Exception {
+        //Load molecule from molfile
+        IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/TestPyrene.mol");
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        /*With aromaticity*/
+        tmpScaffoldGenerator.setDetermineAromaticitySetting(true);
+        List<IAtomContainer> tmpMoleculeList = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
+        /*Check if there is only one fragment there*/
+        assertEquals(1, tmpMoleculeList.size());
+        assertEquals(16, tmpMoleculeList.get(0).getAtomCount());
+        /*Without aromaticity*/
+        tmpScaffoldGenerator.setDetermineAromaticitySetting(false);
+        tmpMoleculeList = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
+        /*Check if there is only one fragment there*/
+        assertEquals(1, tmpMoleculeList.size());
+        assertEquals(16, tmpMoleculeList.get(0).getAtomCount());
     }
     //</editor-fold>
 
@@ -1332,6 +1397,8 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
     }
 
     /**
+     * Test of generateSchuffenhauerForest() with V2000 and V3000 mol files.
+     * Loads the 7 Test(Test1.mol-Test7.mol) molfiles from the Resources folder.
      * Creates different ScaffoldTrees and merges them. The result is visualised with GraphStream.
      * @throws Exception if anything goes wrong
      */
@@ -1340,7 +1407,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
     public void mergeAllTestMoleculesToForestTest() throws Exception {
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
         List<IAtomContainer> tmpTestMoleculeList = new ArrayList<>();
-        for (int tmpCount = 1; tmpCount < 24; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 8; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpTestMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -1427,14 +1494,14 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
     //<editor-fold desc="Schuffenhauer rules tests">
     /**
      * Test oftmpScaffoldGenerator.applySchuffenhauerRules() with V2000 and V3000 mol files.
-     * Loads the Test(Test1.mol-Test21.mol) molfiles from the Resources folder and creates the SchuffenhauerScaffolds with getScaffold().
+     * Loads the Test(Test1.mol-Test7.mol) molfiles from the Resources folder and creates the SchuffenhauerScaffolds with getScaffold().
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
      * The subfolder has the name of the input file.
      * @throws Exception if anything goes wrong
      */
     @Test
     public void applySchuffenhauerRulesTest() throws Exception {
-        for (int tmpCount = 1; tmpCount < 24; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 8; tmpCount++) {
             String tmpFileName = "Test" + tmpCount;
             //Load molecule from molfile
             IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
@@ -3522,7 +3589,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
                 if(anIsRemoveRingCalculated == true && anIsApplySchuffenhauerCalculated == false) {
                     ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
                     IAtomContainer tmpSchuff = tmpScaffoldGenerator.getScaffold(tmpMolecule, true);
-                    List<IAtomContainer> tmpRings =tmpScaffoldGenerator.getRingsInternal(tmpSchuff,true);
+                    List<IAtomContainer> tmpRings = tmpScaffoldGenerator.getRingsInternal(tmpSchuff,true);
                     /*Skip all molecules with more than 1000 rings*/
                     if(tmpRings.size() > 100) {
                         System.out.println(tmpCoconutID);
