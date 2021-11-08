@@ -40,7 +40,6 @@ import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.tools.CDKHydrogenAdder;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -48,7 +47,6 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.TreeMap;
-import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -66,7 +64,7 @@ import java.util.logging.Logger;
  * Different trees or networks can also be merged together.
  *
  * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
- * @version 1.0.0.8
+ * @version 1.0.0.9
  */
 public class ScaffoldGenerator {
 
@@ -689,19 +687,11 @@ public class ScaffoldGenerator {
             } catch (Exception anException) {
                 /*Log the skipped molecule*/
                 Logger tmpLogger = Logger.getLogger(ScaffoldGenerator.class.getName());
-                FileHandler tmpFileHandler = null;
-                try {
-                    tmpFileHandler = new FileHandler("Exceptions_Log.txt", true);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                tmpLogger.addHandler(tmpFileHandler);
                 tmpLogger.setLevel(Level.WARNING);
                 tmpLogger.warning("generateScaffoldNetwork Exception.");
                 tmpLogExceptionCounter++;
                 tmpLogger.warning("SMILES of the skipped molecule number " + tmpLogExceptionCounter + ": "
                         + this.smilesGeneratorSetting.create(tmpClonedMolecule));
-                tmpFileHandler.close();
             }
         }
         return  tmpScaffoldNetwork;
@@ -940,19 +930,11 @@ public class ScaffoldGenerator {
             } catch (Exception anException) {
                 /*Log the skipped molecule*/
                 Logger tmpLogger = Logger.getLogger(ScaffoldGenerator.class.getName());
-                FileHandler tmpFileHandler = null;
-                try {
-                    tmpFileHandler = new FileHandler("Exceptions_Log.txt", true);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                tmpLogger.addHandler(tmpFileHandler);
                 tmpLogger.setLevel(Level.WARNING);
-                tmpLogger.warning("generateSchuffenhauerForest exception.");
+                tmpLogger.warning("generateSchuffenhauerForest Exception.");
                 tmpLogExceptionCounter++;
                 tmpLogger.warning("SMILES of the skipped molecule number " + tmpLogExceptionCounter + ": "
                         + this.smilesGeneratorSetting.create(tmpMolecule));
-                tmpFileHandler.close();
             }
         }
         return tmpOutputForest;
@@ -1517,7 +1499,11 @@ public class ScaffoldGenerator {
         /*Is it an aromatic ring at all*/
         //Remove exocyclic atoms
         IAtomContainer tmpRemovedRing = this.getRingsInternal(tmpClonedRing, false).get(0);
-        this.aromaticityModelSetting.apply(tmpRemovedRing);
+        /*Do not check aromaticity if both options are false.
+        Then pyrene and similar molecules can also be fragmented because no further DB are inserted.*/
+        if(this.determineAromaticitySetting || !this.areOnlyHybridisationsAtAromaticBondsRetained()) {
+            this.aromaticityModelSetting.apply(tmpRemovedRing);
+        }
         if (!this.isAtomContainerAromatic(tmpRemovedRing)) {
             return true;
         }
