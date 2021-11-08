@@ -62,7 +62,7 @@ import static junit.framework.TestCase.assertEquals;
  * JUnit test class for the ScaffoldGenerator
  *
  * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
- * @version 1.0.2.0
+ * @version 1.0.2.1
  */
 public class ScaffoldGeneratorTest extends ScaffoldGenerator {
 
@@ -952,14 +952,30 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         //Load molecule from molfile
         IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/TestPyrene.mol");
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
-        /*With aromaticity*/
+        /*With aromaticity and with only hybridisation at aromatic bonds*/
         tmpScaffoldGenerator.setDetermineAromaticitySetting(true);
+        tmpScaffoldGenerator.setRetainOnlyHybridisationsAtAromaticBondsSetting(true);
         List<IAtomContainer> tmpMoleculeList = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         /*Check if there is only one fragment there*/
         assertEquals(1, tmpMoleculeList.size());
         assertEquals(16, tmpMoleculeList.get(0).getAtomCount());
-        /*Without aromaticity*/
+        /*With aromaticity and without only hybridisation at aromatic bonds*/
+        tmpScaffoldGenerator.setDetermineAromaticitySetting(true);
+        tmpScaffoldGenerator.setRetainOnlyHybridisationsAtAromaticBondsSetting(false);
+        tmpMoleculeList = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
+        /*Check if there is only one fragment there*/
+        assertEquals(1, tmpMoleculeList.size());
+        assertEquals(16, tmpMoleculeList.get(0).getAtomCount());
+        /*Without aromaticity and with only hybridisation at aromatic bonds*/
         tmpScaffoldGenerator.setDetermineAromaticitySetting(false);
+        tmpScaffoldGenerator.setRetainOnlyHybridisationsAtAromaticBondsSetting(true);
+        tmpMoleculeList = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
+        /*Check if there is only one fragment there*/
+        assertEquals(4, tmpMoleculeList.size());
+        assertEquals(16, tmpMoleculeList.get(0).getAtomCount());
+        /*Without aromaticity and without only hybridisation at aromatic bonds*/
+        tmpScaffoldGenerator.setDetermineAromaticitySetting(false);
+        tmpScaffoldGenerator.setRetainOnlyHybridisationsAtAromaticBondsSetting(false);
         tmpMoleculeList = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         /*Check if there is only one fragment there*/
         assertEquals(1, tmpMoleculeList.size());
