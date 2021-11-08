@@ -35,7 +35,7 @@ import java.util.List;
  * Class that generates pictures for the publication
  *
  * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
- * @version 1.0.0.0
+ * @version 1.0.0.1
  */
 public class PublicationFigures extends ScaffoldGenerator {
 
@@ -332,22 +332,25 @@ public class PublicationFigures extends ScaffoldGenerator {
         //SMILES to IAtomContainer
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("C1=CC2=C3C(=C1)C=CC4=CC=CC(=C43)C=C2");
         /*Apply Schuffenhauer with aromaticity detection*/
+        /*Apply Schuffenhauer with aromaticity detection and without non-aromatic DBs*/
         tmpScaffoldGenerator.setDetermineAromaticitySetting(true);
-        List<IAtomContainer> tmpSchuffenhauerList = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
+        tmpScaffoldGenerator.setRetainOnlyHybridisationsAtAromaticBondsSetting(true);
+        List<IAtomContainer> tmpSchuffenhauerWithoutAromaticityList = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         /*Generate the rings*/
         int tmpCounter = 0;
-        for (IAtomContainer tmpIterative : tmpSchuffenhauerList) {
+        for (IAtomContainer tmpIterative : tmpSchuffenhauerWithoutAromaticityList) {
             /*Generate picture of the molecule*/
             BufferedImage tmpImgRemove = tmpGenerator.depict(tmpIterative).toImg();
             /*Save the picture*/
             new File(System.getProperty("user.dir") + "/Figure/Figure7" ).mkdirs();
-            File tmpOutputRemove = new File(System.getProperty("user.dir") + "/Figure/Figure7/FragmentWithAromaticity" + tmpCounter + ".png");
+            File tmpOutputRemove = new File(System.getProperty("user.dir") + "/Figure/Figure7/FragmentAromaticity1OnlyAromaticity1Number" + tmpCounter + ".png");
             ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
             tmpCounter++;
         }
-        /*Apply Schuffenhauer without aromaticity detection*/
-        tmpScaffoldGenerator.setDetermineAromaticitySetting(false);
-        List<IAtomContainer> tmpSchuffenhauerWithoutAromaticityList = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
+        /*Apply Schuffenhauer without aromaticity detection and with non-aromatic DBs*/
+        tmpScaffoldGenerator.setDetermineAromaticitySetting(true);
+        tmpScaffoldGenerator.setRetainOnlyHybridisationsAtAromaticBondsSetting(false);
+        tmpSchuffenhauerWithoutAromaticityList = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
         /*Generate the rings*/
         tmpCounter = 0;
         for (IAtomContainer tmpIterative : tmpSchuffenhauerWithoutAromaticityList) {
@@ -355,7 +358,37 @@ public class PublicationFigures extends ScaffoldGenerator {
             BufferedImage tmpImgRemove = tmpGenerator.depict(tmpIterative).toImg();
             /*Save the picture*/
             new File(System.getProperty("user.dir") + "/Figure/Figure7" ).mkdirs();
-            File tmpOutputRemove = new File(System.getProperty("user.dir") + "/Figure/Figure7/FragmentWithOutAromaticity" + tmpCounter + ".png");
+            File tmpOutputRemove = new File(System.getProperty("user.dir") + "/Figure/Figure7/FragmentAromaticity1OnlyAromaticity0Number" + tmpCounter + ".png");
+            ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
+            tmpCounter++;
+        }
+        /*Apply Schuffenhauer with aromaticity detection and without non-aromatic DBs*/
+        tmpScaffoldGenerator.setDetermineAromaticitySetting(false);
+        tmpScaffoldGenerator.setRetainOnlyHybridisationsAtAromaticBondsSetting(true);
+        tmpSchuffenhauerWithoutAromaticityList = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
+        tmpCounter = 0;
+        /*Generate the rings*/
+        for (IAtomContainer tmpIterative : tmpSchuffenhauerWithoutAromaticityList) {
+            /*Generate picture of the molecule*/
+            BufferedImage tmpImgRemove = tmpGenerator.depict(tmpIterative).toImg();
+            /*Save the picture*/
+            new File(System.getProperty("user.dir") + "/Figure/Figure7" ).mkdirs();
+            File tmpOutputRemove = new File(System.getProperty("user.dir") + "/Figure/Figure7/FragmentAromaticity0OnlyAromaticity1Number" + tmpCounter + ".png");
+            ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
+            tmpCounter++;
+        }
+        /*Apply Schuffenhauer without aromaticity detection and without non-aromatic DBs*/
+        tmpScaffoldGenerator.setDetermineAromaticitySetting(false);
+        tmpScaffoldGenerator.setRetainOnlyHybridisationsAtAromaticBondsSetting(false);
+        tmpSchuffenhauerWithoutAromaticityList = tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
+        /*Generate the rings*/
+        tmpCounter = 0;
+        for (IAtomContainer tmpIterative : tmpSchuffenhauerWithoutAromaticityList) {
+            /*Generate picture of the molecule*/
+            BufferedImage tmpImgRemove = tmpGenerator.depict(tmpIterative).toImg();
+            /*Save the picture*/
+            new File(System.getProperty("user.dir") + "/Figure/Figure7" ).mkdirs();
+            File tmpOutputRemove = new File(System.getProperty("user.dir") + "/Figure/Figure7/FragmentAromaticity0OnlyAromaticity0Number" + tmpCounter + ".png");
             ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
             tmpCounter++;
         }
