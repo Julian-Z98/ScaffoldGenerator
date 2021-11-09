@@ -20,3 +20,6 @@ Figure/
 # de.unijena.cheminf.scaffolds.performanceTest.PerformanceTest files #
 /Results.txt
 /Exceptions_Log.txt
+/CSV_Origin_Forest.csv
+/CSV_Origin_Network.csv
+/CSV_Time_Stamp.csv
