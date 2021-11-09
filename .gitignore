@@ -17,6 +17,6 @@ Figure/
 # Large input files #
 *.sdf
 
-# PerformanceTest files #
+# de.unijena.cheminf.scaffolds.performanceTest.PerformanceTest files #
 /Results.txt
 /Exceptions_Log.txt

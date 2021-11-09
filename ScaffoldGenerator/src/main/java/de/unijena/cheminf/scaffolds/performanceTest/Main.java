@@ -1,4 +1,4 @@
-/**
+package de.unijena.cheminf.scaffolds.performanceTest; /**
  * Performance test for
  * ScaffoldGenerator for CDK
  * Copyright (C) 2021 Julian Zander
@@ -22,7 +22,7 @@
 //package de.unijena.cheminf.performancetest;
 
 /**
- * Main class for starting application.
+ * de.unijena.cheminf.scaffolds.performanceTest.Main class for starting application.
  *
  * @author Julian Zander(zanderjulian@gmx.de)
  */
@@ -36,7 +36,8 @@ public class Main {
      */
     public static void main(String[] args) {
         try {
-            //PerformanceTest tmpApplication = new PerformanceTest("ScaffoldGenerator\\src\\test\\resources\\PerformanceTest.sdf");
+            //de.unijena.cheminf.scaffolds.performanceTest.PerformanceTest tmpApplication = new de.unijena.cheminf.scaffolds.performanceTest.PerformanceTest("ScaffoldGenerator\\src\\test\\resources\\de.unijena.cheminf.scaffolds.performanceTest.PerformanceTest.sdf");
+            //de.unijena.cheminf.scaffolds.performanceTest.PerformanceTest tmpApplication = new de.unijena.cheminf.scaffolds.performanceTest.PerformanceTest(args);
             PerformanceTest tmpApplication = new PerformanceTest("ScaffoldGenerator\\src\\test\\resources\\COCONUT_DB1000.sdf");
         } catch (Exception anException) {
             anException.printStackTrace(System.err);

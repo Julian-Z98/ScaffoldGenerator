@@ -1,4 +1,4 @@
-/**
+ /**
  * Performance test for
  * ScaffoldGenerator for CDK
  * Copyright (C) 2021 Julian Zander
@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//package de.unijena.cheminf.performancetest;
+package de.unijena.cheminf.scaffolds.performanceTest;
 
 import de.unijena.cheminf.scaffolds.ScaffoldGenerator;
 import de.unijena.cheminf.scaffolds.ScaffoldTree;
@@ -40,6 +40,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.logging.FileHandler;
+import java.util.logging.Logger;
 
 /**
  * An application for testing the performance of the ScaffoldGenerator methods.
@@ -165,9 +167,18 @@ public class PerformanceTest {
                 tmpScaffoldGenerator.applyEnumerativeRemoval(tmpMolecule);
             }
             tmpEndTime = System.currentTimeMillis();
+            /*Log the skipped molecules*/
+            Logger tmpLogger = Logger.getLogger("");
+            FileHandler tmpFileHandler = null;
+            try {
+                tmpFileHandler = new FileHandler("Exceptions_Log.txt", true);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            tmpLogger.addHandler(tmpFileHandler);
             tmpResultsPrintWriter.println("Enumerative removal fragment generation took " + (tmpEndTime - tmpStartTime) + " ms.");
             System.out.println("Enumerative removal fragment generation took " + (tmpEndTime - tmpStartTime) + " ms.");
-            /*Generate 10 random subsets from 1/10 to 10/10 and generate a network and a forest out of them*/
+            /*Generate 100 random subsets from 1/100 to 10/100 and generate a network and a forest out of them*/
             for (int tmpDeci = 1; tmpDeci < 101; tmpDeci++) {
                 int tmpRate = (int) (tmpListSize / 100.0 * tmpDeci);
                 tmpResultsPrintWriter.println("\nProcess " + tmpRate + " valid molecules.");
@@ -194,6 +205,7 @@ public class PerformanceTest {
             tmpResultsPrintWriter.println();
             tmpResultsPrintWriter.flush();
             tmpResultsPrintWriter.close();
+            tmpFileHandler.close();
         } catch (Exception anException) {
             this.appendToLogfile(anException);
             anException.printStackTrace(System.err);
