@@ -22,10 +22,14 @@
 package de.unijena.cheminf.scaffolds.performanceTest;
 
 import de.unijena.cheminf.scaffolds.ScaffoldGenerator;
+import de.unijena.cheminf.scaffolds.ScaffoldNetwork;
+import de.unijena.cheminf.scaffolds.ScaffoldNodeBase;
 import de.unijena.cheminf.scaffolds.ScaffoldTree;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.io.iterator.IteratingSDFReader;
+import org.openscience.cdk.smiles.SmiFlavor;
+import org.openscience.cdk.smiles.SmilesGenerator;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -60,6 +64,21 @@ public class PerformanceTest {
      * Name of file for writing results
      */
     private static final String RESULTS_FILE_NAME = "Results.txt";
+
+    /**
+     * Name of CSV file for writing time stamps
+     */
+    private static final String CSV_TIME_FILE_NAME = "CSV_Time_Stamp.csv";
+
+    /**
+     * Name of CSV file for the forest SMILES and the number of origins
+     */
+    private static final String CSV_ORIGIN_NETWORK_FILE_NAME = "CSV_Origin_Network.csv";
+
+    /**
+     * Name of CSV file for the forest SMILES and the number of origins
+     */
+    private static final String CSV_ORIGIN_FOREST_FILE_NAME = "CSV_Origin_Forest.csv";
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="Private class variables">
@@ -104,9 +123,8 @@ public class PerformanceTest {
             } catch (FileNotFoundException | SecurityException anException) {
                 throw new IllegalArgumentException("The database file (name) is not valid: " + anException.getMessage());
             }
-
-            File tmpResultsLogFile = new File(this.workingPath
-                    + PerformanceTest.RESULTS_FILE_NAME);
+            /*Results file*/
+            File tmpResultsLogFile = new File(this.workingPath + PerformanceTest.RESULTS_FILE_NAME);
             FileWriter tmpResultsLogFileWriter = new FileWriter(tmpResultsLogFile, true);
             PrintWriter tmpResultsPrintWriter = new PrintWriter(tmpResultsLogFileWriter);
             tmpResultsPrintWriter.println("#########################################################################");
@@ -115,6 +133,24 @@ public class PerformanceTest {
             tmpResultsPrintWriter.println("Application initialized. Loading database file named " + anArgs + ".");
             tmpResultsPrintWriter.flush();
             System.out.println("\nApplication initialized. Loading database file named " + anArgs + ".");
+            /*Time stamp file*/
+            File tmpCSVTimeFile = new File(this.workingPath + PerformanceTest.CSV_TIME_FILE_NAME);
+            FileWriter tmpCSVTimeFileWriter = new FileWriter(tmpCSVTimeFile, false);
+            PrintWriter tmpCSVTimePrintWriter = new PrintWriter(tmpCSVTimeFileWriter);
+            tmpCSVTimePrintWriter.println("Molecule,Network,Forest");
+            tmpCSVTimePrintWriter.flush();
+            /*Network origin file*/
+            File tmpOriginNetworkOriginFile = new File(this.workingPath + PerformanceTest.CSV_ORIGIN_NETWORK_FILE_NAME);
+            FileWriter tmpOriginNetworkOriginFileWriter = new FileWriter(tmpOriginNetworkOriginFile, false);
+            PrintWriter tmpOriginNetworkOriginPrintWriter = new PrintWriter(tmpOriginNetworkOriginFileWriter);
+            tmpOriginNetworkOriginPrintWriter.println("SMILES,Number of Origins");
+            tmpOriginNetworkOriginPrintWriter.flush();
+            /*Forest origin file*/
+            File tmpOriginForestOriginFile = new File(this.workingPath + PerformanceTest.CSV_ORIGIN_FOREST_FILE_NAME);
+            FileWriter tmpOriginForestOriginFileWriter = new FileWriter(tmpOriginForestOriginFile, false);
+            PrintWriter tmpOriginForestOriginPrintWriter = new PrintWriter(tmpOriginForestOriginFileWriter);
+            tmpOriginForestOriginPrintWriter.println("SMILES,Number of Origins");
+            tmpOriginForestOriginPrintWriter.flush();
             IteratingSDFReader tmpDBReader = new IteratingSDFReader(tmpDBFileInputStream, DefaultChemObjectBuilder.getInstance(), true);
             /*Load molecules*/
             List<IAtomContainer> tmpMoleculesList = new LinkedList<>();
@@ -179,32 +215,64 @@ public class PerformanceTest {
             tmpResultsPrintWriter.println("Enumerative removal fragment generation took " + (tmpEndTime - tmpStartTime) + " ms.");
             System.out.println("Enumerative removal fragment generation took " + (tmpEndTime - tmpStartTime) + " ms.");
             /*Generate 100 random subsets from 1/100 to 10/100 and generate a network and a forest out of them*/
-            for (int tmpDeci = 1; tmpDeci < 101; tmpDeci++) {
-                int tmpRate = (int) (tmpListSize / 100.0 * tmpDeci);
+            int tmpNumberOfRounds = 100;
+            for (int tmpRound = 1; tmpRound < (tmpNumberOfRounds + 1); tmpRound++) {
+                int tmpRate = (int) (tmpListSize / (float)tmpNumberOfRounds * tmpRound);
                 tmpResultsPrintWriter.println("\nProcess " + tmpRate + " valid molecules.");
                 System.out.println("Process " + tmpRate + " valid molecules.");
-                long tmpSeed = System.nanoTime();
-                Collections.shuffle(tmpMoleculesList, new Random(tmpSeed));
+                Collections.shuffle(tmpMoleculesList, new Random(42));
                 List<IAtomContainer> tmpMoleculeSubList = tmpMoleculesList.subList(0, tmpRate);
                 tmpResultsPrintWriter.flush();
                 tmpStartTime = System.currentTimeMillis();
                 /*Real measured process*/
-                tmpScaffoldGenerator.generateScaffoldNetwork(tmpMoleculeSubList);
+                ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.generateScaffoldNetwork(tmpMoleculeSubList);
                 tmpEndTime = System.currentTimeMillis();
-                tmpResultsPrintWriter.println("Network generation took " + (tmpEndTime - tmpStartTime) + " ms.");
-                System.out.println("Network generation took " + (tmpEndTime - tmpStartTime) + " ms.");
+                long tmpNetworkOrigin = tmpEndTime - tmpStartTime;
+                tmpResultsPrintWriter.println("Network generation took " + tmpNetworkOrigin + " ms.");
+                System.out.println("Network generation took " + tmpNetworkOrigin + " ms.");
                 tmpStartTime = System.currentTimeMillis();
                 /*Real measured process*/
                 List<ScaffoldTree> tmpTreeList = tmpScaffoldGenerator.generateSchuffenhauerForest(tmpMoleculeSubList);
                 tmpEndTime = System.currentTimeMillis();
-                tmpResultsPrintWriter.println("Forest generation took " + (tmpEndTime - tmpStartTime) + " ms.");
-                System.out.println("Forest generation took " + (tmpEndTime - tmpStartTime) + " ms.");
-                System.out.println("Number of trees: " + tmpTreeList.size());
+                long tmpForestOrigin = tmpEndTime - tmpStartTime;
+                tmpResultsPrintWriter.println("Forest generation took " + tmpForestOrigin + " ms.");
+                System.out.println("Forest generation took " + tmpForestOrigin + " ms.");
+                tmpCSVTimePrintWriter.println(tmpRate + "," + tmpNetworkOrigin + "," + tmpForestOrigin);
+                tmpCSVTimePrintWriter.flush();
+                if(tmpRound == tmpNumberOfRounds) {
+                    SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
+                    tmpResultsPrintWriter.println("Number of NetworkNodes: " + tmpScaffoldNetwork.getAllNodes().size());
+                    System.out.println("Number of NetworkNodes: " +tmpScaffoldNetwork.getAllNodes().size());
+                    for(ScaffoldNodeBase tmpNode : tmpScaffoldNetwork.getAllNodes()) {
+                        String tmpSMILES = tmpSmilesGenerator.create((IAtomContainer) tmpNode.getMolecule());
+                        tmpOriginNetworkOriginPrintWriter.println(tmpSMILES + "," +  tmpNode.getOriginCount());
+                        tmpOriginNetworkOriginPrintWriter.flush();
+                    }
+                    tmpResultsPrintWriter.println("Number of trees: " + tmpTreeList.size());
+                    System.out.println("Number of trees: " + tmpTreeList.size());
+                    long tmpNumberOfTreeNodes = 0;
+                    for(ScaffoldTree tmpTree : tmpTreeList) {
+                        tmpNumberOfTreeNodes = tmpNumberOfTreeNodes + tmpTree.getAllNodes().size();
+                        for(ScaffoldNodeBase tmpNode : tmpTree.getAllNodes()) {
+                            String tmpSMILES = tmpSmilesGenerator.create((IAtomContainer) tmpNode.getMolecule());
+                            tmpOriginForestOriginPrintWriter.println(tmpSMILES + "," +  tmpNode.getOriginCount());
+                            tmpOriginForestOriginPrintWriter.flush();
+                        }
+                    }
+                    tmpResultsPrintWriter.println("Number of tree nodes: " + tmpNumberOfTreeNodes);
+                    System.out.println("Number of tree nodes: " + tmpNumberOfTreeNodes);
+                }
             }
             tmpResultsPrintWriter.flush();
             tmpResultsPrintWriter.println();
             tmpResultsPrintWriter.flush();
             tmpResultsPrintWriter.close();
+            tmpCSVTimePrintWriter.flush();
+            tmpCSVTimePrintWriter.close();
+            tmpOriginNetworkOriginPrintWriter.flush();
+            tmpOriginNetworkOriginPrintWriter.close();
+            tmpOriginForestOriginPrintWriter.flush();
+            tmpOriginForestOriginPrintWriter.close();
             tmpFileHandler.close();
         } catch (Exception anException) {
             this.appendToLogfile(anException);
