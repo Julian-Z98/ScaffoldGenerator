@@ -71,7 +71,7 @@ public class PerformanceTest {
     private static final String CSV_TIME_FILE_NAME = "CSV_Time_Stamp.csv";
 
     /**
-     * Name of CSV file for the forest SMILES and the number of origins
+     * Name of CSV file for the network SMILES and the number of origins
      */
     private static final String CSV_ORIGIN_NETWORK_FILE_NAME = "CSV_Origin_Network.csv";
 
@@ -90,14 +90,13 @@ public class PerformanceTest {
 
     //<editor-fold defaultstate="collapsed" desc="Constructor">
     /**
-     * Instantiates and starts the application. It first loads all molecules from a given SD file into memory and then
-     * distributes them equally on the given number of different threads to use. It measures the time it takes for all
-     * threads to complete the extraction of functional groups using the ScaffoldGenerator. It exits the system
-     * if an unexpected exception occurs that prevents the application from working, e.g. an IllegalArgumentException
+     * Instantiates and starts the application.
+     * It first loads all molecules from a given SD file into memory And then applies the methods of the ScaffoldGenerator to them.
+     * It exits the system if an unexpected exception occurs that prevents the application from working, e.g. an IllegalArgumentException
      * (will be logged to a file, not printed on the console).
      *
      * @param anArgs the command line arguments, anArgs[0] must be the name of the SD file to load (must be located in
-     * the same directory as the application's JAR file) and anArgs[1] must be the number of different threads to use
+     * the same directory as the application's JAR file)
      * @throws IOException if the constructor is unable to open a text file for logging occurred exceptions
      */
     public PerformanceTest(String anArgs) throws IOException {
@@ -159,8 +158,7 @@ public class PerformanceTest {
                     IAtomContainer tmpMolecule = (IAtomContainer) tmpDBReader.next();
                     tmpMoleculesList.add(tmpMolecule);
                 } catch (Exception anException) {
-                    /*If an IllegalArgumentException is thrown in applyFiltersAndPreprocessing (meaning that the molecule
-                    should be filtered) the molecule is skipped by catching this exception*/
+                    this.appendToLogfile(anException);
                 }
             }
             try {
@@ -215,7 +213,7 @@ public class PerformanceTest {
             tmpResultsPrintWriter.println("Enumerative removal fragment generation took " + (tmpEndTime - tmpStartTime) + " ms.");
             System.out.println("Enumerative removal fragment generation took " + (tmpEndTime - tmpStartTime) + " ms.");
             /*Generate 100 random subsets from 1/100 to 10/100 and generate a network and a forest out of them*/
-            int tmpNumberOfRounds = 100;
+            int tmpNumberOfRounds = 10;
             for (int tmpRound = 1; tmpRound < (tmpNumberOfRounds + 1); tmpRound++) {
                 int tmpRate = (int) (tmpListSize / (float)tmpNumberOfRounds * tmpRound);
                 tmpResultsPrintWriter.println("\nProcess " + tmpRate + " valid molecules.");
@@ -240,7 +238,7 @@ public class PerformanceTest {
                 tmpCSVTimePrintWriter.println(tmpRate + "," + tmpNetworkOrigin + "," + tmpForestOrigin);
                 tmpCSVTimePrintWriter.flush();
                 if(tmpRound == tmpNumberOfRounds) {
-                    SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
+                    SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Stereo);
                     tmpResultsPrintWriter.println("Number of NetworkNodes: " + tmpScaffoldNetwork.getAllNodes().size());
                     System.out.println("Number of NetworkNodes: " +tmpScaffoldNetwork.getAllNodes().size());
                     for(ScaffoldNodeBase tmpNode : tmpScaffoldNetwork.getAllNodes()) {
