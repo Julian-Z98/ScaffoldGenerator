@@ -34,11 +34,11 @@ public class Main {
      *
      * @param args the command line arguments
      */
-    public static void main(String args) {
+    public static void main(String[] args) {
         try {
             //PerformanceTest tmpApplication = new PerformanceTest("ScaffoldGenerator\\src\\test\\resources\\PerformanceTest.sdf");
             //PerformanceTest tmpApplication = new PerformanceTest("ScaffoldGenerator\\src\\test\\resources\\COCONUT_DB1000.sdf");
-            PerformanceTest tmpApplication = new PerformanceTest(args);
+            PerformanceTest tmpApplication = new PerformanceTest(args[0]);
         } catch (Exception anException) {
             anException.printStackTrace(System.err);
             System.exit(1);
