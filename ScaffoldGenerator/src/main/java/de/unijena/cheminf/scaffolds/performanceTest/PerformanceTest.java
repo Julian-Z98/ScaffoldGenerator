@@ -112,7 +112,6 @@ public class PerformanceTest {
         tmpExceptionsPrintWriter.println("Time-stamp: " + tmpTimeStamp);
         tmpExceptionsPrintWriter.println();
         tmpExceptionsPrintWriter.flush();
-        tmpExceptionsPrintWriter.close();
         try {
             /*Load SD file*/
             File tmpDBFile = new File(this.workingPath + anArgs);
@@ -158,24 +157,33 @@ public class PerformanceTest {
                     IAtomContainer tmpMolecule = (IAtomContainer) tmpDBReader.next();
                     tmpMoleculesList.add(tmpMolecule);
                 } catch (Exception anException) {
+                    tmpExceptionsPrintWriter.println("Load molecules ERROR");
+                    tmpExceptionsPrintWriter.flush();
                     this.appendToLogfile(anException);
                 }
             }
             try {
                 tmpDBReader.close();
-            } catch (IOException ex) {
-                this.appendToLogfile(ex);
+            } catch (IOException anException) {
+                tmpExceptionsPrintWriter.println("DBReader close IO ERROR");
+                tmpExceptionsPrintWriter.flush();
+                this.appendToLogfile(anException);
             }
             tmpResultsPrintWriter.println("\nDone Loading database. Found and processed " + tmpMoleculesList.size() + " valid molecules.");
             System.out.println("Done Loading database. Found and processed " + tmpMoleculesList.size() + " valid molecules.");
-            /*Remove all molecules with more than 10 Rings from list*/
+            /*Remove all molecules with more than 10 rings from list*/
             ScaffoldGenerator tmpScaffoldGenerator = new ScaffoldGenerator();
             for(int tmpIndex = 0 ; tmpIndex < tmpMoleculesList.size(); tmpIndex++) {
-                System.out.println(tmpIndex);
-                IAtomContainer tmpScaffold = tmpScaffoldGenerator.getScaffold(tmpMoleculesList.get(tmpIndex), false);
-                if(tmpScaffoldGenerator.getRings(tmpScaffold, false, false).size() > 10) {
-                    tmpMoleculesList.remove(tmpIndex);
-                    tmpIndex--;
+                try{
+                    IAtomContainer tmpScaffold = tmpScaffoldGenerator.getScaffold(tmpMoleculesList.get(tmpIndex), false);
+                    if(tmpScaffoldGenerator.getRings(tmpScaffold, false, false).size() > 10) {
+                        tmpMoleculesList.remove(tmpIndex);
+                        tmpIndex--;
+                    }
+                } catch(Exception anException) {
+                    tmpExceptionsPrintWriter.println("Remove molecules with more than 10 rings ERROR");
+                    tmpExceptionsPrintWriter.flush();
+                    this.appendToLogfile(anException);
                 }
             }
             int tmpListSize = tmpMoleculesList.size();
@@ -192,7 +200,7 @@ public class PerformanceTest {
             long tmpEndTime = System.currentTimeMillis();
             tmpResultsPrintWriter.println("Schuffenhauer fragment generation took " + (tmpEndTime - tmpStartTime) + " ms.");
             System.out.println("Schuffenhauer fragment generation took " + (tmpEndTime - tmpStartTime) + " ms.");
-            /*Generate all Schuffenhauer fragments of the molecule*/
+            /*Generate all enumerative fragments of the molecule*/
             tmpResultsPrintWriter.println("\nGenerate all enumerative removal fragments.");
             System.out.println("Generate all enumerative removal fragments.");
             tmpStartTime = System.currentTimeMillis();
@@ -201,6 +209,8 @@ public class PerformanceTest {
                 tmpScaffoldGenerator.applyEnumerativeRemoval(tmpMolecule);
             }
             tmpEndTime = System.currentTimeMillis();
+            tmpResultsPrintWriter.println("Enumerative removal fragment generation took " + (tmpEndTime - tmpStartTime) + " ms.");
+            System.out.println("Enumerative removal fragment generation took " + (tmpEndTime - tmpStartTime) + " ms.");
             /*Log the skipped molecules*/
             Logger tmpLogger = Logger.getLogger("");
             FileHandler tmpFileHandler = null;
@@ -210,10 +220,8 @@ public class PerformanceTest {
                 e.printStackTrace();
             }
             tmpLogger.addHandler(tmpFileHandler);
-            tmpResultsPrintWriter.println("Enumerative removal fragment generation took " + (tmpEndTime - tmpStartTime) + " ms.");
-            System.out.println("Enumerative removal fragment generation took " + (tmpEndTime - tmpStartTime) + " ms.");
-            /*Generate 100 random subsets from 1/100 to 10/100 and generate a network and a forest out of them*/
-            int tmpNumberOfRounds = 10;
+            /*Generate 100 random subsets from 1/100 to 100/100 and generate a network and a forest out of them*/
+            int tmpNumberOfRounds = 100;
             for (int tmpRound = 1; tmpRound < (tmpNumberOfRounds + 1); tmpRound++) {
                 int tmpRate = (int) (tmpListSize / (float)tmpNumberOfRounds * tmpRound);
                 tmpResultsPrintWriter.println("\nProcess " + tmpRate + " valid molecules.");
@@ -239,9 +247,10 @@ public class PerformanceTest {
                 tmpCSVTimePrintWriter.flush();
                 if(tmpRound == tmpNumberOfRounds) {
                     SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Stereo);
-                    tmpResultsPrintWriter.println("Number of NetworkNodes: " + tmpScaffoldNetwork.getAllNodes().size());
-                    System.out.println("Number of NetworkNodes: " +tmpScaffoldNetwork.getAllNodes().size());
-                    for(ScaffoldNodeBase tmpNode : tmpScaffoldNetwork.getAllNodes()) {
+                    List<ScaffoldNodeBase> tmpNetworkNodeList = tmpScaffoldNetwork.getAllNodes();
+                    tmpResultsPrintWriter.println("Number of NetworkNodes: " + tmpNetworkNodeList.size());
+                    System.out.println("Number of NetworkNodes: " + tmpNetworkNodeList.size());
+                    for(ScaffoldNodeBase tmpNode : tmpNetworkNodeList) {
                         String tmpSMILES = tmpSmilesGenerator.create((IAtomContainer) tmpNode.getMolecule());
                         tmpOriginNetworkOriginPrintWriter.println(tmpSMILES + "," +  tmpNode.getOriginCount());
                         tmpOriginNetworkOriginPrintWriter.flush();
@@ -261,6 +270,8 @@ public class PerformanceTest {
                     System.out.println("Number of tree nodes: " + tmpNumberOfTreeNodes);
                 }
             }
+            String tmpFinTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("uuuu_MM_dd_HH_mm"));
+            tmpResultsPrintWriter.println("---FIN at "+ tmpFinTime  + "---");
             tmpResultsPrintWriter.flush();
             tmpResultsPrintWriter.println();
             tmpResultsPrintWriter.flush();
@@ -272,6 +283,7 @@ public class PerformanceTest {
             tmpOriginForestOriginPrintWriter.flush();
             tmpOriginForestOriginPrintWriter.close();
             tmpFileHandler.close();
+            tmpExceptionsPrintWriter.close();
         } catch (Exception anException) {
             this.appendToLogfile(anException);
             anException.printStackTrace(System.err);
@@ -292,8 +304,7 @@ public class PerformanceTest {
         PrintWriter tmpPrintWriter = null;
         try {
             FileWriter tmpFileWriter = new FileWriter(this.workingPath
-                    + PerformanceTest.EXCEPTIONS_LOG_FILE_NAME,
-                    true);
+                    + PerformanceTest.EXCEPTIONS_LOG_FILE_NAME, true);
             tmpPrintWriter = new PrintWriter(tmpFileWriter);
             StringWriter tmpStringWriter = new StringWriter();
             anException.printStackTrace(new PrintWriter(tmpStringWriter));
