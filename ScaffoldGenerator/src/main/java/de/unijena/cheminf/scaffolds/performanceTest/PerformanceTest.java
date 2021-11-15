@@ -63,22 +63,22 @@ public class PerformanceTest {
     /**
      * Name of file for writing results
      */
-    private static final String RESULTS_FILE_NAME = "Results.txt";
+    private static final String RESULTS_FILE_NAME = "Results";
 
     /**
-     * Name of CSV file for writing time stamps
+     * Name of CSV file for writing time processing time
      */
-    private static final String CSV_TIME_FILE_NAME = "CSV_Time_Stamp.csv";
+    private static final String CSV_TIME_FILE_NAME = "CSV_Processing_Time";
 
     /**
      * Name of CSV file for the network SMILES and the number of origins
      */
-    private static final String CSV_ORIGIN_NETWORK_FILE_NAME = "CSV_Origin_Network.csv";
+    private static final String CSV_ORIGIN_NETWORK_FILE_NAME = "CSV_Origin_Network.";
 
     /**
      * Name of CSV file for the forest SMILES and the number of origins
      */
-    private static final String CSV_ORIGIN_FOREST_FILE_NAME = "CSV_Origin_Forest.csv";
+    private static final String CSV_ORIGIN_FOREST_FILE_NAME = "CSV_Origin_Forest";
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="Private class variables">
@@ -92,6 +92,19 @@ public class PerformanceTest {
     /**
      * Instantiates and starts the application.
      * It first loads all molecules from a given SD file into memory And then applies the methods of the ScaffoldGenerator to them.
+     *
+     * First, all molecules with more than 10 rings are removed.
+     * The Schuffenhauer fragments and the enumerative fragments of all molecules are then generated and the time of generation is measured.
+     * The molecules are then divided into 100 subsets in ascending order of size and the generation of networks and forests is performed with these subsets.
+     * The size of the subsets is 1/100 to 100/100 of the dataset and the respective runtime for each subset is stored in a CSV file.
+     *
+     * Results and logs are generated and saved in different txt and csv files in the .jar folder:
+     * -Results.txt contains the summary of all tests run and their runtimes
+     * -Exceptions_Log.txt contains the exceptions that may have been thrown together with their description
+     * -CSV_Origin_Forest.csv contains the SMILES of each node of the forest and the number of their origins.
+     * -CSV_Origin_Network.csv contains the SMILES of each node of the network and the number of their origins.
+     * -CSV_Processing_Time.csv contains the size of all subsets that were used to generate a forest/network and their specific runtime in ms.
+     *
      * It exits the system if an unexpected exception occurs that prevents the application from working, e.g. an IllegalArgumentException
      * (will be logged to a file, not printed on the console).
      *
@@ -103,15 +116,16 @@ public class PerformanceTest {
         /*Set up exception log file*/
         this.workingPath = (new File("").getAbsoluteFile().getAbsolutePath()) + File.separator;
         LocalDateTime tmpDateTime = LocalDateTime.now();
-        String tmpTimeStamp = tmpDateTime.format(DateTimeFormatter.ofPattern("uuuu_MM_dd_HH_mm"));
+        String tmpProcessingTime = tmpDateTime.format(DateTimeFormatter.ofPattern("uuuu_MM_dd_HH_mm"));
         File tmpExceptionsLogFile = new File(this.workingPath
                 + PerformanceTest.EXCEPTIONS_LOG_FILE_NAME);
         FileWriter tmpExceptionsLogFileWriter = new FileWriter(tmpExceptionsLogFile, true);
         PrintWriter tmpExceptionsPrintWriter = new PrintWriter(tmpExceptionsLogFileWriter);
         tmpExceptionsPrintWriter.println("#########################################################################");
-        tmpExceptionsPrintWriter.println("Time-stamp: " + tmpTimeStamp);
+        tmpExceptionsPrintWriter.println("Processing Time: " + tmpProcessingTime);
         tmpExceptionsPrintWriter.println();
         tmpExceptionsPrintWriter.flush();
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique | SmiFlavor.UseAromaticSymbols);
         try {
             /*Load SD file*/
             File tmpDBFile = new File(this.workingPath + anArgs);
@@ -122,32 +136,32 @@ public class PerformanceTest {
                 throw new IllegalArgumentException("The database file (name) is not valid: " + anException.getMessage());
             }
             /*Results file*/
-            File tmpResultsLogFile = new File(this.workingPath + PerformanceTest.RESULTS_FILE_NAME);
+            File tmpResultsLogFile = new File(this.workingPath + PerformanceTest.RESULTS_FILE_NAME + tmpProcessingTime + ".txt");
             FileWriter tmpResultsLogFileWriter = new FileWriter(tmpResultsLogFile, true);
             PrintWriter tmpResultsPrintWriter = new PrintWriter(tmpResultsLogFileWriter);
             tmpResultsPrintWriter.println("#########################################################################");
-            tmpResultsPrintWriter.println("Time-stamp: " + tmpTimeStamp);
+            tmpResultsPrintWriter.println("Processing Time: " + tmpProcessingTime);
             tmpResultsPrintWriter.println();
             tmpResultsPrintWriter.println("Application initialized. Loading database file named " + anArgs + ".");
             tmpResultsPrintWriter.flush();
             System.out.println("\nApplication initialized. Loading database file named " + anArgs + ".");
-            /*Time stamp file*/
-            File tmpCSVTimeFile = new File(this.workingPath + PerformanceTest.CSV_TIME_FILE_NAME);
+            /*ProcessingTime file*/
+            File tmpCSVTimeFile = new File(this.workingPath + PerformanceTest.CSV_TIME_FILE_NAME + tmpProcessingTime + ".csv");
             FileWriter tmpCSVTimeFileWriter = new FileWriter(tmpCSVTimeFile, false);
             PrintWriter tmpCSVTimePrintWriter = new PrintWriter(tmpCSVTimeFileWriter);
-            tmpCSVTimePrintWriter.println("Molecule,Network,Forest");
+            tmpCSVTimePrintWriter.println("Number of the molecules,Calculation time for the network in ms,Calculation time for the forest in ms");
             tmpCSVTimePrintWriter.flush();
             /*Network origin file*/
-            File tmpOriginNetworkOriginFile = new File(this.workingPath + PerformanceTest.CSV_ORIGIN_NETWORK_FILE_NAME);
+            File tmpOriginNetworkOriginFile = new File(this.workingPath + PerformanceTest.CSV_ORIGIN_NETWORK_FILE_NAME + tmpProcessingTime + ".csv");
             FileWriter tmpOriginNetworkOriginFileWriter = new FileWriter(tmpOriginNetworkOriginFile, false);
             PrintWriter tmpOriginNetworkOriginPrintWriter = new PrintWriter(tmpOriginNetworkOriginFileWriter);
-            tmpOriginNetworkOriginPrintWriter.println("SMILES,Number of Origins");
+            tmpOriginNetworkOriginPrintWriter.println("SMILES of the node,Number of origins");
             tmpOriginNetworkOriginPrintWriter.flush();
             /*Forest origin file*/
-            File tmpOriginForestOriginFile = new File(this.workingPath + PerformanceTest.CSV_ORIGIN_FOREST_FILE_NAME);
+            File tmpOriginForestOriginFile = new File(this.workingPath + PerformanceTest.CSV_ORIGIN_FOREST_FILE_NAME + tmpProcessingTime + ".csv");
             FileWriter tmpOriginForestOriginFileWriter = new FileWriter(tmpOriginForestOriginFile, false);
             PrintWriter tmpOriginForestOriginPrintWriter = new PrintWriter(tmpOriginForestOriginFileWriter);
-            tmpOriginForestOriginPrintWriter.println("SMILES,Number of Origins");
+            tmpOriginForestOriginPrintWriter.println("SMILES of the node,Number of origins");
             tmpOriginForestOriginPrintWriter.flush();
             IteratingSDFReader tmpDBReader = new IteratingSDFReader(tmpDBFileInputStream, DefaultChemObjectBuilder.getInstance(), true);
             /*Load molecules*/
@@ -174,9 +188,8 @@ public class PerformanceTest {
             /*Remove all molecules with more than 10 rings from list*/
             ScaffoldGenerator tmpScaffoldGenerator = new ScaffoldGenerator();
             for(int tmpIndex = 0 ; tmpIndex < tmpMoleculesList.size(); tmpIndex++) {
-                try{
-                    IAtomContainer tmpScaffold = tmpScaffoldGenerator.getScaffold(tmpMoleculesList.get(tmpIndex), false);
-                    if(tmpScaffoldGenerator.getRings(tmpScaffold, false, false).size() > 10) {
+                try {
+                    if(tmpScaffoldGenerator.getRings(tmpMoleculesList.get(tmpIndex), false, false).size() > 10) {
                         tmpMoleculesList.remove(tmpIndex);
                         tmpIndex--;
                     }
@@ -195,7 +208,19 @@ public class PerformanceTest {
             long tmpStartTime = System.currentTimeMillis();
             /*Real measured process*/
             for(IAtomContainer tmpMolecule : tmpMoleculesList) {
-                tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
+                try {
+                    tmpScaffoldGenerator.applySchuffenhauerRules(tmpMolecule);
+                } catch (Exception anException) {
+                    try {
+                        tmpExceptionsPrintWriter.println("applySchuffenhauerRules ERROR with molecule: " + tmpSmilesGenerator.create(tmpMolecule));
+                        tmpExceptionsPrintWriter.flush();
+                        this.appendToLogfile(anException);
+                    } catch(Exception anExceptionException) {
+                        tmpExceptionsPrintWriter.println("applySchuffenhauerRules ERROR. Cant generate SMILES of the molecule");
+                        tmpExceptionsPrintWriter.flush();
+                        this.appendToLogfile(anException);
+                    }
+                }
             }
             long tmpEndTime = System.currentTimeMillis();
             tmpResultsPrintWriter.println("Schuffenhauer fragment generation took " + (tmpEndTime - tmpStartTime) + " ms.");
@@ -206,7 +231,19 @@ public class PerformanceTest {
             tmpStartTime = System.currentTimeMillis();
             /*Real measured process*/
             for(IAtomContainer tmpMolecule : tmpMoleculesList) {
-                tmpScaffoldGenerator.applyEnumerativeRemoval(tmpMolecule);
+                try {
+                    tmpScaffoldGenerator.applyEnumerativeRemoval(tmpMolecule);
+                } catch (Exception anException) {
+                    try {
+                        tmpExceptionsPrintWriter.println("applyEnumerativeRemoval ERROR with molecule: " + tmpSmilesGenerator.create(tmpMolecule));
+                        tmpExceptionsPrintWriter.flush();
+                        this.appendToLogfile(anException);
+                    } catch(Exception anExceptionException) {
+                        tmpExceptionsPrintWriter.println("applyEnumerativeRemoval ERROR. Cant generate SMILES of the molecule");
+                        tmpExceptionsPrintWriter.flush();
+                        this.appendToLogfile(anException);
+                    }
+                }
             }
             tmpEndTime = System.currentTimeMillis();
             tmpResultsPrintWriter.println("Enumerative removal fragment generation took " + (tmpEndTime - tmpStartTime) + " ms.");
@@ -216,62 +253,104 @@ public class PerformanceTest {
             FileHandler tmpFileHandler = null;
             try {
                 tmpFileHandler = new FileHandler("Exceptions_Log.txt", true);
-            } catch (IOException e) {
-                e.printStackTrace();
+                tmpLogger.addHandler(tmpFileHandler);
+            } catch(Exception anException) {
+                tmpExceptionsPrintWriter.println("FileHandler ERROR");
+                tmpExceptionsPrintWriter.flush();
+                this.appendToLogfile(anException);
             }
-            tmpLogger.addHandler(tmpFileHandler);
             /*Generate 100 random subsets from 1/100 to 100/100 and generate a network and a forest out of them*/
-            int tmpNumberOfRounds = 100;
+
+
+
+
+
+
+
+
+
+            //Change to 100
+            int tmpNumberOfRounds = 10;
             for (int tmpRound = 1; tmpRound < (tmpNumberOfRounds + 1); tmpRound++) {
-                int tmpRate = (int) (tmpListSize / (float)tmpNumberOfRounds * tmpRound);
-                tmpResultsPrintWriter.println("\nProcess " + tmpRate + " valid molecules.");
-                System.out.println("Process " + tmpRate + " valid molecules.");
-                Collections.shuffle(tmpMoleculesList, new Random(42));
-                List<IAtomContainer> tmpMoleculeSubList = tmpMoleculesList.subList(0, tmpRate);
-                tmpResultsPrintWriter.flush();
-                tmpStartTime = System.currentTimeMillis();
-                /*Real measured process*/
-                ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.generateScaffoldNetwork(tmpMoleculeSubList);
-                tmpEndTime = System.currentTimeMillis();
-                long tmpNetworkOrigin = tmpEndTime - tmpStartTime;
-                tmpResultsPrintWriter.println("Network generation took " + tmpNetworkOrigin + " ms.");
-                System.out.println("Network generation took " + tmpNetworkOrigin + " ms.");
-                tmpStartTime = System.currentTimeMillis();
-                /*Real measured process*/
-                List<ScaffoldTree> tmpTreeList = tmpScaffoldGenerator.generateSchuffenhauerForest(tmpMoleculeSubList);
-                tmpEndTime = System.currentTimeMillis();
-                long tmpForestOrigin = tmpEndTime - tmpStartTime;
-                tmpResultsPrintWriter.println("Forest generation took " + tmpForestOrigin + " ms.");
-                System.out.println("Forest generation took " + tmpForestOrigin + " ms.");
-                tmpCSVTimePrintWriter.println(tmpRate + "," + tmpNetworkOrigin + "," + tmpForestOrigin);
-                tmpCSVTimePrintWriter.flush();
-                if(tmpRound == tmpNumberOfRounds) {
-                    SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Stereo);
-                    List<ScaffoldNodeBase> tmpNetworkNodeList = tmpScaffoldNetwork.getAllNodes();
-                    tmpResultsPrintWriter.println("Number of NetworkNodes: " + tmpNetworkNodeList.size());
-                    System.out.println("Number of NetworkNodes: " + tmpNetworkNodeList.size());
-                    for(ScaffoldNodeBase tmpNode : tmpNetworkNodeList) {
-                        String tmpSMILES = tmpSmilesGenerator.create((IAtomContainer) tmpNode.getMolecule());
-                        tmpOriginNetworkOriginPrintWriter.println(tmpSMILES + "," +  tmpNode.getOriginCount());
-                        tmpOriginNetworkOriginPrintWriter.flush();
-                    }
-                    tmpResultsPrintWriter.println("Number of trees: " + tmpTreeList.size());
-                    System.out.println("Number of trees: " + tmpTreeList.size());
-                    long tmpNumberOfTreeNodes = 0;
-                    for(ScaffoldTree tmpTree : tmpTreeList) {
-                        tmpNumberOfTreeNodes = tmpNumberOfTreeNodes + tmpTree.getAllNodes().size();
-                        for(ScaffoldNodeBase tmpNode : tmpTree.getAllNodes()) {
-                            String tmpSMILES = tmpSmilesGenerator.create((IAtomContainer) tmpNode.getMolecule());
-                            tmpOriginForestOriginPrintWriter.println(tmpSMILES + "," +  tmpNode.getOriginCount());
-                            tmpOriginForestOriginPrintWriter.flush();
+                try {
+                    int tmpRate = (int) (tmpListSize / (float)tmpNumberOfRounds * tmpRound);
+                    tmpResultsPrintWriter.println("\nProcess " + tmpRate + " valid molecules.");
+                    System.out.println("Process " + tmpRate + " valid molecules.");
+                    Collections.shuffle(tmpMoleculesList, new Random(42));
+                    List<IAtomContainer> tmpMoleculeSubList = tmpMoleculesList.subList(0, tmpRate);
+                    tmpResultsPrintWriter.flush();
+                    tmpStartTime = System.currentTimeMillis();
+                    /*Real measured process*/
+                    ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.generateScaffoldNetwork(tmpMoleculeSubList);
+                    tmpEndTime = System.currentTimeMillis();
+                    long tmpNetworkOriginTime = tmpEndTime - tmpStartTime;
+                    tmpResultsPrintWriter.println("Network generation took " + tmpNetworkOriginTime + " ms.");
+                    System.out.println("Network generation took " + tmpNetworkOriginTime + " ms.");
+                    tmpStartTime = System.currentTimeMillis();
+                    /*Real measured process*/
+                    List<ScaffoldTree> tmpTreeList = tmpScaffoldGenerator.generateSchuffenhauerForest(tmpMoleculeSubList);
+                    tmpEndTime = System.currentTimeMillis();
+                    long tmpForestOriginTime = tmpEndTime - tmpStartTime;
+                    tmpResultsPrintWriter.println("Forest generation took " + tmpForestOriginTime + " ms.");
+                    System.out.println("Forest generation took " + tmpForestOriginTime + " ms.");
+                    tmpCSVTimePrintWriter.println(tmpRate + "," + tmpNetworkOriginTime + "," + tmpForestOriginTime);
+                    tmpCSVTimePrintWriter.flush();
+                    if(tmpRound == tmpNumberOfRounds) {
+                        try {
+                            List<ScaffoldNodeBase> tmpNetworkNodeList = tmpScaffoldNetwork.getAllNodes();
+                            tmpResultsPrintWriter.println("Number of NetworkNodes: " + tmpNetworkNodeList.size());
+                            System.out.println("Number of NetworkNodes: " + tmpNetworkNodeList.size());
+                            for(ScaffoldNodeBase tmpNode : tmpNetworkNodeList) {
+                                try {
+                                    String tmpSMILES = tmpSmilesGenerator.create((IAtomContainer) tmpNode.getMolecule());
+                                    tmpOriginNetworkOriginPrintWriter.println(tmpSMILES + "," +  tmpNode.getOriginCount());
+                                    tmpOriginNetworkOriginPrintWriter.flush();
+                                } catch (Exception anException) {
+                                    tmpExceptionsPrintWriter.println("SmilesGenerator ERROR. Cant generate SMILES of the network node");
+                                    tmpExceptionsPrintWriter.flush();
+                                    this.appendToLogfile(anException);
+                                }
+                            }
+                        } catch (Exception anException) {
+                            tmpExceptionsPrintWriter.println("Network node list ERROR");
+                            tmpExceptionsPrintWriter.flush();
+                            this.appendToLogfile(anException);
+                        }
+                        tmpResultsPrintWriter.println("Number of trees: " + tmpTreeList.size());
+                        System.out.println("Number of trees: " + tmpTreeList.size());
+                        try {
+                            long tmpNumberOfTreeNodes = 0;
+                            for(ScaffoldTree tmpTree : tmpTreeList) {
+                                tmpNumberOfTreeNodes = tmpNumberOfTreeNodes + tmpTree.getAllNodes().size();
+                                for(ScaffoldNodeBase tmpNode : tmpTree.getAllNodes()) {
+                                    try {
+                                        String tmpSMILES = tmpSmilesGenerator.create((IAtomContainer) tmpNode.getMolecule());
+                                        tmpOriginForestOriginPrintWriter.println(tmpSMILES + "," +  tmpNode.getOriginCount());
+                                        tmpOriginForestOriginPrintWriter.flush();
+                                    } catch (Exception anException) {
+                                        tmpExceptionsPrintWriter.println("SmilesGenerator ERROR. Cant generate SMILES of the forest node");
+                                        tmpExceptionsPrintWriter.flush();
+                                        this.appendToLogfile(anException);
+
+                                    }
+                                }
+                            }
+                            tmpResultsPrintWriter.println("Number of tree nodes: " + tmpNumberOfTreeNodes);
+                            System.out.println("Number of tree nodes: " + tmpNumberOfTreeNodes);
+                        } catch (Exception anException) {
+                            tmpExceptionsPrintWriter.println("Forest node list ERROR");
+                            tmpExceptionsPrintWriter.flush();
+                            this.appendToLogfile(anException);
                         }
                     }
-                    tmpResultsPrintWriter.println("Number of tree nodes: " + tmpNumberOfTreeNodes);
-                    System.out.println("Number of tree nodes: " + tmpNumberOfTreeNodes);
+                } catch(Exception anException) {
+                    tmpExceptionsPrintWriter.println("Subset ERROR");
+                    tmpExceptionsPrintWriter.flush();
+                    this.appendToLogfile(anException);
                 }
             }
             String tmpFinTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("uuuu_MM_dd_HH_mm"));
-            tmpResultsPrintWriter.println("---FIN at "+ tmpFinTime  + "---");
+            tmpResultsPrintWriter.println("---FIN at " + tmpFinTime  + "---");
             tmpResultsPrintWriter.flush();
             tmpResultsPrintWriter.println();
             tmpResultsPrintWriter.flush();
