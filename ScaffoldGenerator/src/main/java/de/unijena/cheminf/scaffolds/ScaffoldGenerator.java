@@ -64,7 +64,7 @@ import java.util.logging.Logger;
  * Different trees or networks can also be merged together.
  *
  * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
- * @version 1.0.0.9
+ * @version 1.0.1.0
  */
 public class ScaffoldGenerator {
 
@@ -169,6 +169,11 @@ public class ScaffoldGenerator {
      * By default, ScaffoldModeOption.SCHUFFENHAUER_SCAFFOLD is used.
      */
     public static final ScaffoldModeOption SCAFFOLD_MODE_OPTION_DEFAULT = ScaffoldModeOption.SCHUFFENHAUER_SCAFFOLD;
+
+    /**
+     * Default logger.
+     */
+    public static final Logger LOGGER = Logger.getLogger(ScaffoldGenerator.class.getName());
     //</editor-fold>
 
     //<editor-fold desc="Private variables">
@@ -682,16 +687,19 @@ public class ScaffoldGenerator {
         for(IAtomContainer tmpMolecule : aMoleculeList) {
             Objects.requireNonNull(tmpMolecule, "Input molecule must be non null");
             IAtomContainer tmpClonedMolecule = tmpMolecule.clone();
-            try{
+            try {
                 tmpScaffoldNetwork.mergeNetwork(this.generateScaffoldNetwork(tmpClonedMolecule));
             } catch (Exception anException) {
                 /*Log the skipped molecule*/
-                Logger tmpLogger = Logger.getLogger(ScaffoldGenerator.class.getName());
-                tmpLogger.setLevel(Level.WARNING);
-                tmpLogger.warning("generateScaffoldNetwork Exception.");
                 tmpLogExceptionCounter++;
-                tmpLogger.warning("SMILES of the skipped molecule number " + tmpLogExceptionCounter + ": "
-                        + this.smilesGeneratorSetting.create(tmpClonedMolecule));
+                try {
+                    LOGGER.log(Level.WARNING, anException.toString(), anException
+                            + "\n generateScaffoldNetwork() Exception. SMILES of the skipped molecule number " + tmpLogExceptionCounter + ": "
+                            + this.smilesGeneratorSetting.create(tmpClonedMolecule));
+                } catch (Exception anExceptionException) {
+                    LOGGER.log(Level.WARNING, anException.toString(), anException
+                            + "\nException inside the generateScaffoldNetwork() Exception. Probably a problem with the SMILES generator." );
+                }
             }
         }
         return  tmpScaffoldNetwork;
@@ -912,7 +920,7 @@ public class ScaffoldGenerator {
         tmpOutputForest.add(tmpFirstTree);
         /*Go through all molecules*/
         for(IAtomContainer tmpMolecule : aMoleculeList) {
-            try{
+            try {
                 boolean isMoleculeMerged = false;
                 ScaffoldTree tmpOldTree = this.generateSchuffenhauerTree(tmpMolecule);
                 /*Go through each newly created tree*/
@@ -929,12 +937,15 @@ public class ScaffoldGenerator {
                 }
             } catch (Exception anException) {
                 /*Log the skipped molecule*/
-                Logger tmpLogger = Logger.getLogger(ScaffoldGenerator.class.getName());
-                tmpLogger.setLevel(Level.WARNING);
-                tmpLogger.warning("generateSchuffenhauerForest Exception.");
                 tmpLogExceptionCounter++;
-                tmpLogger.warning("SMILES of the skipped molecule number " + tmpLogExceptionCounter + ": "
-                        + this.smilesGeneratorSetting.create(tmpMolecule));
+                try {
+                    LOGGER.log(Level.WARNING, anException.toString(), anException
+                            + "\n generateSchuffenhauerForest() Exception. SMILES of the skipped molecule number " + tmpLogExceptionCounter + ": "
+                            + this.smilesGeneratorSetting.create(tmpMolecule));
+                } catch (Exception anExceptionException) {
+                    LOGGER.log(Level.WARNING, anException.toString(), anException
+                            + "\nException inside the generateSchuffenhauerForest() Exception. Probably a problem with the SMILES generator." );
+                }
             }
         }
         return tmpOutputForest;
