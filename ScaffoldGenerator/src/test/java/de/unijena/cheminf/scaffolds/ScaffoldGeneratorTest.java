@@ -991,7 +991,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
     @Ignore
     @Test
     public void graphStreamTreeTest() throws Exception {
-        String tmpFileName = "Test11" ;
+        String tmpFileName = "Test3" ;
         //Load molecule from molfile
         IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
         //Generate a tree of molecules with iteratively removed terminal rings
@@ -1033,7 +1033,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
     @Ignore
     @Test
     public void graphStreamNetworkTest() throws Exception {
-        String tmpFileName = "Test11" ;
+        String tmpFileName = "Test3" ;
         //Load molecule from molfile
         IAtomContainer tmpMolecule = this.loadMolFile("src/test/resources/" + tmpFileName + ".mol");
         //Generate a tree of molecules with iteratively removed terminal rings
