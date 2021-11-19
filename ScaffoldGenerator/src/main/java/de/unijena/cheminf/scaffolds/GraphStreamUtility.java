@@ -21,6 +21,8 @@ package de.unijena.cheminf.scaffolds;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.SingleGraph;
+import org.graphstream.stream.file.FileSinkImages;
+import org.graphstream.stream.file.images.Resolutions;
 import org.openscience.cdk.depict.DepictionGenerator;
 import org.openscience.cdk.interfaces.IAtomContainer;
 
@@ -32,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Contains useful functions such as visualisation with Graphstream.
  * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
- * @version 1.0.0.0
+ * @version 1.0.1.0
  */
 public final class GraphStreamUtility {
     /**
@@ -45,12 +47,22 @@ public final class GraphStreamUtility {
     public static void displayWithGraphStream(ScaffoldNodeCollectionBase aScaffoldCollection, boolean aShowLabel) throws Exception {
         /*Create a graph from the ScaffoldCollection*/
         Graph tmpGraph = new SingleGraph("TestGraph");
+        System.setProperty("org.graphstream.ui", "swing");
+        FileSinkImages tmpFileSinkImages = FileSinkImages.createDefault();
+        tmpFileSinkImages.setOutputPolicy(FileSinkImages.OutputPolicy.BY_GRAPH_EVENT);
+        tmpFileSinkImages.setOutputType(FileSinkImages.OutputType.jpg);
+        tmpFileSinkImages.setQuality(FileSinkImages.Quality.HIGH);
+        tmpFileSinkImages.setViewCenter(10000, 10000);
+        //tmpFileSinkImages.setResolution(2048, 2048);
+        tmpFileSinkImages.setResolution(Resolutions.UHD_4K);
+        tmpFileSinkImages.setAutofit(false);
+        tmpFileSinkImages.setLayoutPolicy(FileSinkImages.LayoutPolicy.COMPUTED_FULLY_AT_NEW_IMAGE);
         tmpGraph.setAttribute("ui.stylesheet", "node { shape: rounded-box; size-mode: fit; padding: 60px; } graph { shape: box; size-mode: fit; padding: 70px; }");
         tmpGraph.setAttribute("ui.quality");
         tmpGraph.setAttribute("ui.antialias");
         /*Add edges and nodes*/
         int tmpEdgeCount = 0;
-        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(512,512).withFillToFit();
+        DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(2048,2048).withFillToFit();
         Integer[][] tmpMatrix = aScaffoldCollection.getMatrix(); //Create the adjacency matrix
         for(int tmpRow = 0; tmpRow < tmpMatrix.length; tmpRow++) { //Create a node for each row
             /*Add the ScaffoldCollection nodes to the graph*/
@@ -73,7 +85,9 @@ public final class GraphStreamUtility {
             File tmpSecOutputRemove = new File(System.getProperty("user.dir") + "//target/test-classes/GraphStream" + tmpRow + ".png");
             ImageIO.write(tmpNodeImg, "png", tmpSecOutputRemove);
             //set the images
-            tmpNode.setAttribute("ui.style", "fill-mode: image-scaled-ratio-max;" + "fill-image: url('GraphStream" + tmpRow + ".png');");
+            tmpNode.setAttribute("ui.style", "fill-mode: image-scaled;" + "fill-image: url('GraphStream" + tmpRow + ".png');");
+
+            //tmpNode.setAttribute("ui.style", "fill-mode: image-scaled-ratio-max;" + "fill-image: url('GraphStream" + tmpRow + ".png');");
             /*Add edges*/
             for(int tmpCol = 0; tmpCol < tmpMatrix[tmpRow].length; tmpCol++) { //Go through each column of the row
                 if(tmpRow < tmpCol) { //Skip a diagonal half to get edges in one direction only.
@@ -88,7 +102,13 @@ public final class GraphStreamUtility {
         /*Display graph*/
         System.setProperty("org.graphstream.ui", "swing");
         tmpGraph.display();
-        //tmpGraph.setAttribute("ui.screenshot", "screenshot.png"); // Saved at: C:\Users\zande\IdeaProjects\ScaffoldGenerator\ScaffoldGenerator
+        //BufferedImage bufferedImage = new BufferedImage(2048, 2048, BufferedImage.TYPE_INT_RGB);
+        //Graphics2D tmpTestImage = bufferedImage.createGraphics();
+        File tmpImageFile = new File("outputFile.jpg");
+        //ImageIO.write(bufferedImage, "png", tmpImageFile);
+        tmpFileSinkImages.writeAll(tmpGraph, tmpImageFile.getAbsolutePath());
+        //tmpFileSinkImages.writeAll(tmpGraph, tmpImageFile.getAbsolutePath());
+        //tmpGraph.setAttribute("ui.screenshot", "screenshot.jpg"); // Saved at: C:\Users\zande\IdeaProjects\ScaffoldGenerator\ScaffoldGenerator
         TimeUnit.SECONDS.sleep(300);
     }
 }
