@@ -62,7 +62,7 @@ import static junit.framework.TestCase.assertEquals;
  * JUnit test class for the ScaffoldGenerator
  *
  * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
- * @version 1.0.2.1
+ * @version 1.0.3.0
  */
 public class ScaffoldGeneratorTest extends ScaffoldGenerator {
 
@@ -1369,6 +1369,41 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
      */
     @Ignore
     @Test
+    public void mergeMoleculesToForestProblemTest() throws Exception {
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        //SMILES to IAtomContainer
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        IAtomContainer tmpMolecule = tmpParser.parseSmiles("O=C(OC)CCC=1C=2N=C(C=C3N=C(C=C4N=C(C=C5N=C(C2)C(=C5C)CC)C=C4C)C=C3C)C1C");
+        IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("N=1C2=CC3=NC(=CC4=NC(=C5C6=NC(=CC1C(=C2C)C)C(=C6CCC5)C)C(=C4C)CC)C(=C3C)CC");
+        IAtomContainer tmpMolecule2 = tmpParser.parseSmiles("ON=C1C=CC=2C3=NC(=CC4=NC(=CC5=NC(=CC6=NC(C=C6C)=C13)C(=C5C)CC)C(=C4C)CC)C2C");
+
+        //Generate a tree of molecules with iteratively removed terminal rings
+        List<IAtomContainer> tmpTreeList = new ArrayList<>();
+        tmpTreeList.add(tmpMolecule);
+        tmpTreeList.add(tmpMolecule1);
+        tmpTreeList.add(tmpMolecule2);
+        List<ScaffoldTree> tmpFinalForest = tmpScaffoldGenerator.generateSchuffenhauerForest(tmpTreeList);
+        System.out.println("Forest size: " + tmpFinalForest.size());
+        ScaffoldTree tmpScaffoldTree = tmpFinalForest.get(0);
+        System.out.println("Node size" + tmpFinalForest.get(0).getAllNodes().size());
+        for(ScaffoldNodeBase tmpTreeNode : tmpScaffoldTree.getAllNodes()) {
+            for(Object tmpSmiles : tmpTreeNode.getNonVirtualOriginSmilesList()) {
+                System.out.println("nonVirtual: " + tmpSmiles);
+            }
+        }
+        IAtomContainer tmpRootMolecule = (IAtomContainer) tmpScaffoldTree.getRoot().getMolecule();
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
+        System.out.println("I am Root: " + tmpSmilesGenerator.create(tmpRootMolecule));
+        /*Display the tree*/
+        GraphStreamUtility.displayWithGraphStream(tmpScaffoldTree, true);
+    }
+
+    /**
+     * Creates different ScaffoldTrees and merges them. The result is visualised with GraphStream.
+     * @throws Exception if anything goes wrong
+     */
+    @Ignore
+    @Test
     public void mergeMoleculesToForestTest() throws Exception {
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
         //SMILES to IAtomContainer
@@ -1454,7 +1489,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
         List<IAtomContainer> tmpTestMoleculeList = new ArrayList<>();
         /*Loading and reading the library*/
-        File tmpResourcesDirectory = new File("src/test/resources/COCONUT_DB.sdf");
+        File tmpResourcesDirectory = new File("src/test/resources/COCONUT_OR.sdf");
         IteratingSDFReader tmpReader = new IteratingSDFReader( new FileInputStream(tmpResourcesDirectory), DefaultChemObjectBuilder.getInstance());
         int tmpAllCounter = 0;
         int tmpCounter = 0;
@@ -1484,6 +1519,49 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         }
         /*Display the tree*/
         GraphStreamUtility.displayWithGraphStream(tmpScaffoldTree, true);
+    }
+
+    @Ignore
+    @Test
+    public void generateSdfNetworkTest() throws Exception {
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
+        tmpScaffoldGenerator.setSmilesGeneratorSetting(tmpSmilesGenerator);
+        List<IAtomContainer> tmpTestMoleculeList = new ArrayList<>();
+        /*Loading and reading the library*/
+        File tmpResourcesDirectory = new File("src/test/resources/COCONUT_PROBLEM.sdf");
+        IteratingSDFReader tmpReader = new IteratingSDFReader( new FileInputStream(tmpResourcesDirectory), DefaultChemObjectBuilder.getInstance());
+        int tmpAllCounter = 0;
+        int tmpCounter = 0;
+        while (tmpReader.hasNext()) {
+            tmpAllCounter++;
+            tmpCounter++;
+            if(tmpCounter < 25000) {
+                continue;
+            }
+            IAtomContainer tmpMolecule = (IAtomContainer) tmpReader.next();
+            tmpTestMoleculeList.add(tmpMolecule);
+            if(tmpAllCounter == 50000) {
+                break;
+            }
+        }
+        System.out.println("Number of molecules: " + tmpTestMoleculeList.size());
+        ScaffoldNetwork tmpTestTreeList = new ScaffoldNetwork(this.getSmilesGenerator());
+        tmpTestTreeList = tmpScaffoldGenerator.generateScaffoldNetwork(tmpTestMoleculeList);
+        System.out.println("Size: " + tmpTestTreeList.getAllNodes().size());
+        for(ScaffoldNodeBase tmpNode : tmpTestTreeList.getAllNodes()) {
+            IAtomContainer tmpMolecule = (IAtomContainer) tmpNode.getMolecule();
+            String tmpSmiles = tmpSmilesGenerator.create(tmpMolecule);
+            System.out.println(tmpSmiles);
+        }
+        for(Object tmpNewNetworkObject : tmpTestTreeList.getAllNodes()) {
+            NetworkNode tmpNewNetworkNode = (NetworkNode) tmpNewNetworkObject;
+            if(tmpSmilesGenerator.create((IAtomContainer) tmpNewNetworkNode.getMolecule()).equals("N=1C=2C=CC1C=C3N=C(C=C3)C=C4N=C(C=C4)C=C5N=C(C=C5)C2")) {
+                System.out.println("Ist schon drin");
+            }
+        }
+        /*Display the tree*/
+        GraphStreamUtility.displayWithGraphStream(tmpTestTreeList, true);
     }
 
     /**
