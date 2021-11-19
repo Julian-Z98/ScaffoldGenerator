@@ -34,7 +34,7 @@ import java.util.Objects;
  * A network can have several roots and leaves.
  *
  * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
- * @version 1.0.1.1
+ * @version 1.0.1.2
  */
 public class ScaffoldNetwork extends ScaffoldNodeCollectionBase {
 
@@ -106,7 +106,7 @@ public class ScaffoldNetwork extends ScaffoldNodeCollectionBase {
     }
 
     /**
-     * Adds another ScaffoldNetwork to the existing one if possible.
+     * Adds another ScaffoldNetwork to the existing one.
      * The new network is inserted at the node that both networks have in common.
      * All children of the new network at this node and there linkages are taken over if they do not already exist.
      *
