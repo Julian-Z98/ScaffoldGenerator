@@ -125,7 +125,7 @@ public class PerformanceTest {
         tmpExceptionsPrintWriter.println("Processing Time: " + tmpProcessingTime);
         tmpExceptionsPrintWriter.println();
         tmpExceptionsPrintWriter.flush();
-        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique | SmiFlavor.UseAromaticSymbols);
+        SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
         try {
             /*Load SD file*/
             File tmpDBFile = new File(this.workingPath + anArgs);
@@ -187,6 +187,7 @@ public class PerformanceTest {
             System.out.println("Done Loading database. Found and processed " + tmpMoleculesList.size() + " valid molecules.");
             /*Remove all molecules with more than 10 rings from list*/
             ScaffoldGenerator tmpScaffoldGenerator = new ScaffoldGenerator();
+            tmpScaffoldGenerator.setSmilesGeneratorSetting(tmpSmilesGenerator);
             for(int tmpIndex = 0 ; tmpIndex < tmpMoleculesList.size(); tmpIndex++) {
                 try {
                     if(tmpScaffoldGenerator.getRings(tmpMoleculesList.get(tmpIndex), false, false).size() > 10) {
@@ -270,7 +271,7 @@ public class PerformanceTest {
 
 
             //Change to 100
-            int tmpNumberOfRounds = 10;
+            int tmpNumberOfRounds = 1;
             for (int tmpRound = 1; tmpRound < (tmpNumberOfRounds + 1); tmpRound++) {
                 try {
                     int tmpRate = (int) (tmpListSize / (float)tmpNumberOfRounds * tmpRound);
