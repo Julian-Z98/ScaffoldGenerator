@@ -683,7 +683,7 @@ public class ScaffoldGenerator {
      */
     public ScaffoldNetwork generateScaffoldNetwork(List<IAtomContainer> aMoleculeList) throws CDKException, CloneNotSupportedException, NullPointerException {
         Objects.requireNonNull(aMoleculeList, "Input molecule list must be non null");
-        ScaffoldNetwork tmpScaffoldNetwork = new ScaffoldNetwork();
+        ScaffoldNetwork tmpScaffoldNetwork = new ScaffoldNetwork(this.smilesGeneratorSetting);
         for(IAtomContainer tmpMolecule : aMoleculeList) {
             Objects.requireNonNull(tmpMolecule, "Input molecule must be non null");
             IAtomContainer tmpClonedMolecule = tmpMolecule.clone();
@@ -691,14 +691,15 @@ public class ScaffoldGenerator {
                 tmpScaffoldNetwork.mergeNetwork(this.generateScaffoldNetwork(tmpClonedMolecule));
             } catch (Exception anException) {
                 /*Log the skipped molecule*/
-                tmpLogExceptionCounter++;
+                this.tmpLogExceptionCounter++;
                 try {
-                    LOGGER.log(Level.WARNING, anException.toString(), anException
-                            + "\n generateScaffoldNetwork() Exception. SMILES of the skipped molecule number " + tmpLogExceptionCounter + ": "
-                            + this.smilesGeneratorSetting.create(tmpClonedMolecule));
+                    ScaffoldGenerator.LOGGER.log(Level.WARNING, anException.toString()
+                            + "\n generateScaffoldNetwork() Exception. SMILES of the skipped molecule number " + this.tmpLogExceptionCounter + ": "
+                            + this.smilesGeneratorSetting.create(tmpClonedMolecule), anException);
                 } catch (Exception anExceptionException) {
-                    LOGGER.log(Level.WARNING, anException.toString(), anException
-                            + "\nException inside the generateScaffoldNetwork() Exception. Probably a problem with the SMILES generator." );
+                    ScaffoldGenerator.LOGGER.log(Level.WARNING, anException.toString()
+                            + "\nException inside the generateScaffoldNetwork() Exception. Probably a problem with the SMILES generator.",
+                            anException);
                 }
             }
         }
@@ -876,7 +877,7 @@ public class ScaffoldGenerator {
         TreeNode tmpReverseParentNode =  new TreeNode<IAtomContainer>(tmpFragmentList.get(tmpFragmentList.size()-1));
         String tmpSmiles = this.getSmilesGenerator().create(tmpClonedMolecule);
         tmpReverseParentNode.addOriginSmiles(tmpSmiles);
-        ScaffoldTree tmpScaffoldTree = new ScaffoldTree();
+        ScaffoldTree tmpScaffoldTree = new ScaffoldTree(this.smilesGeneratorSetting);
         tmpScaffoldTree.addNode(tmpReverseParentNode);
         /*Build the ScaffoldTree with the smallest fragment as root and add the origin to each fragment*/
         for(int i = 1; i < tmpFragmentList.size(); i++) {
@@ -937,14 +938,14 @@ public class ScaffoldGenerator {
                 }
             } catch (Exception anException) {
                 /*Log the skipped molecule*/
-                tmpLogExceptionCounter++;
+                this.tmpLogExceptionCounter++;
                 try {
-                    LOGGER.log(Level.WARNING, anException.toString(), anException
-                            + "\n generateSchuffenhauerForest() Exception. SMILES of the skipped molecule number " + tmpLogExceptionCounter + ": "
-                            + this.smilesGeneratorSetting.create(tmpMolecule));
+                    ScaffoldGenerator.LOGGER.log(Level.WARNING, anException.toString()
+                            + "\n generateSchuffenhauerForest() Exception. SMILES of the skipped molecule number "
+                            + this.tmpLogExceptionCounter + ": " + this.smilesGeneratorSetting.create(tmpMolecule), anException);
                 } catch (Exception anExceptionException) {
-                    LOGGER.log(Level.WARNING, anException.toString(), anException
-                            + "\nException inside the generateSchuffenhauerForest() Exception. Probably a problem with the SMILES generator." );
+                    ScaffoldGenerator.LOGGER.log(Level.WARNING, anException.toString()
+                            + "\nException inside the generateSchuffenhauerForest() Exception. Probably a problem with the SMILES generator.", anException);
                 }
             }
         }
