@@ -322,11 +322,24 @@ public class PerformanceTest {
                         try {
                             long tmpNumberOfTreeNodes = 0;
                             for(ScaffoldTree tmpTree : tmpTreeList) {
+                                ScaffoldNodeBase tmpRootNode = tmpTree.getRoot();
                                 tmpNumberOfTreeNodes = tmpNumberOfTreeNodes + tmpTree.getAllNodes().size();
                                 for(ScaffoldNodeBase tmpNode : tmpTree.getAllNodes()) {
                                     try {
                                         String tmpSMILES = tmpSmilesGenerator.create((IAtomContainer) tmpNode.getMolecule());
-                                        tmpOriginForestOriginPrintWriter.println(tmpSMILES + "," +  tmpNode.getOriginCount());
+                                        tmpOriginForestOriginPrintWriter.print(tmpSMILES + "," +  tmpNode.getOriginCount());
+                                        if(tmpNode.equals(tmpRootNode)) {
+                                            if(tmpTree.getAllNodes().size() < 50) {
+                                                for(ScaffoldNodeBase tmpOriginNode : tmpTree.getAllNodes()) {
+                                                    for(Object tmpOrigin : tmpOriginNode.getNonVirtualOriginSmilesList()) {
+                                                        tmpOriginForestOriginPrintWriter.print("," + tmpOrigin);
+                                                    }
+                                                }
+                                            } else {
+                                                tmpOriginForestOriginPrintWriter.print("," + "-");
+                                            }
+                                        }
+                                        tmpOriginForestOriginPrintWriter.println();
                                         tmpOriginForestOriginPrintWriter.flush();
                                     } catch (Exception anException) {
                                         tmpExceptionsPrintWriter.println("SmilesGenerator ERROR. Cant generate SMILES of the forest node");
