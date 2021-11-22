@@ -64,7 +64,7 @@ import java.util.logging.Logger;
  * Different trees or networks can also be merged together.
  *
  * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
- * @version 1.0.2.0
+ * @version 1.0.2.1
  */
 public class ScaffoldGenerator {
 
@@ -877,6 +877,10 @@ public class ScaffoldGenerator {
         TreeNode tmpReverseParentNode =  new TreeNode<IAtomContainer>(tmpFragmentList.get(tmpFragmentList.size()-1));
         String tmpSmiles = this.getSmilesGenerator().create(tmpClonedMolecule);
         tmpReverseParentNode.addOriginSmiles(tmpSmiles);
+        //Add non virtual if tmpFragmentList.size loop do not run
+        if(tmpFragmentList.size() == 1) {
+            tmpReverseParentNode.addNonVirtualOriginSmiles(tmpSmiles);
+        }
         ScaffoldTree tmpScaffoldTree = new ScaffoldTree(this.smilesGeneratorSetting);
         tmpScaffoldTree.addNode(tmpReverseParentNode);
         /*Build the ScaffoldTree with the smallest fragment as root and add the origin to each fragment*/
