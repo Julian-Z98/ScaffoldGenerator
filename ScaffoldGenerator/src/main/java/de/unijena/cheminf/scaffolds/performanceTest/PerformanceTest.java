@@ -38,6 +38,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
@@ -141,6 +142,9 @@ public class PerformanceTest {
             PrintWriter tmpResultsPrintWriter = new PrintWriter(tmpResultsLogFileWriter);
             tmpResultsPrintWriter.println("#########################################################################");
             tmpResultsPrintWriter.println("Processing Time: " + tmpProcessingTime);
+            NumberFormat tmpFormat = NumberFormat.getInstance();
+            tmpResultsPrintWriter.println("Max memory: " + tmpFormat.format(Runtime.getRuntime().maxMemory()/1024));
+            tmpResultsPrintWriter.println("Memory usage: " + tmpFormat.format((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())/1024) + " / " + tmpFormat.format(Runtime.getRuntime().totalMemory()/1024));
             tmpResultsPrintWriter.println();
             tmpResultsPrintWriter.println("Application initialized. Loading database file named " + anArgs + ".");
             tmpResultsPrintWriter.flush();
@@ -161,7 +165,7 @@ public class PerformanceTest {
             File tmpOriginForestOriginFile = new File(this.workingPath + PerformanceTest.CSV_ORIGIN_FOREST_FILE_NAME + tmpProcessingTime + ".csv");
             FileWriter tmpOriginForestOriginFileWriter = new FileWriter(tmpOriginForestOriginFile, false);
             PrintWriter tmpOriginForestOriginPrintWriter = new PrintWriter(tmpOriginForestOriginFileWriter);
-            tmpOriginForestOriginPrintWriter.println("SMILES of the node,Number of origins");
+            tmpOriginForestOriginPrintWriter.println("SMILES of the node,Number of origins,NonVirtualOrigins");
             tmpOriginForestOriginPrintWriter.flush();
             IteratingSDFReader tmpDBReader = new IteratingSDFReader(tmpDBFileInputStream, DefaultChemObjectBuilder.getInstance(), true);
             /*Load molecules*/
@@ -183,6 +187,7 @@ public class PerformanceTest {
                 tmpExceptionsPrintWriter.flush();
                 this.appendToLogfile(anException);
             }
+            tmpResultsPrintWriter.println("Memory usage: " + tmpFormat.format((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())/1024) + " / " + tmpFormat.format(Runtime.getRuntime().totalMemory()/1024));
             tmpResultsPrintWriter.println("\nDone Loading database. Found and processed " + tmpMoleculesList.size() + " valid molecules.");
             System.out.println("Done Loading database. Found and processed " + tmpMoleculesList.size() + " valid molecules.");
             /*Remove all molecules with more than 10 rings from list*/
@@ -200,6 +205,7 @@ public class PerformanceTest {
                     this.appendToLogfile(anException);
                 }
             }
+            tmpResultsPrintWriter.println("Memory usage: " + tmpFormat.format((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())/1024) + " / " + tmpFormat.format(Runtime.getRuntime().totalMemory()/1024));
             int tmpListSize = tmpMoleculesList.size();
             tmpResultsPrintWriter.println("\nNumber of molecules with less than 11 rings: " + tmpListSize);
             System.out.println("Number of molecules with less than 11 rings: " + tmpListSize);
@@ -224,6 +230,7 @@ public class PerformanceTest {
                 }
             }
             long tmpEndTime = System.currentTimeMillis();
+            tmpResultsPrintWriter.println("Memory usage: " + tmpFormat.format((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())/1024) + " / " + tmpFormat.format(Runtime.getRuntime().totalMemory()/1024));
             tmpResultsPrintWriter.println("Schuffenhauer fragment generation took " + (tmpEndTime - tmpStartTime) + " ms.");
             System.out.println("Schuffenhauer fragment generation took " + (tmpEndTime - tmpStartTime) + " ms.");
             /*Generate all enumerative fragments of the molecule*/
@@ -247,6 +254,7 @@ public class PerformanceTest {
                 }
             }
             tmpEndTime = System.currentTimeMillis();
+            tmpResultsPrintWriter.println("Memory usage: " + tmpFormat.format((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())/1024) + " / " + tmpFormat.format(Runtime.getRuntime().totalMemory()/1024));
             tmpResultsPrintWriter.println("Enumerative removal fragment generation took " + (tmpEndTime - tmpStartTime) + " ms.");
             System.out.println("Enumerative removal fragment generation took " + (tmpEndTime - tmpStartTime) + " ms.");
             /*Log the skipped molecules*/
@@ -262,15 +270,7 @@ public class PerformanceTest {
             }
             /*Generate 100 random subsets from 1/100 to 100/100 and generate a network and a forest out of them*/
 
-
-
-
-
-
-
-
-
-            //Change to 100
+            //Back to 100
             int tmpNumberOfRounds = 1;
             for (int tmpRound = 1; tmpRound < (tmpNumberOfRounds + 1); tmpRound++) {
                 try {
@@ -284,6 +284,7 @@ public class PerformanceTest {
                     /*Real measured process*/
                     ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.generateScaffoldNetwork(tmpMoleculeSubList);
                     tmpEndTime = System.currentTimeMillis();
+                    tmpResultsPrintWriter.println("Memory usage: " + tmpFormat.format((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())/1024) + " / " + tmpFormat.format(Runtime.getRuntime().totalMemory()/1024));
                     long tmpNetworkOriginTime = tmpEndTime - tmpStartTime;
                     tmpResultsPrintWriter.println("Network generation took " + tmpNetworkOriginTime + " ms.");
                     System.out.println("Network generation took " + tmpNetworkOriginTime + " ms.");
@@ -291,6 +292,7 @@ public class PerformanceTest {
                     /*Real measured process*/
                     List<ScaffoldTree> tmpTreeList = tmpScaffoldGenerator.generateSchuffenhauerForest(tmpMoleculeSubList);
                     tmpEndTime = System.currentTimeMillis();
+                    tmpResultsPrintWriter.println("Memory usage: " + tmpFormat.format((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())/1024) + " / " + tmpFormat.format(Runtime.getRuntime().totalMemory()/1024));
                     long tmpForestOriginTime = tmpEndTime - tmpStartTime;
                     tmpResultsPrintWriter.println("Forest generation took " + tmpForestOriginTime + " ms.");
                     System.out.println("Forest generation took " + tmpForestOriginTime + " ms.");
@@ -307,7 +309,7 @@ public class PerformanceTest {
                                     tmpOriginNetworkOriginPrintWriter.println(tmpSMILES + "," +  tmpNode.getOriginCount());
                                     tmpOriginNetworkOriginPrintWriter.flush();
                                 } catch (Exception anException) {
-                                    tmpExceptionsPrintWriter.println("SmilesGenerator ERROR. Cant generate SMILES of the network node");
+                                    tmpExceptionsPrintWriter.println("Network Origin ERROR. Probably a SmilesGenerator Problem");
                                     tmpExceptionsPrintWriter.flush();
                                     this.appendToLogfile(anException);
                                 }
@@ -328,21 +330,27 @@ public class PerformanceTest {
                                     try {
                                         String tmpSMILES = tmpSmilesGenerator.create((IAtomContainer) tmpNode.getMolecule());
                                         tmpOriginForestOriginPrintWriter.print(tmpSMILES + "," +  tmpNode.getOriginCount());
-                                        if(tmpNode.equals(tmpRootNode)) {
-                                            if(tmpTree.getAllNodes().size() < 50) {
-                                                for(ScaffoldNodeBase tmpOriginNode : tmpTree.getAllNodes()) {
-                                                    for(Object tmpOrigin : tmpOriginNode.getNonVirtualOriginSmilesList()) {
-                                                        tmpOriginForestOriginPrintWriter.print("," + tmpOrigin);
+                                        try {
+                                            if(tmpNode.equals(tmpRootNode) && !tmpSMILES.equals("")) {
+                                                if(tmpTree.getAllNodes().size() < 50) {
+                                                    for(ScaffoldNodeBase tmpOriginNode : tmpTree.getAllNodes()) {
+                                                        for(Object tmpOrigin : tmpOriginNode.getNonVirtualOriginSmilesList()) {
+                                                            tmpOriginForestOriginPrintWriter.print("," + tmpOrigin);
+                                                        }
                                                     }
+                                                } else {
+                                                    tmpOriginForestOriginPrintWriter.print("," + "-");
                                                 }
-                                            } else {
-                                                tmpOriginForestOriginPrintWriter.print("," + "-");
                                             }
+                                        } catch(Exception anException) {
+                                            tmpExceptionsPrintWriter.println("Forest NonVirtualOrigin ERROR. Probably a SmilesGenerator Problem");
+                                            tmpExceptionsPrintWriter.flush();
+                                            this.appendToLogfile(anException);
                                         }
                                         tmpOriginForestOriginPrintWriter.println();
                                         tmpOriginForestOriginPrintWriter.flush();
                                     } catch (Exception anException) {
-                                        tmpExceptionsPrintWriter.println("SmilesGenerator ERROR. Cant generate SMILES of the forest node");
+                                        tmpExceptionsPrintWriter.println("Forest Origin ERROR. Probably a SmilesGenerator Problem");
                                         tmpExceptionsPrintWriter.flush();
                                         this.appendToLogfile(anException);
 
