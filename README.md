@@ -46,7 +46,8 @@ The respective file can be downloaded at [https://coconut.naturalproducts.net/do
   * [AdoptOpenJDK](https://adoptopenjdk.net) (as one possible source of the JDK)
 * Apache Maven version 4
   * [Apache Maven](http://maven.apache.org)
-**Managed by Maven**
+  
+**Managed by Maven:**
 * Chemistry Development Kit (CDK) version 2.5
   * [Chemistry Development Kit on GitHub](https://cdk.github.io/)
   * License: GNU Lesser General Public License 2.1 
