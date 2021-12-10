@@ -111,14 +111,16 @@ public class PerformanceTest {
      *
      * @param anArgs the command line arguments, anArgs[0] must be the name of the SD file to load (must be located in
      * the same directory as the application's JAR file)
+     * @param aNumberOfRounds is the number of steps in which the database is to be run through.
      * @throws IOException if the constructor is unable to open a text file for logging occurred exceptions
      */
-    public PerformanceTest(String anArgs) throws IOException {
+    public PerformanceTest(String anArgs, String aNumberOfRounds) throws IOException {
         /*Set up exception log file*/
         this.workingPath = (new File("").getAbsoluteFile().getAbsolutePath()) + File.separator;
         LocalDateTime tmpDateTime = LocalDateTime.now();
         String tmpProcessingTime = tmpDateTime.format(DateTimeFormatter.ofPattern("uuuu_MM_dd_HH_mm"));
-        File tmpExceptionsLogFile = new File(this.workingPath
+        new File(this.workingPath + "/Results").mkdirs();
+        File tmpExceptionsLogFile = new File(this.workingPath + "/Results/"
                 + PerformanceTest.EXCEPTIONS_LOG_FILE_NAME);
         FileWriter tmpExceptionsLogFileWriter = new FileWriter(tmpExceptionsLogFile, true);
         PrintWriter tmpExceptionsPrintWriter = new PrintWriter(tmpExceptionsLogFileWriter);
@@ -136,8 +138,8 @@ public class PerformanceTest {
             } catch (FileNotFoundException | SecurityException anException) {
                 throw new IllegalArgumentException("The database file (name) is not valid: " + anException.getMessage());
             }
-            /*Results file*/
-            File tmpResultsLogFile = new File(this.workingPath + PerformanceTest.RESULTS_FILE_NAME + tmpProcessingTime + ".txt");
+            /*Results files*/
+            File tmpResultsLogFile = new File(this.workingPath + "/Results/" + PerformanceTest.RESULTS_FILE_NAME + tmpProcessingTime + ".txt");
             FileWriter tmpResultsLogFileWriter = new FileWriter(tmpResultsLogFile, true);
             PrintWriter tmpResultsPrintWriter = new PrintWriter(tmpResultsLogFileWriter);
             tmpResultsPrintWriter.println("#########################################################################");
@@ -150,19 +152,19 @@ public class PerformanceTest {
             tmpResultsPrintWriter.flush();
             System.out.println("\nApplication initialized. Loading database file named " + anArgs + ".");
             /*ProcessingTime file*/
-            File tmpCSVTimeFile = new File(this.workingPath + PerformanceTest.CSV_TIME_FILE_NAME + tmpProcessingTime + ".csv");
+            File tmpCSVTimeFile = new File(this.workingPath + "/Results/" + PerformanceTest.CSV_TIME_FILE_NAME + tmpProcessingTime + ".csv");
             FileWriter tmpCSVTimeFileWriter = new FileWriter(tmpCSVTimeFile, false);
             PrintWriter tmpCSVTimePrintWriter = new PrintWriter(tmpCSVTimeFileWriter);
             tmpCSVTimePrintWriter.println("Number of the molecules,Calculation time for the network in ms,Calculation time for the forest in ms");
             tmpCSVTimePrintWriter.flush();
             /*Network origin file*/
-            File tmpOriginNetworkOriginFile = new File(this.workingPath + PerformanceTest.CSV_ORIGIN_NETWORK_FILE_NAME + tmpProcessingTime + ".csv");
+            File tmpOriginNetworkOriginFile = new File(this.workingPath + "/Results/" + PerformanceTest.CSV_ORIGIN_NETWORK_FILE_NAME + tmpProcessingTime + ".csv");
             FileWriter tmpOriginNetworkOriginFileWriter = new FileWriter(tmpOriginNetworkOriginFile, false);
             PrintWriter tmpOriginNetworkOriginPrintWriter = new PrintWriter(tmpOriginNetworkOriginFileWriter);
             tmpOriginNetworkOriginPrintWriter.println("SMILES of the node,Number of origins");
             tmpOriginNetworkOriginPrintWriter.flush();
             /*Forest origin file*/
-            File tmpOriginForestOriginFile = new File(this.workingPath + PerformanceTest.CSV_ORIGIN_FOREST_FILE_NAME + tmpProcessingTime + ".csv");
+            File tmpOriginForestOriginFile = new File(this.workingPath + "/Results/" + PerformanceTest.CSV_ORIGIN_FOREST_FILE_NAME + tmpProcessingTime + ".csv");
             FileWriter tmpOriginForestOriginFileWriter = new FileWriter(tmpOriginForestOriginFile, false);
             PrintWriter tmpOriginForestOriginPrintWriter = new PrintWriter(tmpOriginForestOriginFileWriter);
             tmpOriginForestOriginPrintWriter.println("SMILES of the node,Number of origins,NonVirtualOrigins");
@@ -261,17 +263,15 @@ public class PerformanceTest {
             Logger tmpLogger = Logger.getLogger("");
             FileHandler tmpFileHandler = null;
             try {
-                tmpFileHandler = new FileHandler("Exceptions_Log.txt", true);
+                tmpFileHandler = new FileHandler(this.workingPath + "/Results/Exceptions_Log.txt", true);
                 tmpLogger.addHandler(tmpFileHandler);
             } catch(Exception anException) {
                 tmpExceptionsPrintWriter.println("FileHandler ERROR");
                 tmpExceptionsPrintWriter.flush();
                 this.appendToLogfile(anException);
             }
-            /*Generate 100 random subsets from 1/100 to 100/100 and generate a network and a forest out of them*/
-
-            //Back to 100
-            int tmpNumberOfRounds = 1;
+            /*Generate aNumberOfRounds random subsets from 1/aNumberOfRounds to aNumberOfRounds/aNumberOfRounds and generate a network and a forest out of them*/
+            int tmpNumberOfRounds = Integer.parseInt(aNumberOfRounds);
             for (int tmpRound = 1; tmpRound < (tmpNumberOfRounds + 1); tmpRound++) {
                 try {
                     int tmpRate = (int) (tmpListSize / (float)tmpNumberOfRounds * tmpRound);
@@ -405,7 +405,7 @@ public class PerformanceTest {
         PrintWriter tmpPrintWriter = null;
         try {
             FileWriter tmpFileWriter = new FileWriter(this.workingPath
-                    + PerformanceTest.EXCEPTIONS_LOG_FILE_NAME, true);
+                    + "/Results/" + PerformanceTest.EXCEPTIONS_LOG_FILE_NAME, true);
             tmpPrintWriter = new PrintWriter(tmpFileWriter);
             StringWriter tmpStringWriter = new StringWriter();
             anException.printStackTrace(new PrintWriter(tmpStringWriter));
