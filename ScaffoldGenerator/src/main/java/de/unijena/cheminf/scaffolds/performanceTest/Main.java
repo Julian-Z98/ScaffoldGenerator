@@ -30,7 +30,7 @@ public class Main {
 
     /**
      * Starts the application. Command line arguments must be the name of an SD-file to read (must be located in the
-     * same directory as the application's .jar file) and the number of different threads to use for calculation.
+     * same directory as the application's .jar file).
      *
      * @param args the command line arguments
      */
@@ -38,7 +38,9 @@ public class Main {
         try {
             //PerformanceTest tmpApplication = new PerformanceTest("ScaffoldGenerator\\src\\test\\resources\\PerformanceTest.sdf");
             //PerformanceTest tmpApplication = new PerformanceTest("ScaffoldGenerator\\src\\test\\resources\\COCONUT_DB1000.sdf");
-            PerformanceTest tmpApplication = new PerformanceTest(args[0]);
+            //PerformanceTest tmpApplication = new PerformanceTest("ScaffoldGenerator\\src\\test\\resources\\COCONUT_PROBLEM.sdf");
+            //PerformanceTest tmpApplication = new PerformanceTest("ScaffoldGenerator\\src\\test\\resources\\COCONUT_DB1000.sdf", "1");
+            PerformanceTest tmpApplication = new PerformanceTest(args[0], args[1]);
         } catch (Exception anException) {
             anException.printStackTrace(System.err);
             System.exit(1);
