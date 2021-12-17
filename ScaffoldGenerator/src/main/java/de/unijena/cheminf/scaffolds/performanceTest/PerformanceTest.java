@@ -80,6 +80,16 @@ public class PerformanceTest {
      * Name of CSV file for the forest SMILES and the number of origins
      */
     private static final String CSV_ORIGIN_FOREST_FILE_NAME = "CSV_Origin_Forest";
+
+    /**
+     * Name of CSV file for the empty forest scaffolds
+     */
+    private static final String CSV_EMPTY_SCAFFOLD_FOREST_FILE_NAME = "CSV_Empty_Forest_Scaffold";
+
+    /**
+     * Name of CSV file for the empty network scaffolds
+     */
+    private static final String CSV_EMPTY_SCAFFOLD_NETWORK_FILE_NAME = "CSV_Empty_Network_Scaffold";
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="Private class variables">
@@ -169,6 +179,14 @@ public class PerformanceTest {
             PrintWriter tmpOriginForestOriginPrintWriter = new PrintWriter(tmpOriginForestOriginFileWriter);
             tmpOriginForestOriginPrintWriter.println("SMILES of the node,Number of origins,NonVirtualOrigins");
             tmpOriginForestOriginPrintWriter.flush();
+            /*empty scaffold forest file*/
+            File tmpEmptyScaffoldForestFile = new File(this.workingPath + "/Results/" + PerformanceTest.CSV_EMPTY_SCAFFOLD_FOREST_FILE_NAME + tmpProcessingTime + ".csv");
+            FileWriter tmpEmptyScaffoldForestFileWriter = new FileWriter(tmpEmptyScaffoldForestFile, false);
+            PrintWriter tmpEmptyScaffoldForestPrintWriter = new PrintWriter(tmpEmptyScaffoldForestFileWriter);
+            /*empty scaffold file*/
+            File tmpEmptyScaffoldNetworkFile = new File(this.workingPath + "/Results/" + PerformanceTest.CSV_EMPTY_SCAFFOLD_NETWORK_FILE_NAME + tmpProcessingTime + ".csv");
+            FileWriter tmpEmptyScaffoldNetworkFileWriter = new FileWriter(tmpEmptyScaffoldNetworkFile, false);
+            PrintWriter tmpEmptyScaffoldNetworkPrintWriter = new PrintWriter(tmpEmptyScaffoldNetworkFileWriter);
             IteratingSDFReader tmpDBReader = new IteratingSDFReader(tmpDBFileInputStream, DefaultChemObjectBuilder.getInstance(), true);
             /*Load molecules*/
             List<IAtomContainer> tmpMoleculesList = new LinkedList<>();
@@ -308,6 +326,11 @@ public class PerformanceTest {
                                     String tmpSMILES = tmpSmilesGenerator.create((IAtomContainer) tmpNode.getMolecule());
                                     tmpOriginNetworkOriginPrintWriter.println(tmpSMILES + "," +  tmpNode.getOriginCount());
                                     tmpOriginNetworkOriginPrintWriter.flush();
+                                    if(tmpSMILES.equals("")||tmpSMILES.isEmpty()) {
+                                        for(Object tmpOrigin : tmpNode.getOriginSmilesList()) {
+                                            tmpEmptyScaffoldNetworkPrintWriter.println(tmpOrigin);
+                                        }
+                                    }
                                 } catch (Exception anException) {
                                     tmpExceptionsPrintWriter.println("Network Origin ERROR. Probably a SmilesGenerator Problem");
                                     tmpExceptionsPrintWriter.flush();
@@ -331,8 +354,15 @@ public class PerformanceTest {
                                         String tmpSMILES = tmpSmilesGenerator.create((IAtomContainer) tmpNode.getMolecule());
                                         tmpOriginForestOriginPrintWriter.print(tmpSMILES + "," +  tmpNode.getOriginCount());
                                         try {
-                                            if(tmpNode.equals(tmpRootNode) && !tmpSMILES.equals("")) {
-                                                if(tmpTree.getAllNodes().size() < 50) {
+                                            if(tmpNode.equals(tmpRootNode)) {
+                                                if(tmpSMILES.equals("")|| tmpSMILES.isEmpty()) {
+                                                    for(ScaffoldNodeBase tmpOriginNode : tmpTree.getAllNodes()) {
+                                                        for(Object tmpOrigin : tmpOriginNode.getOriginSmilesList()) {
+                                                            tmpEmptyScaffoldForestPrintWriter.println(tmpOrigin);
+                                                        }
+                                                    }
+                                                }
+                                                if(tmpTree.getAllNodes().size() < 50 && !tmpSMILES.isEmpty()) {
                                                     for(ScaffoldNodeBase tmpOriginNode : tmpTree.getAllNodes()) {
                                                         for(Object tmpOrigin : tmpOriginNode.getNonVirtualOriginSmilesList()) {
                                                             tmpOriginForestOriginPrintWriter.print("," + tmpOrigin);
@@ -343,7 +373,7 @@ public class PerformanceTest {
                                                 }
                                             }
                                         } catch(Exception anException) {
-                                            tmpExceptionsPrintWriter.println("Forest NonVirtualOrigin ERROR. Probably a SmilesGenerator Problem");
+                                            tmpExceptionsPrintWriter.println("Forest NonVirtualOrigin   ERROR. Probably a SmilesGenerator Problem");
                                             tmpExceptionsPrintWriter.flush();
                                             this.appendToLogfile(anException);
                                         }
@@ -383,6 +413,10 @@ public class PerformanceTest {
             tmpOriginNetworkOriginPrintWriter.close();
             tmpOriginForestOriginPrintWriter.flush();
             tmpOriginForestOriginPrintWriter.close();
+            tmpEmptyScaffoldNetworkPrintWriter.flush();
+            tmpEmptyScaffoldNetworkPrintWriter.close();
+            tmpEmptyScaffoldForestPrintWriter.flush();
+            tmpEmptyScaffoldForestPrintWriter.close();
             tmpFileHandler.close();
             tmpExceptionsPrintWriter.close();
         } catch (Exception anException) {
