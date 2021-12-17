@@ -62,7 +62,7 @@ import static junit.framework.TestCase.assertEquals;
  * JUnit test class for the ScaffoldGenerator
  *
  * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
- * @version 1.0.3.0
+ * @version 1.0.4.0
  */
 public class ScaffoldGeneratorTest extends ScaffoldGenerator {
 
@@ -980,6 +980,84 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         /*Check if there is only one fragment there*/
         assertEquals(1, tmpMoleculeList.size());
         assertEquals(16, tmpMoleculeList.get(0).getAtomCount());
+    }
+
+    /**
+     * Tests the network decomposition on two intertwined ring systems.
+     * none of the nodes should be empty
+     * @throws Exception if anything goes wrong
+     */
+    @Test
+    public void heteroThreeGenerateScaffoldNetworkTest() throws Exception {
+        //SMILES to IAtomContainer
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("O=C(O)C(NC(=O)C(N)C(C)C)C1N2CC2C(N=C(N)N)C1");
+        //Generate a Network of molecules with iteratively removed terminal rings
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        /*Uncomment the molecule to display it*/
+        ScaffoldNetwork tmpScaffoldNetwork = tmpScaffoldGenerator.generateScaffoldNetwork(tmpMolecule1);//Ondasetron
+        /*Print some further information*/
+        assertEquals(3, tmpScaffoldNetwork.getAllNodes().size());//Should not be disassembled further
+        for(ScaffoldNodeBase tmpNode : tmpScaffoldNetwork.getAllNodes()) {
+            IAtomContainer tmpNodeMolecule = (IAtomContainer) tmpNode.getMolecule();
+            boolean tmpIsEmpty = true;
+            if(tmpNodeMolecule.getAtomCount() != 0) {
+                tmpIsEmpty = false;
+            }
+            assertEquals(false, tmpIsEmpty);
+        }
+        tmpMolecule1 = tmpParser.parseSmiles("O=C1C=C2C(=CC=C1OC)C3=C(OC)C(=O)C(O)=CC34N5C2CC54C");
+        /*Uncomment the molecule to display it*/
+        tmpScaffoldNetwork = tmpScaffoldGenerator.generateScaffoldNetwork(tmpMolecule1);//Ondasetron
+        for(ScaffoldNodeBase tmpNode : tmpScaffoldNetwork.getAllNodes()) {
+            IAtomContainer tmpNodeMolecule = (IAtomContainer) tmpNode.getMolecule();
+            boolean tmpIsEmpty = true;
+            if(tmpNodeMolecule.getAtomCount() != 0) {
+                tmpIsEmpty = false;
+            }
+            assertEquals(false, tmpIsEmpty);
+        }
+        /*Print some further information*/
+        assertEquals(17, tmpScaffoldNetwork.getAllNodes().size());//Should not be disassembled further
+    }
+
+    /**
+     * Tests the enumerative removal on two intertwined ring systems.
+     * none of the nodes should be empty
+     * @throws Exception if anything goes wrong
+     */
+    @Test
+    public void heteroGenerateSchuffenauerRemovalTest() throws Exception {
+        //SMILES to IAtomContainer
+        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        IAtomContainer tmpMolecule1 = tmpParser.parseSmiles("O=C(O)C(NC(=O)C(N)C(C)C)C1N2CC2C(N=C(N)N)C1");
+        //Generate a Network of molecules with iteratively removed terminal rings
+        ScaffoldGenerator tmpScaffoldGenerator = this.getScaffoldGeneratorTestSettings();
+        /*Uncomment the molecule to display it*/
+        ScaffoldTree tmpTree = tmpScaffoldGenerator.generateSchuffenhauerTree(tmpMolecule1);//Ondasetron
+        for(ScaffoldNodeBase tmpNode : tmpTree.getAllNodes()) {
+            IAtomContainer tmpNodeMolecule = (IAtomContainer) tmpNode.getMolecule();
+            boolean tmpIsEmpty = true;
+            if(tmpNodeMolecule.getAtomCount() != 0) {
+                tmpIsEmpty = false;
+            }
+            assertEquals(false, tmpIsEmpty);
+        }
+        /*Print some further information*/
+        assertEquals(2, tmpTree.getAllNodes().size());//Should not be disassembled further
+        tmpMolecule1 = tmpParser.parseSmiles("O=C1C=C2C(=CC=C1OC)C3=C(OC)C(=O)C(O)=CC34N5C2CC54C");
+        /*Uncomment the molecule to display it*/
+        tmpTree = tmpScaffoldGenerator.generateSchuffenhauerTree(tmpMolecule1);//Ondasetron
+        for(ScaffoldNodeBase tmpNode : tmpTree.getAllNodes()) {
+            IAtomContainer tmpNodeMolecule = (IAtomContainer) tmpNode.getMolecule();
+            boolean tmpIsEmpty = true;
+            if(tmpNodeMolecule.getAtomCount() != 0) {
+                tmpIsEmpty = false;
+            }
+            assertEquals(false, tmpIsEmpty);
+        }
+        /*Print some further information*/
+        assertEquals(5, tmpTree.getAllNodes().size());//Should not be disassembled further
     }
     //</editor-fold>
 
