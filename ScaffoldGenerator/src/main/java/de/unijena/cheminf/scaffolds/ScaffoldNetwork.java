@@ -18,14 +18,13 @@
 
 package de.unijena.cheminf.scaffolds;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.smiles.SmilesGenerator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
@@ -73,13 +72,23 @@ public class ScaffoldNetwork extends ScaffoldNodeCollectionBase {
         this.smilesMap.put(tmpSmiles, aNode);
         /*Since the network is built from the leaves to the root,
          the levels of all nodes in the network must be re-determined for every node added.*/
-        this.levelMap.put(aNode.getLevel(), aNode);
-        ListMultimap<Integer, ScaffoldNodeBase> tmpLevelMap = ArrayListMultimap.create();
+        List<ScaffoldNodeBase> tmpNodeBaseList = new ArrayList<>();
+        if(this.levelMap.keySet().contains(aNode.getLevel())) {
+            tmpNodeBaseList.addAll(this.levelMap.get(aNode.getLevel()));
+        }
+        tmpNodeBaseList.add(aNode);
+        this.levelMap.put(aNode.getLevel(), tmpNodeBaseList);
+        HashMap<Integer, List<ScaffoldNodeBase>> tmpLevelMap = new HashMap<>();
         for(ScaffoldNodeBase tmpNodeBase : this.getAllNodes()) {
             NetworkNode tmpNetworkNode = (NetworkNode) tmpNodeBase;
-            tmpLevelMap.put(tmpNetworkNode.getLevel(), tmpNetworkNode);
+            List<ScaffoldNodeBase> tmpNodeBaseListInternal = new ArrayList<>();
+            if(tmpLevelMap.keySet().contains(tmpNetworkNode.getLevel())) {
+                tmpNodeBaseListInternal.addAll(this.levelMap.get(tmpNetworkNode.getLevel()));
+            }
+            tmpNodeBaseListInternal.add(tmpNetworkNode);
+            tmpLevelMap.put(tmpNetworkNode.getLevel(), tmpNodeBaseListInternal);
+            this.levelMap = tmpLevelMap;
         }
-        this.levelMap = tmpLevelMap;
         //Increase nodeCounter
         this.nodeCounter++;
     }

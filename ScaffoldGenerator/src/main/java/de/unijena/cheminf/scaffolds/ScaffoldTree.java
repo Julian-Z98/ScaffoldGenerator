@@ -22,7 +22,9 @@ import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.smiles.SmilesGenerator;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 
@@ -69,7 +71,12 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
         String tmpSmiles = this.smilesGenerator.create(tmpMolecule); //Convert molecule to SMILES
         this.smilesMap.put(tmpSmiles, aNode);
         //Add to levelMap
-        this.levelMap.put(aNode.getLevel(), aNode);
+        List<ScaffoldNodeBase> tmpNodeBaseList = new ArrayList<>();
+        if(this.levelMap.keySet().contains(aNode.getLevel())) {
+            tmpNodeBaseList.addAll(this.levelMap.get(aNode.getLevel()));
+        }
+        tmpNodeBaseList.add(aNode);
+        this.levelMap.put(aNode.getLevel(), tmpNodeBaseList);
         /*Add origins from the new node to parent nodes*/
         for(int tmpCount = 0; tmpCount < aNode.getLevel(); tmpCount++) {
             TreeNode tmpNextNode = ((TreeNode<?>) aNode).getParent();
