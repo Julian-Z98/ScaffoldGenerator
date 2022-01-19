@@ -52,6 +52,7 @@ import java.io.FileReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -62,7 +63,7 @@ import static junit.framework.TestCase.assertEquals;
  * JUnit test class for the ScaffoldGenerator
  *
  * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
- * @version 1.0.4.0
+ * @version 1.0.5.0
  */
 public class ScaffoldGeneratorTest extends ScaffoldGenerator {
 
@@ -716,25 +717,28 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         tmpScaffoldNetwork.removeNode(tmpRemoveNode);
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator(SmiFlavor.Unique);
         List <IAtomContainer> tmpMoleculeList = new ArrayList<>();
-        for(ScaffoldNodeBase tmpTestNodeBase : tmpScaffoldNetwork.getAllNodes()) {
+        List <String> tmpStringList = new ArrayList<>();
+     for(ScaffoldNodeBase tmpTestNodeBase : tmpScaffoldNetwork.getAllNodes()) {
             NetworkNode tmpTestNode = (NetworkNode) tmpTestNodeBase;
             IAtomContainer tmpTestMolecule = (IAtomContainer) tmpTestNode.getMolecule();
             tmpMoleculeList.add(tmpTestMolecule);
+            tmpStringList.add(tmpSmilesGenerator.create(tmpTestMolecule));
             assertEquals("[H]C12SC(C)(C)C(C(=O)O)N2C(=O)C1NC(=O)C=3C(=NOC3C)C=4C(F)=CC=CC4Cl", tmpTestNode.getOriginSmilesList().get(0));
             if(!tmpTestNode.getNonVirtualOriginCount().equals(0)) {
                 assertEquals("[H]C12SC(C)(C)C(C(=O)O)N2C(=O)C1NC(=O)C=3C(=NOC3C)C=4C(F)=CC=CC4Cl", tmpTestNode.getNonVirtualOriginSmilesList().get(0));
             }
         }
-        assertEquals("S1CNCC1", tmpSmilesGenerator.create(tmpMoleculeList.get(0)));
-        assertEquals("O=C1NCC1", tmpSmilesGenerator.create(tmpMoleculeList.get(1)));
-        assertEquals("N=1OC=CC1", tmpSmilesGenerator.create(tmpMoleculeList.get(2)));
-        assertEquals("C=1C=CC=CC1", tmpSmilesGenerator.create(tmpMoleculeList.get(3)));
-        assertEquals("N=1OC=CC1C=2C=CC=CC2", tmpSmilesGenerator.create(tmpMoleculeList.get(4)));
-        assertEquals("O=C(NC1C(=O)NC1)C=2C=NOC2", tmpSmilesGenerator.create(tmpMoleculeList.get(5)));
-        assertEquals("O=C1N2CCSC2C1", tmpSmilesGenerator.create(tmpMoleculeList.get(6)));
-        assertEquals("O=C(NC1C(=O)NC1)C2=CON=C2C=3C=CC=CC3", tmpSmilesGenerator.create(tmpMoleculeList.get(7)));
-        assertEquals("O=C(NC1C(=O)N2CCSC21)C=3C=NOC3", tmpSmilesGenerator.create(tmpMoleculeList.get(8)));
-        assertEquals("O=C(NC1C(=O)N2CCSC21)C3=CON=C3C=4C=CC=CC4", tmpSmilesGenerator.create(tmpMoleculeList.get(9)));
+        Collections.sort(tmpStringList);
+        assertEquals("C=1C=CC=CC1", tmpStringList.get(0));
+        assertEquals("N=1OC=CC1", tmpStringList.get(1));
+        assertEquals("N=1OC=CC1C=2C=CC=CC2", tmpStringList.get(2));
+        assertEquals("O=C(NC1C(=O)N2CCSC21)C3=CON=C3C=4C=CC=CC4", tmpStringList.get(3));
+        assertEquals("O=C(NC1C(=O)N2CCSC21)C=3C=NOC3", tmpStringList.get(4));
+        assertEquals("O=C(NC1C(=O)NC1)C2=CON=C2C=3C=CC=CC3", tmpStringList.get(5));
+        assertEquals("O=C(NC1C(=O)NC1)C=2C=NOC2", tmpStringList.get(6));
+        assertEquals("O=C1N2CCSC2C1", tmpStringList.get(7));
+        assertEquals("O=C1NCC1", tmpStringList.get(8));
+        assertEquals("S1CNCC1", tmpStringList.get(9));
     }
 
     /**

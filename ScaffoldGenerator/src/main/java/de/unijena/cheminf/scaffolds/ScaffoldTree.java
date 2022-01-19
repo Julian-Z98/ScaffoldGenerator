@@ -22,9 +22,8 @@ import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.smiles.SmilesGenerator;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Objects;
 
 
@@ -33,7 +32,7 @@ import java.util.Objects;
  * A tree can have one root and several leaves.
  *
  * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
- * @version 1.0.1.0
+ * @version 1.0.2.0
  */
 public class ScaffoldTree extends ScaffoldNodeCollectionBase {
 
@@ -71,13 +70,11 @@ public class ScaffoldTree extends ScaffoldNodeCollectionBase {
         String tmpSmiles = this.smilesGenerator.create(tmpMolecule); //Convert molecule to SMILES
         this.smilesMap.put(tmpSmiles, aNode);
         //Add to levelMap
-        List<ScaffoldNodeBase> tmpNodeBaseList = new ArrayList<>();
-        if(this.levelMap.keySet().contains(aNode.getLevel())) {
-            tmpNodeBaseList.addAll(this.levelMap.get(aNode.getLevel()));
+        int tmpLevel = aNode.getLevel();
+        if(this.levelMap.get(tmpLevel) == null) {
+            this.levelMap.put(tmpLevel, new HashSet<>());
         }
-        tmpNodeBaseList.add(aNode);
-        this.levelMap.put(aNode.getLevel(), tmpNodeBaseList);
-        /*Add origins from the new node to parent nodes*/
+        this.levelMap.get(tmpLevel).add(aNode);
         for(int tmpCount = 0; tmpCount < aNode.getLevel(); tmpCount++) {
             TreeNode tmpNextNode = ((TreeNode<?>) aNode).getParent();
             for(Object tmpString : aNode.getOriginSmilesList()) {
