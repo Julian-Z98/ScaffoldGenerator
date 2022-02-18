@@ -80,16 +80,6 @@ public class PerformanceTest {
      * Name of CSV file for the forest SMILES and the number of origins
      */
     private static final String CSV_ORIGIN_FOREST_FILE_NAME = "CSV_Origin_Forest";
-
-    /**
-     * Name of CSV file for the empty forest scaffolds
-     */
-    private static final String CSV_EMPTY_SCAFFOLD_FOREST_FILE_NAME = "CSV_Empty_Forest_Scaffold";
-
-    /**
-     * Name of CSV file for the empty network scaffolds
-     */
-    private static final String CSV_EMPTY_SCAFFOLD_NETWORK_FILE_NAME = "CSV_Empty_Network_Scaffold";
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="Private class variables">
@@ -106,8 +96,8 @@ public class PerformanceTest {
      *
      * First, all molecules with more than 10 rings are removed.
      * The Schuffenhauer fragments and the enumerative fragments of all molecules are then generated and the time of generation is measured.
-     * The molecules are then divided into 100 subsets in ascending order of size and the generation of networks and forests is performed with these subsets.
-     * The size of the subsets is 1/100 to 100/100 of the dataset and the respective runtime for each subset is stored in a CSV file.
+     * The molecules are then divided into subsets in ascending order of size and the generation of networks and forests is performed with these subsets.
+     * The size of the sets can be freely determined and the respective runtime for each subset is stored in a CSV file.
      *
      * Results and logs are generated and saved in different txt and csv files in the .jar folder:
      * -Results.txt contains the summary of all tests run and their runtimes
@@ -119,7 +109,7 @@ public class PerformanceTest {
      * It exits the system if an unexpected exception occurs that prevents the application from working, e.g. an IllegalArgumentException
      * (will be logged to a file, not printed on the console).
      *
-     * @param anArgs the command line arguments, anArgs[0] must be the name of the SD file to load (must be located in
+     * @param anArgs the command line argument, anArgs must be the name of the SD file to load (must be located in
      * the same directory as the application's JAR file)
      * @param aNumberOfRounds is the number of steps in which the database is to be run through.
      * @throws IOException if the constructor is unable to open a text file for logging occurred exceptions
@@ -179,14 +169,6 @@ public class PerformanceTest {
             PrintWriter tmpOriginForestOriginPrintWriter = new PrintWriter(tmpOriginForestOriginFileWriter);
             tmpOriginForestOriginPrintWriter.println("SMILES of the node,Number of origins,NonVirtualOrigins");
             tmpOriginForestOriginPrintWriter.flush();
-            /*empty scaffold forest file*/
-            File tmpEmptyScaffoldForestFile = new File(this.workingPath + "/Results/" + PerformanceTest.CSV_EMPTY_SCAFFOLD_FOREST_FILE_NAME + tmpProcessingTime + ".csv");
-            FileWriter tmpEmptyScaffoldForestFileWriter = new FileWriter(tmpEmptyScaffoldForestFile, false);
-            PrintWriter tmpEmptyScaffoldForestPrintWriter = new PrintWriter(tmpEmptyScaffoldForestFileWriter);
-            /*empty scaffold file*/
-            File tmpEmptyScaffoldNetworkFile = new File(this.workingPath + "/Results/" + PerformanceTest.CSV_EMPTY_SCAFFOLD_NETWORK_FILE_NAME + tmpProcessingTime + ".csv");
-            FileWriter tmpEmptyScaffoldNetworkFileWriter = new FileWriter(tmpEmptyScaffoldNetworkFile, false);
-            PrintWriter tmpEmptyScaffoldNetworkPrintWriter = new PrintWriter(tmpEmptyScaffoldNetworkFileWriter);
             IteratingSDFReader tmpDBReader = new IteratingSDFReader(tmpDBFileInputStream, DefaultChemObjectBuilder.getInstance(), true);
             /*Load molecules*/
             List<IAtomContainer> tmpMoleculesList = new LinkedList<>();
@@ -326,11 +308,6 @@ public class PerformanceTest {
                                     String tmpSMILES = tmpSmilesGenerator.create((IAtomContainer) tmpNode.getMolecule());
                                     tmpOriginNetworkOriginPrintWriter.println(tmpSMILES + "," +  tmpNode.getOriginCount());
                                     tmpOriginNetworkOriginPrintWriter.flush();
-                                    if(tmpSMILES.equals("")||tmpSMILES.isEmpty()) {
-                                        for(Object tmpOrigin : tmpNode.getOriginSmilesList()) {
-                                            tmpEmptyScaffoldNetworkPrintWriter.println(tmpOrigin);
-                                        }
-                                    }
                                 } catch (Exception anException) {
                                     tmpExceptionsPrintWriter.println("Network Origin ERROR. Probably a SmilesGenerator Problem");
                                     tmpExceptionsPrintWriter.flush();
@@ -355,13 +332,6 @@ public class PerformanceTest {
                                         tmpOriginForestOriginPrintWriter.print(tmpSMILES + "," +  tmpNode.getOriginCount());
                                         try {
                                             if(tmpNode.equals(tmpRootNode)) {
-                                                if(tmpSMILES.equals("")|| tmpSMILES.isEmpty()) {
-                                                    for(ScaffoldNodeBase tmpOriginNode : tmpTree.getAllNodes()) {
-                                                        for(Object tmpOrigin : tmpOriginNode.getOriginSmilesList()) {
-                                                            tmpEmptyScaffoldForestPrintWriter.println(tmpOrigin);
-                                                        }
-                                                    }
-                                                }
                                                 if(tmpTree.getAllNodes().size() < 50 && !tmpSMILES.isEmpty()) {
                                                     for(ScaffoldNodeBase tmpOriginNode : tmpTree.getAllNodes()) {
                                                         for(Object tmpOrigin : tmpOriginNode.getNonVirtualOriginSmilesList()) {
@@ -413,10 +383,6 @@ public class PerformanceTest {
             tmpOriginNetworkOriginPrintWriter.close();
             tmpOriginForestOriginPrintWriter.flush();
             tmpOriginForestOriginPrintWriter.close();
-            tmpEmptyScaffoldNetworkPrintWriter.flush();
-            tmpEmptyScaffoldNetworkPrintWriter.close();
-            tmpEmptyScaffoldForestPrintWriter.flush();
-            tmpEmptyScaffoldForestPrintWriter.close();
             tmpFileHandler.close();
             tmpExceptionsPrintWriter.close();
         } catch (Exception anException) {
