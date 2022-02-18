@@ -36,10 +36,7 @@ public class Main {
      */
     public static void main(String[] args) {
         try {
-            //PerformanceTest tmpApplication = new PerformanceTest("ScaffoldGenerator\\src\\test\\resources\\PerformanceTest.sdf");
-            //PerformanceTest tmpApplication = new PerformanceTest("ScaffoldGenerator\\src\\test\\resources\\COCONUT_DB1000.sdf");
-            //PerformanceTest tmpApplication = new PerformanceTest("ScaffoldGenerator\\src\\test\\resources\\COCONUT_PROBLEM.sdf");
-            //PerformanceTest tmpApplication = new PerformanceTest("ScaffoldGenerator\\src\\test\\resources\\COCONUT_DB1000.sdf", "1");
+            //PerformanceTest tmpApplication = new PerformanceTest("ScaffoldGenerator\\src\\test\\resources\\Drugbank_081121.sdf", "1");
             PerformanceTest tmpApplication = new PerformanceTest(args[0], args[1]);
         } catch (Exception anException) {
             anException.printStackTrace(System.err);
