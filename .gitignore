@@ -23,3 +23,9 @@ Figure/
 /CSV_Origin_Forest.csv
 /CSV_Origin_Network.csv
 /CSV_Time_Stamp.csv
+
+# grid figures sources
+ScaffoldGenerator/src/test/resources/de/unijena/cheminf/scaffolds/CSV_Origin_Forest_COCONUT.csv
+ScaffoldGenerator/src/test/resources/de/unijena/cheminf/scaffolds/CSV_Origin_Network_COCONUT.csv
+ScaffoldGenerator/src/test/resources/de/unijena/cheminf/scaffolds/CSV_Origin_Forest_DrugBank.csv
+ScaffoldGenerator/src/test/resources/de/unijena/cheminf/scaffolds/CSV_Origin_Network_DrugBank.csv

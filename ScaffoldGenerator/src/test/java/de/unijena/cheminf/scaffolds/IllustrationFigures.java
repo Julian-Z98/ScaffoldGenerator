@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Julian Zander, Jonas Schaub, Achim Zielesny, Christoph Steinbeck
+ * Copyright (c) 2022 Julian Zander, Jonas Schaub, Achim Zielesny, Christoph Steinbeck
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -26,10 +26,22 @@ import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.smiles.SmilesParser;
 
 import javax.imageio.ImageIO;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Class that creates sample images.
@@ -392,6 +404,103 @@ public class IllustrationFigures extends ScaffoldGenerator {
             ImageIO.write(tmpImgRemove, "png", tmpOutputRemove);
             tmpCounter++;
         }
+    }
+
+    /**
+     * Depicts the 20 most frequent scaffolds in DrugBank and COCONUT (for forest and network), imported from CSV files
+     * that were created using the performance test command-line application.
+     *
+     * @throws Exception if anything goes wrong
+     * @author Jonas Schaub
+     */
+    @Test
+    public void gridFiguresTest() throws Exception {
+        String tmpOutputFolderPath = new File(System.getProperty("user.dir")).getAbsolutePath() + File.separator
+                + "Figure" + File.separator + "GridFigures" + File.separator;
+        File tmpOutputFolderFile = new File(tmpOutputFolderPath);
+        if (!tmpOutputFolderFile.exists()) {
+            tmpOutputFolderFile.mkdirs();
+        } else {
+            for (File tmpFile : tmpOutputFolderFile.listFiles()) {
+                if (!tmpFile.isDirectory()) {
+                    tmpFile.delete();
+                }
+            }
+        }
+        System.out.println("Output directory: " + tmpOutputFolderPath);
+        SmilesParser tmpSmiPar = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        DepictionGenerator tmpDepictionGenerator = new DepictionGenerator();
+        HashMap<String, String> tmpFilesMap = new HashMap<>(10);
+        tmpFilesMap.put("COCONUT_Forest", "CSV_Origin_Forest_COCONUT.csv");
+        tmpFilesMap.put("COCONUT_Network", "CSV_Origin_Network_COCONUT.csv");
+        tmpFilesMap.put("DrugBank_Forest", "CSV_Origin_Forest_DrugBank.csv");
+        tmpFilesMap.put("DrugBank_Network", "CSV_Origin_Network_DrugBank.csv");
+        for (String tmpKey : tmpFilesMap.keySet()) {
+            String tmpSpecificOutputFolderPath = tmpOutputFolderPath + tmpKey + File.separator;
+            File tmpSpecificOutputFolderFile = new File(tmpSpecificOutputFolderPath);
+            if (!tmpSpecificOutputFolderFile.exists()) {
+                tmpSpecificOutputFolderFile.mkdirs();
+            } else {
+                for (File tmpFile : tmpSpecificOutputFolderFile.listFiles()) {
+                    if (!tmpFile.isDirectory()) {
+                        tmpFile.delete();
+                    }
+                }
+            }
+            System.out.println("Output directory: " + tmpSpecificOutputFolderFile);
+            File tmpScaffoldsFile = new File(this.getClass().getResource(tmpFilesMap.get(tmpKey)).getFile());
+            BufferedReader tmpReader = new BufferedReader(new FileReader(tmpScaffoldsFile));
+            //assuming that there are no doublets among the scaffold SMILES
+            HashMap<String, Integer> tmpSMILESToFrequencyMap = new HashMap<>(420000);
+            String tmpLine = tmpReader.readLine(); //skip header;
+            while ((tmpLine = tmpReader.readLine()) != null) {
+                String[] tmpLineSplit = tmpLine.split(",");
+                tmpSMILESToFrequencyMap.put(tmpLineSplit[0],Integer.parseInt(tmpLineSplit[1]));
+            }
+            List <Map.Entry<String, Integer>> tmpEntriesList = new LinkedList<>(tmpSMILESToFrequencyMap.entrySet());
+            //map sorting based on: https://www.programiz.com/java-programming/examples/sort-map-values
+            // call the sort() method of Collections
+            Collections.sort(tmpEntriesList, (l1, l2) -> (-1)*l1.getValue().compareTo(l2.getValue()));
+            // create a new map
+            LinkedHashMap<String, Integer> tmpSortedMap = new LinkedHashMap();
+            // get entry from list to the map
+            for (Map.Entry<String, Integer> entry : tmpEntriesList) {
+                tmpSortedMap.put(entry.getKey(), entry.getValue());
+            }
+            int i = 0;
+            for (Map.Entry tmpEntry : tmpSortedMap.entrySet()) {
+                int tmpFrequency = (Integer) tmpEntry.getValue();
+                String tmpSMILESCode = (String) tmpEntry.getKey();
+                IAtomContainer tmpScaffold = tmpSmiPar.parseSmiles(tmpSMILESCode);
+                /*Generate picture of the molecule*/
+                BufferedImage tmpImg = tmpDepictionGenerator.withSize(300,350).withZoom(2).depict(tmpScaffold).toImg();
+                Graphics2D tmpGraphics2d = tmpImg.createGraphics();
+                tmpGraphics2d.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+                tmpGraphics2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                tmpGraphics2d.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
+                tmpGraphics2d.setRenderingHint(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_ENABLE);
+                tmpGraphics2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+                tmpGraphics2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                tmpGraphics2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                tmpGraphics2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+                tmpGraphics2d.addRenderingHints(new RenderingHints(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON));
+                tmpGraphics2d.drawImage(tmpImg, 0, 0,null);
+                tmpGraphics2d.setColor(Color.BLACK);
+                tmpGraphics2d.setFont(new Font("Calibri", Font.PLAIN, 40));
+                FontMetrics tmpFontMetric = tmpGraphics2d.getFontMetrics();
+                int tmpTextWidth = tmpFontMetric.stringWidth(String.valueOf(tmpFrequency));
+                tmpGraphics2d.drawString(String.valueOf(tmpFrequency), (tmpImg.getWidth() / 2) - tmpTextWidth / 2, tmpImg.getHeight()-20);
+                tmpGraphics2d.dispose();
+                /*Save the picture*/
+                File tmpOutput = new File(tmpSpecificOutputFolderPath + tmpKey + i + ".png");
+                ImageIO.write(tmpImg, "png", tmpOutput);
+                i++;
+                if (i == 20) {
+                    break;
+                }
+            }
+        }
+
     }
 
     /**
