@@ -431,10 +431,10 @@ public class PublicationFigures extends ScaffoldGenerator {
         SmilesParser tmpSmiPar = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         DepictionGenerator tmpDepictionGenerator = new DepictionGenerator();
         HashMap<String, String> tmpFilesMap = new HashMap<>(10);
-        tmpFilesMap.put("COCONUT_Forest", "CSV_Origin_Forest_COCONUT_2021_12_16_10_35.csv");
-        tmpFilesMap.put("COCONUT_Network", "CSV_Origin_Network_COCONUT_2021_12_16_10_35.csv");
-        tmpFilesMap.put("DrugBank_Forest", "CSV_Origin_Forest_DrugBank_2021_12_09_08_42.csv");
-        tmpFilesMap.put("DrugBank_Network", "CSV_Origin_Network_DrugBank_2021_12_09_08_42.csv");
+        tmpFilesMap.put("COCONUT_Forest", "CSV_Origin_Forest_COCONUT.csv");
+        tmpFilesMap.put("COCONUT_Network", "CSV_Origin_Network_COCONUT.csv");
+        tmpFilesMap.put("DrugBank_Forest", "CSV_Origin_Forest_DrugBank.csv");
+        tmpFilesMap.put("DrugBank_Network", "CSV_Origin_Network_DrugBank.csv");
         for (String tmpKey : tmpFilesMap.keySet()) {
             String tmpSpecificOutputFolderPath = tmpOutputFolderPath + tmpKey + File.separator;
             File tmpSpecificOutputFolderFile = new File(tmpSpecificOutputFolderPath);
