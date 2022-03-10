@@ -1,7 +1,7 @@
  /**
  * Performance test for
  * ScaffoldGenerator for CDK
- * Copyright (C) 2021 Julian Zander
+ * Copyright (C) 2022 Julian Zander
  *
  * Source code is available at <https://github.com/Julian-Z98/ScaffoldGenerator>
  *

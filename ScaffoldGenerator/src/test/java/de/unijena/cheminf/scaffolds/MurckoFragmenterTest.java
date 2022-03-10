@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Julian Zander, Jonas Schaub, Achim Zielesny, Christoph Steinbeck
+ * Copyright (c) 2022 Julian Zander, Jonas Schaub, Achim Zielesny, Christoph Steinbeck
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -33,7 +33,7 @@ import org.openscience.cdk.io.MDLV3000Reader;
 import org.openscience.cdk.io.formats.IChemFormat;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -62,7 +62,7 @@ public class MurckoFragmenterTest {
       */
     @Test
     public void testFragmenter() throws IOException, CDKException {
-        for (int tmpCount = 1; tmpCount < 24; tmpCount++) {
+        for (int tmpCount = 1; tmpCount < 8; tmpCount++) {
             String tmpFileName = "Test"+ tmpCount;
             //Get molecule path
             //InputStream tmpInputStream = ScaffoldGenerator.class.getClassLoader().getSystemResourceAsStream(tmpFileName+".mol");

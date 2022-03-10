@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Julian Zander, Jonas Schaub, Achim Zielesny, Christoph Steinbeck
+ * Copyright (c) 2022 Julian Zander, Jonas Schaub, Achim Zielesny, Christoph Steinbeck
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -57,7 +57,7 @@ import java.util.logging.Logger;
  *
  * Furthermore, the molecules can be decomposed according to the <a href="https://doi.org/10.1021/ci600338x">
  * Schuffenhauer rules</a> and a generation of all possible fragments,
- * which can be created by the iterative removal of the rings, is also possible. <br/>
+ * which can be created by the iterative removal of the rings, is also possible. <br>
  * The resulting molecular fragments can be organised in the form of a tree or a network.
  * The network approach is based on the <a href="https://doi.org/10.1021/ci2000924">
  * Mining for Bioactive Scaffolds with Scaffold Networks</a> Paper.
@@ -370,7 +370,11 @@ public class ScaffoldGenerator {
      */
     public IAtomContainer getScaffold(IAtomContainer aMolecule, boolean anAddImplicitHydrogens) throws CDKException, CloneNotSupportedException, NullPointerException {
         Objects.requireNonNull(aMolecule, "Input molecule must be non null");
-        IAtomContainer tmpMolecule =  this.getScaffoldInternal(aMolecule, anAddImplicitHydrogens, this.determineAromaticitySetting, this.aromaticityModelSetting, this.scaffoldModeSetting);
+        IAtomContainer tmpMolecule =  this.getScaffoldInternal(aMolecule,
+                anAddImplicitHydrogens,
+                this.determineAromaticitySetting,
+                this.aromaticityModelSetting,
+                this.scaffoldModeSetting);
         return tmpMolecule;
     }
 
@@ -590,7 +594,7 @@ public class ScaffoldGenerator {
      * A new level is created when the total number of rings decreases by 1.
      * Level 0 is the one with the fewest (mostly 1) rings and therefore the root. <p>
      *
-     * Duplicates are permitted. <br />
+     * Duplicates are permitted. <br>
      * Duplicates are not given their own node, but a link created to the existing related node.
      * In this way, a child can have several parents. <p>
      *
@@ -612,7 +616,7 @@ public class ScaffoldGenerator {
         List<IAtomContainer> tmpIterativeRemovalList = new ArrayList<>(tmpRingCount * 45);
         tmpIterativeRemovalList.add(tmpScaffoldOriginal); //Add origin Scaffold
         /*Add the first node to the tree*/
-        NetworkNode tmpFirstNode = new NetworkNode<>(tmpScaffoldOriginal);
+        NetworkNode<IAtomContainer> tmpFirstNode = new NetworkNode<>(tmpScaffoldOriginal);
         tmpScaffoldNetwork.addNode(tmpFirstNode);
         /*Get the origin and link it to the first node*/
         String tmpFirstNodeSmiles = this.getSmilesGenerator().create(aMolecule);
@@ -637,7 +641,7 @@ public class ScaffoldGenerator {
                     if(!tmpScaffoldNetwork.containsMolecule(tmpRingRemoved)) {
                         tmpIterativeRemovalList.add(tmpRingRemoved);
                         //Create new node
-                        NetworkNode tmpNewNode = new NetworkNode<>(tmpRingRemoved);
+                        NetworkNode<IAtomContainer> tmpNewNode = new NetworkNode<>(tmpRingRemoved);
                         //Add the new node as parent for the old one
                         NetworkNode tmpNode1 = (NetworkNode) tmpScaffoldNetwork.getNode(tmpIterMol);
                         tmpNode1.addParent(tmpNewNode);
@@ -664,7 +668,7 @@ public class ScaffoldGenerator {
      *
      * Iteratively removes the terminal rings of each molecule. All resulting scaffolds of a molecule are saved in a ScaffoldNetwork.
      * A new level is created when the total number of rings decreases by 1.
-     * Level 0 is the one with the fewest (mostly 1) rings and therefore the root. <br />
+     * Level 0 is the one with the fewest (mostly 1) rings and therefore the root. <br>
      *
      * All networks are merged together. Duplicates are permitted.
      * Duplicates are not given their own node, but a link created to the existing related node.
@@ -708,7 +712,7 @@ public class ScaffoldGenerator {
 
     /**
      * Iteratively removes the rings of the molecule according to specific rules that are queried hierarchically
-     * and returns the scaffolds as list. <br/>
+     * and returns the scaffolds as list. <br>
      * Based on the rules from the  <a href="https://doi.org/10.1021/ci600338x"> "The Scaffold Tree"</a> Paper by Schuffenhauer et al.
      * Rule 7 {@link ScaffoldGenerator#applySchuffenhauerRuleSeven(IAtomContainer, List)} is only applied
      * if {@link ScaffoldGenerator#ruleSevenAppliedSetting} is true.
@@ -874,7 +878,7 @@ public class ScaffoldGenerator {
         IAtomContainer tmpClonedMolecule = aMolecule.clone();
         List<IAtomContainer> tmpFragmentList = this.applySchuffenhauerRules(tmpClonedMolecule);
         /*Set the root for the ScaffoldTree and add the origin of the root*/
-        TreeNode tmpReverseParentNode =  new TreeNode<IAtomContainer>(tmpFragmentList.get(tmpFragmentList.size()-1));
+        TreeNode<IAtomContainer> tmpReverseParentNode =  new TreeNode<IAtomContainer>(tmpFragmentList.get(tmpFragmentList.size()-1));
         String tmpSmiles = this.getSmilesGenerator().create(tmpClonedMolecule);
         tmpReverseParentNode.addOriginSmiles(tmpSmiles);
         //Add non virtual if tmpFragmentList.size loop do not run
@@ -885,7 +889,7 @@ public class ScaffoldGenerator {
         tmpScaffoldTree.addNode(tmpReverseParentNode);
         /*Build the ScaffoldTree with the smallest fragment as root and add the origin to each fragment*/
         for(int i = 1; i < tmpFragmentList.size(); i++) {
-            TreeNode tmpNewNode = new TreeNode<IAtomContainer>(tmpFragmentList.get((tmpFragmentList.size() - 1) - i));
+            TreeNode<IAtomContainer> tmpNewNode = new TreeNode<IAtomContainer>(tmpFragmentList.get((tmpFragmentList.size() - 1) - i));
             IAtomContainer tmpTestMol = (IAtomContainer) tmpNewNode.getMolecule();
             TreeNode tmpNode = (TreeNode) tmpScaffoldTree.getAllNodesOnLevel(i - 1).get(0);
             tmpNode.addChild(tmpTestMol);
@@ -1348,16 +1352,15 @@ public class ScaffoldGenerator {
                         Integer tmpRingCloneProperty0 = tmpRingClone.getAtom(0).getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY);
                         Integer tmpRingCloneProperty1 = tmpRingClone.getAtom(1).getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY);
                         /* Find the second atom to which the heteroatom was bonded if it was sp3 hybridised*/
-                        if((tmpMolAtomProperty.equals(tmpRingCloneProperty0) ||
-                                tmpMolAtomProperty.equals(tmpRingCloneProperty1)) && tmpBondAtom1 != null) {
-                            //insert a double bond between the two atoms
-                            tmpMoleculeClone.getBond(tmpBondAtom1 , tmpMolAtom).setOrder(IBond.Order.DOUBLE);
-                        }
-                        /*Find the first atom to which the heteroatom was bonded if it was sp3 hybridised*/
-                        if((tmpMolAtomProperty.equals(tmpRingCloneProperty0) ||
-                                tmpMolAtomProperty.equals(tmpRingCloneProperty1)) && tmpBondAtom1 == null) {
-                            //Save this atom
-                            tmpBondAtom1 = tmpMolAtom;
+                        if(tmpMolAtomProperty.equals(tmpRingCloneProperty0) || tmpMolAtomProperty.equals(tmpRingCloneProperty1)) {
+                            if (tmpBondAtom1 != null) {
+                                //insert a double bond between the two atoms
+                                tmpMoleculeClone.getBond(tmpBondAtom1 , tmpMolAtom).setOrder(IBond.Order.DOUBLE);
+                            } else {
+                                /*Find the first atom to which the heteroatom was bonded if it was sp3 hybridised*/
+                                //Save this atom
+                                tmpBondAtom1 = tmpMolAtom;
+                            }
                         }
                         /*The heteroatom is to be removed*/
                         if(tmpNonCAtom.getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY).equals(tmpMolAtom.getProperty(SCAFFOLD_ATOM_COUNTER_PROPERTY))) {
@@ -1422,7 +1425,7 @@ public class ScaffoldGenerator {
             /*Increase the number of hydrogens by 1 for all previously untreated edge C atoms to compensate for the removed atom.*/
             for(IAtom tmpAtom : tmpMoleculeClone.atoms()) {
                 Integer tmpAtomProperty = tmpAtom.getProperty(ScaffoldGenerator.SCAFFOLD_ATOM_COUNTER_PROPERTY);
-                if(tmpEdgeAtomNumbers.contains(tmpAtomProperty) && tmpAtom.getSymbol() == "C") {
+                if(tmpEdgeAtomNumbers.contains(tmpAtomProperty) && tmpAtom.getSymbol().equals("C")) {
                     tmpAtom.setImplicitHydrogenCount(tmpAtom.getImplicitHydrogenCount() + 1);
                 }
             }
