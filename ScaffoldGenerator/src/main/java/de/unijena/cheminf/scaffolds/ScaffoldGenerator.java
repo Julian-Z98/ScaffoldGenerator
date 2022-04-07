@@ -18,7 +18,6 @@
 
 package de.unijena.cheminf.scaffolds;
 
-import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.aromaticity.ElectronDonation;
@@ -440,7 +439,7 @@ public class ScaffoldGenerator {
             tmpCounter++;
         }
         /*Generate scaffold*/
-        IAtomContainer tmpScaffold = new AtomContainer();
+        IAtomContainer tmpScaffold;
         /*SideChains cannot be generated for ELEMENTAL_WIRE_FRAME, BASIC_FRAMEWORK and BASIC_WIRE_FRAME themselves.
         Their SideChains are identical to those of MURCKO_FRAMEWORK. Therefore, they can be used.*/
         if(this.scaffoldModeSetting.equals(ScaffoldModeOption.ELEMENTAL_WIRE_FRAME) || this.scaffoldModeSetting.equals(ScaffoldModeOption.BASIC_FRAMEWORK)
