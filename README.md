@@ -9,6 +9,8 @@ and [Varin et al.](https://doi.org/10.1021/ci2000924), it offers scaffold percep
 molecules and molecule collections. From the latter, Scaffold Trees and Scaffold Networks can be constructed, 
 represented in data structures, and visualised using the [GraphStream library](https://graphstream-project.org). 
 Multiple options to fine-tune and adapt the routines are available.
+<br>A scientific article describing the library has been submitted for peer-review. The preprint is available here: 
+[https://doi.org/10.26434/chemrxiv-2022-7tf0h](https://doi.org/10.26434/chemrxiv-2022-7tf0h)
 
 ## Contents of this repository
 ### Sources
