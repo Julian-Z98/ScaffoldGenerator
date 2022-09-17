@@ -12,6 +12,8 @@ Multiple options to fine-tune and adapt the routines are available.
 <br>A scientific article describing the library has been submitted for peer-review. The preprint is available here: 
 [https://doi.org/10.26434/chemrxiv-2022-7tf0h](https://doi.org/10.26434/chemrxiv-2022-7tf0h)
 
+[![DOI](https://zenodo.org/badge/359747884.svg)](https://zenodo.org/badge/latestdoi/359747884)
+
 ## Contents of this repository
 ### Sources
 * ScaffoldGenerator: Core class of the library making its main functionalities available through convenient, high-level methods.
