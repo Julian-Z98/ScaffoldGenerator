@@ -1,6 +1,8 @@
 # Scaffold Generator
 ##### A CDK-based library for generating Scaffold Trees and Scaffold Networks
 
+[![DOI](https://zenodo.org/badge/359747884.svg)](https://zenodo.org/badge/latestdoi/359747884)
+
 ## Description
 The Scaffold Generator library is designed to make molecular scaffold-related functionalities available in applications 
 and workflows based on the [Chemistry Development Kit (CDK)](https://cdk.github.io/). Building mainly upon the works by 
@@ -12,47 +14,64 @@ Multiple options to fine-tune and adapt the routines are available.
 <br>A scientific article describing the library has been submitted for peer-review. The preprint is available here: 
 [https://doi.org/10.26434/chemrxiv-2022-7tf0h](https://doi.org/10.26434/chemrxiv-2022-7tf0h)
 
-[![DOI](https://zenodo.org/badge/359747884.svg)](https://zenodo.org/badge/latestdoi/359747884)
-
 ## Contents of this repository
 ### Sources
-* ScaffoldGenerator: Core class of the library making its main functionalities available through convenient, high-level methods.
-* ScaffoldNodeCollectionBase: Abstract base class of Scaffold Trees and Scaffold Networks. Manages a collection of scaffold nodes and their connections in a tree-based representation that can be exported as an adjacency matrix.
-* ScaffoldNetwork: Class used to represent Scaffold Network structures.
-* ScaffoldTree: Class used to represent Scaffold Tree structures.
-* ScaffoldNodeBase: Abstract base class for nodes in a Scaffold Tree or Scaffold Network that maintains structural information about its scaffold and the molecules it originated from.
-* NetworkNode: A class for nodes of a Scaffold Network that can have multiple parents.
-* TreeNode: A class for nodes of a Scaffold Tree that can have only one parent.
-* GraphStreamUtility: Utility class for displaying Scaffold Trees and Scaffold Networks using the [GraphStream library](https://graphstream-project.org). It is primarily employed in ScaffoldGeneratorTest (see below) for visual inspection.
-
+The <i>ScaffoldGenerator\src\main\java\ </i> folder contains the Java source classes of Scaffold Generator. The class 
+<i>ScaffoldGenerator</i> is the core class of the library making its main functionalities available through convenient, 
+high-level methods. Other classes are used e.g. to represent data structures like Scaffold Trees and Scaffold Networks.
 
 ### Tests
-* MurckoFragmenterTest: Illustrates the functions and options of CDK’s MurckoFragmenter that is used in Scaffold Generator for initial scaffold creation. Example molecules from resources (see below) are imported and image files of the generated framework structures saved in an output folder.
-* ScaffoldGeneratorTest: Illustrates and tests the functionalities of Scaffold Generator; the correct output of its basic methods like scaffold generation, the more advanced functions to build Scaffold Trees and Scaffold Networks, the correct application of [Schuffenhauer et al.'s](https://doi.org/10.1021/ci600338x) prioritization rules (based on the schemata given in their publication), and the correct workings of the available settings and options. Some examples of Scaffold Trees and Scaffold Networks are displayed for visual inspection using the [GraphStream library](https://graphstream-project.org) and examples for the basic functionalities are visualised using example molecules imported from the resource folder (see below) and saved as image files in an output folder. Additionally, performance tests are included that apply specific routines of Scaffold Generator to the whole [COCONUT database](https://doi.org/10.1186/s13321-020-00478-9).
+The test class <i>ScaffoldGeneratorTest</i> illustrates and tests the functionalities of Scaffold Generator; the correct 
+output of its basic methods like scaffold generation, the more advanced functions to build Scaffold Trees and Scaffold Networks, 
+the correct application of [Schuffenhauer et al.'s](https://doi.org/10.1021/ci600338x) prioritization rules (based on the 
+schemata given in their publication), and the correct workings of the available settings and options. Some examples of 
+Scaffold Trees and Scaffold Networks are displayed for visual inspection using the [GraphStream library](https://graphstream-project.org) 
+and examples for the basic functionalities are visualised using example molecules imported from the resource folder 
+(see below) and saved as image files in an output folder. Two examples for the GraphStream visualisation of Scaffold Trees
+and Networks can be found in the <i>GraphStreamFigures</i> folder.
+<br>Additionally, performance tests are included that apply 
+specific routines of Scaffold Generator to the whole [COCONUT database](https://doi.org/10.1186/s13321-020-00478-9).
 
+### Test resources
+The test resources folder at path <i>src\test\resources\ </i> contains MDL MOL files of 23 test molecules used to 
+illustrate the basic functionalities of Scaffold Generator. They are imported in multiple test methods and the results 
+saved as image files in respective molecule-specific output folders.
+<br>An SD file of the [COCONUT database](https://doi.org/10.1186/s13321-020-00478-9) to run the performance tests, is 
+not included in the repository (see below).
+<br>All molecules used in the test methods imported from SMILES codes are also compiled in a separate file named <i>SGTest_SMILES.txt</i>
+in the <i>ScaffoldGenerator</i> folder. 
 
-### Resources
-The test resources folder at path <i>src\test\resources\ </i> contains MDL MOL files of 23 test molecules used to illustrate the basic functionalities of Scaffold Generator. They are imported in multiple test methods and the results saved as image files in respective molecule-specific output folders.
-<br>An SD file of the [COCONUT database](https://doi.org/10.1186/s13321-020-00478-9) to run the performance tests, is not included in the repository (see below).
+### Performance Test CMD Application
+The folder <i>ScaffoldGenerator\PerformanceTestCMDApp</i> contains the executable JAVA archive <i>ScaffoldGenerator-jar-with-dependencies.jar</i>.
+It can be executed from the command-line (command: java -jar) to do a performance snapshot of Scaffold Generator's scaling behaviour for a growing
+number of input molecules. It requires two command-line arguments:
 
+* file name of an SDF located in the same directory as the JAR (not given)
+* integer number specifying into how many equally-sized bins the data set should be split in the analysis.
+
+Example usage: <code>java -jar ScaffoldGenerator-jar-with-dependencies.jar input-file-in-same-dir-name.sdf 10</code>
+<br>The CMD application will then import the data set, split it into the given number of equally sized bins, create Scaffold Trees and 
+Scaffold Networks for an increasing combination of those structure bins, and create detailed output files of the measured
+runtimes. 
+<br>The source code of the CMD application can be found in the <i>src</i> folder with the other sources. 
 
 ## Installation
 This is a Maven project. In order to use the source code for your own software, download or clone the repository and
 open it in a Maven-supporting IDE (e.g. IntelliJ) as a Maven project and execute the pom.xml file. Maven will then take
-care of installing all dependencies. A Java Development Kit (JDK) of version 11 or higher must also be pre-installed.
+care of installing all dependencies. A Java Development Kit (JDK) of version 17 or higher must also be pre-installed.
 <br>To run the COCONUT-analysing tests, an SD file of the database needs to be placed in the test "resources" folder
 at path <i>src\test\resources\COCONUT_DB.sdf</i>. 
 The respective file can be downloaded at [https://coconut.naturalproducts.net/download](https://coconut.naturalproducts.net/download).
 
 ## Dependencies
 **Needs to be pre-installed:**
-* Java Development Kit (JDK) version 11
-  * [AdoptOpenJDK](https://adoptopenjdk.net) (as one possible source of the JDK)
+* Java Development Kit (JDK) version 17
+  * [Adoptium OpenJDK](https://adoptium.net) (as one possible source of the JDK)
 * Apache Maven version 4
   * [Apache Maven](http://maven.apache.org)
   
 **Managed by Maven:**
-* Chemistry Development Kit (CDK) version 2.5
+* Chemistry Development Kit (CDK) version 2.8
   * [Chemistry Development Kit on GitHub](https://cdk.github.io/)
   * License: GNU Lesser General Public License 2.1 
 * GraphStream version 2.0
@@ -61,9 +80,6 @@ The respective file can be downloaded at [https://coconut.naturalproducts.net/do
 * JUnit version 4.13.2
   * [JUnit 4](https://junit.org/junit4/)
   * License: Eclipse Public License 1.0
-* Google Guava version 30.1.1-jre
-  * [Guava](https://guava.dev)
-  * License: Apache License 2.0
 
 ## References and useful links
 **Conceptual Scaffold, Scaffold Tree, and Scaffold Network articles**
