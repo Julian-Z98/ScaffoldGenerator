@@ -25,9 +25,9 @@ import de.unijena.cheminf.scaffolds.ScaffoldGenerator;
 import de.unijena.cheminf.scaffolds.ScaffoldNetwork;
 import de.unijena.cheminf.scaffolds.ScaffoldNodeBase;
 import de.unijena.cheminf.scaffolds.ScaffoldTree;
-import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.io.iterator.IteratingSDFReader;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.smiles.SmilesGenerator;
 
@@ -169,7 +169,7 @@ public class PerformanceTest {
             PrintWriter tmpOriginForestOriginPrintWriter = new PrintWriter(tmpOriginForestOriginFileWriter);
             tmpOriginForestOriginPrintWriter.println("SMILES of the node,Number of origins,NonVirtualOrigins");
             tmpOriginForestOriginPrintWriter.flush();
-            IteratingSDFReader tmpDBReader = new IteratingSDFReader(tmpDBFileInputStream, DefaultChemObjectBuilder.getInstance(), true);
+            IteratingSDFReader tmpDBReader = new IteratingSDFReader(tmpDBFileInputStream, SilentChemObjectBuilder.getInstance(), true);
             /*Load molecules*/
             List<IAtomContainer> tmpMoleculesList = new LinkedList<>();
             while (tmpDBReader.hasNext()) {

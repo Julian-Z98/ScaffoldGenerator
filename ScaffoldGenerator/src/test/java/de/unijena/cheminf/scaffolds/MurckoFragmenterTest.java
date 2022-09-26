@@ -21,7 +21,6 @@ package de.unijena.cheminf.scaffolds;
 import org.junit.Before;
 import org.junit.Test;
 import org.openscience.cdk.AtomContainer;
-import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.depict.DepictionGenerator;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.fragment.MurckoFragmenter;
@@ -31,6 +30,7 @@ import org.openscience.cdk.io.FormatFactory;
 import org.openscience.cdk.io.MDLV2000Reader;
 import org.openscience.cdk.io.MDLV3000Reader;
 import org.openscience.cdk.io.formats.IChemFormat;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
 
 import javax.imageio.ImageIO;
 import java.awt.Color;
@@ -44,7 +44,7 @@ import java.io.IOException;
   * JUnit test class for the org.openscience.cdk.fragment.MurckoFragmenter
   *
  * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
-  * @version 1.0.0.1
+  * @version 1.0.0.2
   */
 public class MurckoFragmenterTest {
     private MurckoFragmenter fragmenter;
@@ -75,12 +75,12 @@ public class MurckoFragmenterTest {
             //Load V2000 mol file
             if(tmpFormat.getReaderClassName().contains("V2000")) {
                 MDLV2000Reader tmpReader = new MDLV2000Reader(tmpInputStream);
-                IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
+                IChemObjectBuilder tmpBuilder = SilentChemObjectBuilder.getInstance();
                 tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
                 //Load V3000 mol file
             } else if(tmpFormat.getReaderClassName().contains("V3000")) {
                 MDLV3000Reader tmpReader = new MDLV3000Reader(tmpInputStream);
-                IChemObjectBuilder tmpBuilder = DefaultChemObjectBuilder.getInstance();
+                IChemObjectBuilder tmpBuilder = SilentChemObjectBuilder.getInstance();
                 tmpMolecule = tmpReader.read(tmpBuilder.newAtomContainer());
             }
             //Generate picture of the original molecule

@@ -20,9 +20,9 @@ package de.unijena.cheminf.scaffolds;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.depict.DepictionGenerator;
 import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.smiles.SmilesParser;
 
 import javax.imageio.ImageIO;
@@ -47,7 +47,7 @@ import java.util.Map;
  * Class that creates sample images.
  *
  * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
- * @version 1.1.0.0
+ * @version 1.1.0.1
  */
 public class IllustrationFigures extends ScaffoldGenerator {
 
@@ -60,7 +60,7 @@ public class IllustrationFigures extends ScaffoldGenerator {
     @Test
     public void scaffoldTypesTest() throws Exception {
         //SMILES to IAtomContainer
-        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        SmilesParser tmpParser  = new SmilesParser(SilentChemObjectBuilder.getInstance());
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1=C(C(=NO1)C2=C(C=CC=C2Cl)F)C(=O)NC3C4N(C3=O)C(C(S4)(C)C)C(=O)O");
         /*Generate picture of the Original molecule*/
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(2048,2048).withFillToFit();
@@ -125,7 +125,7 @@ public class IllustrationFigures extends ScaffoldGenerator {
      */
     @Test
     public void schuffenhauerFragmentationTest() throws Exception {
-        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        SmilesParser tmpParser  = new SmilesParser(SilentChemObjectBuilder.getInstance());
         ScaffoldGenerator tmpScaffoldGenerator = new ScaffoldGenerator();
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(2048,2048).withFillToFit();
         //SMILES to IAtomContainer
@@ -168,7 +168,7 @@ public class IllustrationFigures extends ScaffoldGenerator {
      */
     @Test
     public void enumerativeRemovalTest() throws Exception {
-        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        SmilesParser tmpParser  = new SmilesParser(SilentChemObjectBuilder.getInstance());
         ScaffoldGenerator tmpScaffoldGenerator = new ScaffoldGenerator();
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(2048,2048).withFillToFit();
         //SMILES to IAtomContainer
@@ -200,7 +200,7 @@ public class IllustrationFigures extends ScaffoldGenerator {
      */
     @Test
     public void ruleSevenTest() throws Exception {
-        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        SmilesParser tmpParser  = new SmilesParser(SilentChemObjectBuilder.getInstance());
         ScaffoldGenerator tmpScaffoldGenerator = new ScaffoldGenerator();
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(2048,2048).withFillToFit();
         //SMILES to IAtomContainer
@@ -236,7 +236,7 @@ public class IllustrationFigures extends ScaffoldGenerator {
      */
     @Test
     public void retainOnlyHybridisationsAtAromaticBondsSettingTest() throws Exception {
-        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        SmilesParser tmpParser  = new SmilesParser(SilentChemObjectBuilder.getInstance());
         ScaffoldGenerator tmpScaffoldGenerator = new ScaffoldGenerator();
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(2048,2048).withFillToFit();
         //SMILES to IAtomContainer
@@ -273,7 +273,7 @@ public class IllustrationFigures extends ScaffoldGenerator {
     @Test
     public void scaffoldFragmentationTest() throws Exception {
         //SMILES to IAtomContainer
-        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        SmilesParser tmpParser  = new SmilesParser(SilentChemObjectBuilder.getInstance());
         //IAtomContainer tmpMolecule = tmpParser.parseSmiles("C1CCC(CC1)N(CCO)CC2CCCC2");
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CC1(C(=O)C(=C(O1)C2=CC=C(C=C2)S(=O)(=O)N)C3=CC(=CC=C3)F)C");
         /*Generate picture of the Original molecule*/
@@ -338,7 +338,7 @@ public class IllustrationFigures extends ScaffoldGenerator {
      */
     @Test
     public void determineAromaticitySettingTest() throws Exception {
-        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        SmilesParser tmpParser  = new SmilesParser(SilentChemObjectBuilder.getInstance());
         ScaffoldGenerator tmpScaffoldGenerator = new ScaffoldGenerator();
         DepictionGenerator tmpGenerator = new DepictionGenerator().withSize(2048,2048).withFillToFit().withAromaticDisplay(); //Vllt überall AromaticityDisplay aktivieren?
         //SMILES to IAtomContainer
@@ -428,7 +428,7 @@ public class IllustrationFigures extends ScaffoldGenerator {
             }
         }
         System.out.println("Output directory: " + tmpOutputFolderPath);
-        SmilesParser tmpSmiPar = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        SmilesParser tmpSmiPar = new SmilesParser(SilentChemObjectBuilder.getInstance());
         DepictionGenerator tmpDepictionGenerator = new DepictionGenerator();
         HashMap<String, String> tmpFilesMap = new HashMap<>(10);
         tmpFilesMap.put("COCONUT_Forest", "CSV_Origin_Forest_COCONUT.csv");
@@ -512,7 +512,7 @@ public class IllustrationFigures extends ScaffoldGenerator {
     @Ignore
     @Test
     public void graphStreamTreeTest() throws Exception {
-        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        SmilesParser tmpParser  = new SmilesParser(SilentChemObjectBuilder.getInstance());
         ScaffoldGenerator tmpScaffoldGenerator = new ScaffoldGenerator();
         //SMILES to IAtomContainer
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CNC1CCC(C2=CC=CC=C12)C3=CC(=C(C=C3)Cl)Cl");
@@ -530,7 +530,7 @@ public class IllustrationFigures extends ScaffoldGenerator {
     @Ignore
     @Test
     public void graphStreamNetworkTest() throws Exception {
-        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        SmilesParser tmpParser  = new SmilesParser(SilentChemObjectBuilder.getInstance());
         ScaffoldGenerator tmpScaffoldGenerator = new ScaffoldGenerator();
         //SMILES to IAtomContainer
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("CNC1CCC(C2=CC=CC=C12)C3=CC(=C(C=C3)Cl)Cl");
@@ -547,7 +547,7 @@ public class IllustrationFigures extends ScaffoldGenerator {
     @Ignore
     @Test
     public void graphStreamTreeMergeTest() throws Exception {
-        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        SmilesParser tmpParser  = new SmilesParser(SilentChemObjectBuilder.getInstance());
         ScaffoldGenerator tmpScaffoldGenerator = new ScaffoldGenerator();
         //SMILES to IAtomContainer
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("C1CCC2C(C1)C3=CN=CN=C3S2");
@@ -572,7 +572,7 @@ public class IllustrationFigures extends ScaffoldGenerator {
     @Ignore
     @Test
     public void graphStreamNetworkMergeTest() throws Exception {
-        SmilesParser tmpParser  = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        SmilesParser tmpParser  = new SmilesParser(SilentChemObjectBuilder.getInstance());
         ScaffoldGenerator tmpScaffoldGenerator = new ScaffoldGenerator();
         //SMILES to IAtomContainer
         IAtomContainer tmpMolecule = tmpParser.parseSmiles("ClC2NC1SCNN1N2");
