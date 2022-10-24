@@ -62,7 +62,7 @@ import java.util.concurrent.TimeUnit;
  * JUnit test class for the ScaffoldGenerator
  *
  * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
- * @version 1.0.5.1
+ * @version 1.0.6.0
  */
 public class ScaffoldGeneratorTest extends ScaffoldGenerator {
 

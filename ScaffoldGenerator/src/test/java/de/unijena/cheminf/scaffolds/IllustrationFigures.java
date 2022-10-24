@@ -47,7 +47,7 @@ import java.util.Map;
  * Class that creates sample images.
  *
  * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
- * @version 1.1.0.1
+ * @version 1.1.1.0
  */
 public class IllustrationFigures extends ScaffoldGenerator {
 

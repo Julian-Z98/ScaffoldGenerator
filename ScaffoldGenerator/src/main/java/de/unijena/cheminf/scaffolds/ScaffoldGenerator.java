@@ -63,7 +63,7 @@ import java.util.logging.Logger;
  * Different trees or networks can also be merged together.
  *
  * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
- * @version 1.0.3.0
+ * @version 1.0.4.0
  */
 public class ScaffoldGenerator {
 
