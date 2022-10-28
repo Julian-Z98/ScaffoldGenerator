@@ -3430,7 +3430,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
     /**
      * Test of ScaffoldGenerator.setScaffoldModeSetting() with SMILES.
      * Loads Scheme 1 (Flucloxacillin) from the "The Scaffold Tree" Paper by Schuffenhauer et al. as SMILES and
-     * generates the scaffold, the Murcko Scaffold and the Basic Wire Frame.
+     * generates the scaffold, the Murcko framework and the Basic Wire Frame.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
      * @throws Exception if anything goes wrong
      */
@@ -3459,7 +3459,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
         Assert.assertEquals("O=C(NC1C(=O)N2CCSC21)C3=CON=C3C=4C=CC=CC4", tmpSmilesGenerator.create(tmpScaffoldSMILES));
-        /*Generate Murcko Scaffold*/
+        /*Generate Murcko framework*/
         tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.MURCKO_FRAMEWORK);
         IAtomContainer tmpMurckoSMILES = tmpScaffoldGenerator.getScaffold(tmpMolecule, true);
         /*Generate image of the scaffold*/
@@ -3509,7 +3509,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
     /**
      * Test of ScaffoldGenerator.setScaffoldModeSetting() with SMILES.
      * Loads Scheme 1 (Flucloxacillin) from the "The Scaffold Tree" Paper by Schuffenhauer et al. as SMILES and
-     * generates the scaffold, the Murcko Scaffold and the Basic Wire Frame.
+     * generates the scaffold, the Murcko framework and the Basic Wire Frame.
      * All generated scaffolds are saved as images in a subfolder of the scaffoldTestOutput folder.
      * @throws Exception if anything goes wrong
      */
@@ -3538,7 +3538,7 @@ public class ScaffoldGeneratorTest extends ScaffoldGenerator {
         /*Generate and check SMILES*/
         SmilesGenerator tmpSmilesGenerator = new SmilesGenerator((SmiFlavor.Unique));
         Assert.assertEquals("O=C(NC1C(=O)N2[CH][C]SC21)C3=[C]ON=C3C=4[C]=CC=C[C]4", tmpSmilesGenerator.create(tmpScaffoldSMILES));
-        /*Generate Murcko Scaffold*/
+        /*Generate Murcko framework*/
         tmpScaffoldGenerator.setScaffoldModeSetting(ScaffoldGenerator.ScaffoldModeOption.MURCKO_FRAMEWORK);
         IAtomContainer tmpMurckoSMILES = tmpScaffoldGenerator.getScaffold(tmpMolecule, false);
         /*Generate image of the scaffold*/
