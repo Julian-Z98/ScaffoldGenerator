@@ -34,9 +34,9 @@ references:
       - family-names: "Steinbeck"
         given-names: "Christoph"
         orcid: "https://orcid.org/0000-0001-6966-0814"
-    doi: "10.26434/chemrxiv-2022-7tf0h-v2"
-    journal: "ChemRxiv"
-    scope: "Cite this preprint if you want to reference the general concepts of the software."
-    title: "Scaffold Generator - A Java library implementing molecular scaffold functionalities in the Chemistry Development Kit (CDK)"
+    doi: "10.1186/s13321-022-00656-x"
+    journal: "J Cheminform"
+    scope: "Cite this article if you want to reference the general concepts of the software."
+    title: "Scaffold Generator: a Java library implementing molecular scaffold functionalities in the Chemistry Development Kit (CDK)"
     type: article
     year: 2022

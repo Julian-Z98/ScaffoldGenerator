@@ -61,6 +61,9 @@ import java.util.logging.Logger;
  * The network approach is based on the <a href="https://doi.org/10.1021/ci2000924">
  * Mining for Bioactive Scaffolds with Scaffold Networks</a> Paper.
  * Different trees or networks can also be merged together.
+ * The Scaffold Generator library is described in <a href="https://doi.org/10.1186/s13321-022-00656-x"> Schaub et al.
+ * "Scaffold Generator: a Java library implementing molecular scaffold functionalities in the Chemistry Development Kit
+ * (CDK)" (J Cheminform 14, 79, 2022)</a>
  *
  * @author Julian Zander, Jonas Schaub (zanderjulian@gmx.de, jonas.schaub@uni-jena.de)
  * @version 1.0.4.0
