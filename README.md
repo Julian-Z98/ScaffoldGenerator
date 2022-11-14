@@ -13,6 +13,9 @@ represented in data structures, and visualised using the [GraphStream library](h
 Multiple options to fine-tune and adapt the routines are available.
 <br>A scientific article describing the library has been published and is available here: 
 [https://doi.org/10.1186/s13321-022-00656-x](https://doi.org/10.1186/s13321-022-00656-x)
+<br>Scaffold Generator is also available in the open Java rich client application MORTAR ('MOlecule fRagmenTation fRamework')
+where <i>in silico</i> molecule fragmentation can be easily conducted on a given data set and the results visualised
+([MORTAR GitHub repository](https://github.com/FelixBaensch/MORTAR), [MORTAR article preprint](https://doi.org/10.26434/chemrxiv-2022-zgg8s)).
 
 ## Contents of this repository
 ### Sources
