@@ -57,7 +57,7 @@ public abstract class ScaffoldNodeCollectionBase {
     protected HashMap<String, ScaffoldNodeBase> smilesMap;
 
     /**
-     * Saves all ScaffoldNodes according to their level. Key:Level, Value:ScaffoldNodeBase
+     * Saves all ScaffoldNodes according to their level. Key:Level, Value:HashSet of ScaffoldNodeBase
      */
     protected HashMap<Integer, HashSet<ScaffoldNodeBase>> levelMap;
 
