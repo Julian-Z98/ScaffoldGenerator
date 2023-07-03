@@ -1,7 +1,8 @@
+[![DOI](https://zenodo.org/badge/359747884.svg)](https://zenodo.org/badge/latestdoi/359747884)
 # Scaffold Generator
 ##### A CDK-based library for generating Scaffold Trees and Scaffold Networks
 
-[![DOI](https://zenodo.org/badge/359747884.svg)](https://zenodo.org/badge/latestdoi/359747884)
+
 
 ## Description
 The Scaffold Generator library is designed to make molecular scaffold-related functionalities available in applications 
