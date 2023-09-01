@@ -1,4 +1,7 @@
 [![DOI](https://zenodo.org/badge/359747884.svg)](https://zenodo.org/badge/latestdoi/359747884)
+
+![Scaffold_Generator_logo](./Images/Scaffold.png)
+
 # Scaffold Generator
 ##### A CDK-based library for generating Scaffold Trees and Scaffold Networks
 
