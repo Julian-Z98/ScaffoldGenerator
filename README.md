@@ -4,7 +4,7 @@
 
 # Scaffold Generator
 ##### A CDK-based library for generating Scaffold Trees and Scaffold Networks
-##### :warning:DISLAIMER:warning:: This repository contains legacy code! The project has been moved and is now available and maintained as the [cdk-scaffold module](https://github.com/cdk/cdk-scaffold).
+##### :warning:DISCLAIMER:warning:: This repository contains legacy code! The project has been moved and is now available and maintained as the [cdk-scaffold module](https://github.com/cdk/cdk-scaffold).
 ##### Some of the cdk-scaffold functionalities are also implemented in the MORTAR (MOlecule fRagmenTAtion fRamework) rich client Graphical User Interface (GUI) application ([GitHub repository](https://github.com/FelixBaensch/MORTAR) | [article](https://doi.org/10.1186/s13321-022-00674-9))
 
 ## Description
